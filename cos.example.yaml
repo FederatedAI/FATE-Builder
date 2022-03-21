@@ -1,0 +1,8 @@
+cos:
+  base:
+    secretid:
+    secretkey:
+  buckets:
+  - name: webank-ai-1251170195
+    alias: fate
+    region: ap-guangzhou
