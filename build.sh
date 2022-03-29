@@ -16,6 +16,7 @@ shopt -s expand_aliases
 : "${PUSH_ARC:=0}"
 
 : "${NODE_OPTIONS:=--openssl-legacy-provider}"
+declare -x NODE_OPTIONS
 
 commands=('date' 'dirname' 'readlink' 'mkdir' 'grep' 'printf' 'cp' 'ln' 'xargs' 'find')
 tools=('git' 'mvn' 'npm' 'docker')
@@ -89,11 +90,6 @@ function check_branch
         [ "$ver" == "${versions[$key]}" ] || return 1
     }
 }
-
-[ "$PULL_GIT" -gt 0 ] && git_pull
-[ "$CHEC_BRA" -gt 0 ] && check_branch
-
-[ "$REMO_DIR" -gt 0 ] && rm -fr "$dir/build"
 
 function build_eggroll
 {
@@ -178,6 +174,11 @@ function build_fate
     gcp -af "$FATE_DIR/fateflow/"{bin,conf,python} "$dir/build/fateflow"
     gcp -af "$FATE_DIR/fateflow/examples" "$dir/build/fate_examples/fateflow"
 }
+
+[ "$PULL_GIT" -gt 0 ] && git_pull
+[ "$CHEC_BRA" -gt 0 ] && check_branch
+
+[ "$REMO_DIR" -gt 0 ] && rm -fr "$dir/build"
 
 [ "$BUIL_PYP" -gt 0 ] && build_python_packages
 [ "$BUIL_EGG" -gt 0 ] && build_eggroll
