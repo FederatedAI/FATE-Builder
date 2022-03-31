@@ -14,6 +14,10 @@ shopt -s expand_aliases
 : "${BUIL_EGG:=1}"
 : "${BUIL_BOA:=1}"
 : "${BUIL_FAT:=1}"
+: "${SKIP_PKG:=0}"
+: "${PATH_CON:=cos://fate/Miniconda3-4.5.4-Linux-x86_64.sh}"
+: "${PATH_JDK:=cos://fate/jdk-8u192-linux-x64.tar.gz}"
+: "${PATH_MYS:=cos://fate/mysql-8.0.28.tar.gz}"
 : "${PUSH_ARC:=0}"
 
 : "${NODE_OPTIONS:=--openssl-legacy-provider}"
@@ -59,7 +63,7 @@ alias _git="git -C '$FATE_DIR'"
 _git status >/dev/null
 
 alias coscli="'$dir/bin/coscli-$plat' -c '$dir/cos.yaml'"
-coscli ls >/dev/null
+coscli ls 'cos://fate' >/dev/null
 
 function git_pull
 {
@@ -197,4 +201,14 @@ for module in "${modules[@]}"
 
     gfind "$dir/build" -iname '__pycache__' -exec rm -fr {} \;
     gfind "$dir/build" -iname '*.pyc' -exec rm -f {} \;
+}
+
+[ "$SKIP_BUI" -gt 0 ] ||
+{
+    echo 'TODO'
+}
+
+[ "$PUSH_ARC" -gt 0 ] &&
+{
+    echo 'TODO'
 }
