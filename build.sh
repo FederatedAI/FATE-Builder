@@ -203,7 +203,7 @@ for module in "${modules[@]}"
     gfind "$dir/build" -iname '*.pyc' -exec rm -f {} \;
 }
 
-[ "$SKIP_BUI" -gt 0 ] ||
+[ "$SKIP_PKG" -gt 0 ] ||
 {
     echo 'TODO'
 }
