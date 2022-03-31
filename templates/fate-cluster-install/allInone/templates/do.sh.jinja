@@ -1,0 +1,32 @@
+#!/bin/bash
+
+role=${role};
+
+if [ "\$role" != "host" -a "\$role" != "guest" ]
+then
+  echo "\$0 host|guest"
+  exit 1;
+fi
+export PATH=$PATH:/usr/sbin:/usr/bin:/bin
+cd ${pbase}/install;
+for name in tools-install base-install java-install python-install eggroll-install fate-install;
+do
+  echo "+++++++++++++++deploy \$name +++++++++++++++"
+  bash \${name}/deploy.sh \$role
+  echo "+++++++++++++++++++++++++++++++++++++++++++"
+done
+
+ps aux|grep -v grep | grep 'mysql-install/deploy.sh'
+num=\$( ps aux|grep -v grep | grep -c 'mysql-install/deploy.sh' )
+while [ \$num -ne 0 ]
+do
+  ps aux|grep -v grep | grep 'mysql-install/deploy.sh'
+  num=\$( ps aux|grep -v grep | grep -c 'mysql-install/deploy.sh' )
+  echo "sleep 2"
+  sleep 2
+done
+
+source ${pbase}/${pname}/bin/init_env.sh
+echo "restart fate_flow"
+cd ${pbase}/${pname}/fateflow/bin
+/bin/bash ./service.sh restart

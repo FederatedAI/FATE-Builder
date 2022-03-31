@@ -7,6 +7,7 @@ shopt -s expand_aliases
 : "${PULL_GIT:=1}"
 : "${PULL_OPT:=--rebase --stat --autostash}"
 : "${CHEC_BRA:=1}"
+: "${SKIP_BUI:=0}"
 : "${REMO_DIR:=1}"
 : "${COPY_ONL:=0}"
 : "${BUIL_PYP:=1}"
@@ -18,9 +19,9 @@ shopt -s expand_aliases
 : "${NODE_OPTIONS:=--openssl-legacy-provider}"
 declare -x NODE_OPTIONS
 
-commands=('date' 'dirname' 'readlink' 'mkdir' 'grep' 'printf' 'cp' 'ln' 'xargs' 'find')
-tools=('git' 'mvn' 'npm' 'docker')
-modules=('fate' 'fateflow' 'fateboard' 'eggroll')
+commands=( 'date' 'dirname' 'readlink' 'mkdir' 'grep' 'printf' 'cp' 'ln' 'xargs' 'find' )
+tools=( 'git' 'mvn' 'npm' 'docker' )
+modules=( 'fate' 'fateflow' 'fateboard' 'eggroll' )
 
 case "$OSTYPE" in
     linux*)  plat='linux' ;;
@@ -28,18 +29,18 @@ case "$OSTYPE" in
     *)       exit 1       ;;
 esac
 
-[ "$plat" == 'mac' ] &&
-{
+if [ "$plat" == 'mac' ]
+then
     for command in "${commands[@]}"
     {
         type "g$command" >/dev/null
     }
-} || {
+else
     for command in "${commands[@]}"
     {
         alias "g$command=$command"
     }
-}
+fi
 
 for tool in "${tools[@]}"
 {
@@ -60,21 +61,15 @@ _git status >/dev/null
 alias coscli="'$dir/bin/coscli-$plat' -c '$dir/cos.yaml'"
 coscli ls >/dev/null
 
-function get_version
-{
-    versions["$1"]="$(ggrep -ioP "(?<=$1=).+" "$FATE_DIR/fate.env")"
-}
-
-declare -A versions
-for module in "${modules[@]}"
-{
-    get_version "$module"
-}
-
 function git_pull
 {
     _git pull $PULL_OPT
     _git submodule foreach --recursive 'git -C "$toplevel/$sm_path" pull '"$PULL_OPT"
+}
+
+function get_version
+{
+    versions["$1"]="$(ggrep -ioP "(?<=$1=).+" "$FATE_DIR/fate.env")"
 }
 
 function check_branch
@@ -82,7 +77,7 @@ function check_branch
     for key in "${!versions[@]}"
     {
         readarray -t ver <<< "$(git -C "$FATE_DIR/${key%fate}" branch --show-current | ggrep -oP '\d+')"
-        [ "${#ver[@]}" == 2 ] && ver+=( 0 )
+        [ "${#ver[@]}" -eq 2 ] && ver+=( 0 )
 
         printf -v ver '%s.' "${ver[@]}"
         ver="${ver:0:-1}"
@@ -159,9 +154,10 @@ function build_python_packages
             {
                 new_whl=$(auditwheel repair --plat manylinux2014_x86_64 -w /wheelhouse "$whl" 2>&1 | \
                           grep -ioP "(?<=Fixed-up wheel written to ).+\.whl")
-                [[ -n "$new_whl" && "$new_whl" != "$whl" ]] && rm "$whl" || :
-            } || :
-        }'
+                [ -n "$new_whl" ] && [ "$new_whl" != "$whl" ] && rm -f "$whl"
+            }
+        }
+        :'
 }
 
 function build_fate
@@ -176,19 +172,29 @@ function build_fate
 }
 
 [ "$PULL_GIT" -gt 0 ] && git_pull
+
+declare -A versions
+for module in "${modules[@]}"
+{
+    get_version "$module"
+}
+
 [ "$CHEC_BRA" -gt 0 ] && check_branch
 
-[ "$REMO_DIR" -gt 0 ] && rm -fr "$dir/build"
+[ "$SKIP_BUI" -gt 0 ] ||
+{
+    [ "$REMO_DIR" -gt 0 ] && rm -fr "$dir/build"
 
-[ "$BUIL_PYP" -gt 0 ] && build_python_packages
-[ "$BUIL_EGG" -gt 0 ] && build_eggroll
-[ "$BUIL_BOA" -gt 0 ] && build_fateboard
-[ "$BUIL_FAT" -gt 0 ] && build_fate
+    [ "$BUIL_PYP" -gt 0 ] && build_python_packages
+    [ "$BUIL_EGG" -gt 0 ] && build_eggroll
+    [ "$BUIL_BOA" -gt 0 ] && build_fateboard
+    [ "$BUIL_FAT" -gt 0 ] && build_fate
 
-gfind "$dir/build" -type d -exec chmod 755 {} \;
-gfind "$dir/build" -type f -exec chmod 644 {} \;
+    gfind "$dir/build" -type d -exec chmod 755 {} \;
+    gfind "$dir/build" -type f -exec chmod 644 {} \;
 
-gfind "$dir/build" -iname '*.sh' -exec chmod a+x {} \;
+    gfind "$dir/build" -iname '*.sh' -exec chmod a+x {} \;
 
-gfind "$dir/build" -iname '__pycache__' -exec rm -fr {} \;
-gfind "$dir/build" -iname '*.pyc' -exec rm -f {} \;
+    gfind "$dir/build" -iname '__pycache__' -exec rm -fr {} \;
+    gfind "$dir/build" -iname '*.pyc' -exec rm -f {} \;
+}

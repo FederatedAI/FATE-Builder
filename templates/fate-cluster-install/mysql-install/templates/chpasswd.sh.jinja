@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if [ \$# -ne 1 ]
+then
+  echo "\$0 new_password"
+  exit 1;
+fi
+
+npasswd=\$1;
+
+cd $mbase
+sleep 60;
+#passwd="\$(grep 'A temporary password is generated for' ${mbase}/logs/init.log |sed -n 's#.*root@localhost: \(.*\)#\\1#p')"
+echo "\$npasswd"
+if [ -n "\$npasswd" ]
+then
+  #./bin/mysqladmin -h 127.0.0.1 -P ${mysql_port} -S ./run/mysql.sock  -u${mysql_admin_user} -p"\$passwd" password "\$npasswd"
+  ./bin/mysqladmin -P ${mysql_port} -S ./run/mysql.sock  -u${mysql_admin_user} password "\$npasswd"
+  echo \$npasswd >  .chpasswd
+else
+  echo "password empty, please has a check"
+fi
