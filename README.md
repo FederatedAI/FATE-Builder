@@ -53,13 +53,19 @@
 | `BUIL_EGG` | build and package Eggroll (requires `mvn`) | `1` |
 | `BUIL_BOA` | build and package FATE-Board (requires `npm` & `mvn`) | `1` |
 | `BUIL_FAT` | build and package FATE and FATE-Flow | `1` |
-| `SKIP_PKG` | skip packing the final archive `fate_cluster_install_${FATE_VER}_${RELE_VER}-c7-u18.tar.gz` <br/> turn on this flag will ignore `PATH_CON`, `PATH_JDK`, `PATH_MYS`, `PUSH_ARC`, `FATE_VER` and `RELE_VER` | `0` |
+| `SKIP_PKG` | skip packing the archives <br/> turn on this flag will ignore `PATH_CON`, `PATH_JDK`, `PATH_MYS`, `FATE_VER`, `RELE_VER`, `PACK_ARC`, `PACK_STA`, `PACK_DOC`, `PACK_CLU`, `PACK_OFF`, `PACK_ONL` and `PUSH_ARC` | `0` |
 | `PATH_CON` | the download path of Miniconda on COS (requires `coscli`) | `cos://fate/Miniconda3-4.5.4-Linux-x86_64.sh` |
 | `PATH_JDK` | the download path of JDK on COS (requires `coscli`) | `cos://fate/jdk-8u192-linux-x64.tar.gz` |
 | `PATH_MYS` | the download path of MySQL on COS (requires `coscli`) | `cos://fate/mysql-8.0.28.tar.gz` |
 | `FATE_VER` | the version number of FATE (used on the archive filename) | automatically get it from `$FATE_DIR/fate.env` |
 | `RELE_VER` | the release version (used on the archive filename) | `release` |
-| `PUSH_ARC` | push the archive to COS (requires `coscli`) | `0` |
+| `PACK_ARC` | package the archive `FATE_install_${FATE_VER}_${RELE_VER}.tar.gz` | `1` |
+| `PACK_STA` | package the archive `standalone_fate_install_${FATE_VER}_${RELE_VER}.tar.gz` | `1` |
+| `PACK_DOC` | package the archive `standalone_fate_docker_image_${FATE_VER}_${RELE_VER}.tar` | `1` |
+| `PACK_CLU` | package the archive `fate_cluster_install_${FATE_VER}_${RELE_VER}-c7-u18.tar.gz` | `1` |
+| `PACK_OFF` | package the archive `AnsibleFATE_${FATE_VER}_${RELE_VER}-offline.tar.gz` | `1` |
+| `PACK_ONL` | package the archive `AnsibleFATE_${FATE_VER}_${RELE_VER}-online.tar.gz` | `1` |
+| `PUSH_ARC` | push the archives to COS (requires `coscli`) | `0` |
 
 ## Usage
 
