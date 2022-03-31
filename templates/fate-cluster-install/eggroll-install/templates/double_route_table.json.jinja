@@ -1,0 +1,33 @@
+{
+  "route_table":
+  {
+    "${local_id}":
+    {
+      "default":[
+        {
+          "port": ${local_rollsite_port},
+          "ip": "${local_rollsite_ip}"
+        }
+      ],
+      "fateflow":[
+        {
+          "port": ${local_fateflow_port},
+          "ip": "${local_fateflow_ip}"
+        }
+      ]
+    },
+    "${other_id}":
+    {
+      "default":[
+        {
+          "port": ${other_rollsite_port},
+          "ip": "${other_rollsite_ip}"
+        }
+      ]
+    }
+  },
+  "permission":
+  {
+    "default_allow": true
+  }
+}

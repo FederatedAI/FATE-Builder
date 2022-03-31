@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if [ \$# -ne 1 ]
+then
+  echo "\$0 password"
+  exit 1;
+fi
+
+passwd=\$1;
+echo \$passwd
+
+sleep 45
+
+cd $mbase
+
+./bin/mysqladmin -h 127.0.0.1  -P ${mysql_port} -S ./run/mysql.sock -u${mysql_admin_user} -p"\${passwd}" create ${eggroll_dbname}
+./bin/mysql -h 127.0.0.1  -P ${mysql_port} -S ./run/mysql.sock -u${mysql_admin_user} -p"\${passwd}" ${eggroll_dbname} < $base/sql/create-eggroll-meta-tables.sql
+./bin/mysql -h 127.0.0.1  -P ${mysql_port} -S ./run/mysql.sock -u${mysql_admin_user} -p"\${passwd}" ${eggroll_dbname} < $base/sql/insert-node.sql
+
+echo "dump insert-node.sql over"
+
+touch ./.load

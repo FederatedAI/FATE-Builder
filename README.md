@@ -46,6 +46,7 @@
 | `PULL_GIT` | do `git pull` on `FATE_DIR` and all submodules <br/> it will not clone the repository nor initialize submodules | `1` |
 | `PULL_OPT` | the options for `git pull` <br/> use `PULL_OPT=' ' ./build.sh` to remove all options | `--rebase --stat --autostash` |
 | `CHEC_BRA` | check that the branch names of FATE, Flow, Board and Eggroll match the version numbers in `fate.env` | `1` |
+| `SKIP_BUI` | skip build steps and do not regenerate `build` directory <br/> ignore `REMO_DIR`, `BUIL_PYP`, `COPY_ONL`, `BUIL_EGG`, `BUIL_BOA` and ``BUIL_FAT` | `0` |
 | `REMO_DIR` | remove the directory `build` before building | `1` |
 | `BUIL_PYP` | build and package Python packages (requires `docker`) | `1` |
 | `COPY_ONL` | skip running `mvn clean package` & `npm run build` | `0` |
