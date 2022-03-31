@@ -18,10 +18,14 @@ shopt -s expand_aliases
 : "${PATH_CON:=cos://fate/Miniconda3-4.5.4-Linux-x86_64.sh}"
 : "${PATH_JDK:=cos://fate/jdk-8u192-linux-x64.tar.gz}"
 : "${PATH_MYS:=cos://fate/mysql-8.0.28.tar.gz}"
+: "${RELE_VER:=release}"
+: "${PACK_ARC:=1}"
+: "${PACK_STA:=1}"
+: "${PACK_DOC:=1}"
+: "${PACK_CLU:=1}"
+: "${PACK_OFF:=1}"
+: "${PACK_ONL:=1}"
 : "${PUSH_ARC:=0}"
-
-: "${NODE_OPTIONS:=--openssl-legacy-provider}"
-declare -x NODE_OPTIONS
 
 commands=( 'date' 'dirname' 'readlink' 'mkdir' 'grep' 'printf' 'cp' 'ln' 'xargs' 'find' )
 tools=( 'git' 'mvn' 'npm' 'docker' )
@@ -116,6 +120,9 @@ function build_fateboard
 
     [ "$COPY_ONL" -gt 0 ] ||
     {
+        [ -n "$(node --help | ggrep -i -- '--openssl-legacy-provider')" ] && \
+            declare -x NODE_OPTIONS="--openssl-legacy-provider ${NODE_OPTIONS:-}"
+
         npm --prefix "$source/resources-front-end" --quiet install
         npm --prefix "$source/resources-front-end" --quiet run build
 
@@ -183,6 +190,8 @@ for module in "${modules[@]}"
     get_version "$module"
 }
 
+: "${FATE_VER:=${versions[fate]}}"
+
 [ "$CHEC_BRA" -gt 0 ] && check_branch
 
 [ "$SKIP_BUI" -gt 0 ] ||
@@ -199,7 +208,7 @@ for module in "${modules[@]}"
 
     gfind "$dir/build" -iname '*.sh' -exec chmod a+x {} \;
 
-    gfind "$dir/build" -iname '__pycache__' -exec rm -fr {} \;
+    gfind "$dir/build" -iname '__pycache__' -prune -exec rm -fr {} \;
     gfind "$dir/build" -iname '*.pyc' -exec rm -f {} \;
 }
 
@@ -212,3 +221,5 @@ for module in "${modules[@]}"
 {
     echo 'TODO'
 }
+
+echo 'Done'
