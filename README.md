@@ -2,7 +2,7 @@
 
 ## Dependencies
 
-* [bash](https://formulae.brew.sh/formula/bash), [coreutils](https://formulae.brew.sh/formula/coreutils), [findutils](https://formulae.brew.sh/formula/findutils), [grep](https://formulae.brew.sh/formula/grep), [curl](https://formulae.brew.sh/formula/curl) (macOS only)
+* [bash](https://formulae.brew.sh/formula/bash), [coreutils](https://formulae.brew.sh/formula/coreutils), [findutils](https://formulae.brew.sh/formula/findutils), [grep](https://formulae.brew.sh/formula/grep) (macOS only)
 
 * Git & Git LFS
 
@@ -46,13 +46,19 @@
 | `PULL_GIT` | do `git pull` on `FATE_DIR` and all submodules <br/> it will not clone the repository nor initialize submodules | `1` |
 | `PULL_OPT` | the options for `git pull` <br/> use `PULL_OPT=' ' ./build.sh` to remove all options | `--rebase --stat --autostash` |
 | `CHEC_BRA` | check that the branch names of FATE, Flow, Board and Eggroll match the version numbers in `fate.env` | `1` |
-| `SKIP_BUI` | skip build steps and do not regenerate `build` directory <br/> ignore `REMO_DIR`, `BUIL_PYP`, `COPY_ONL`, `BUIL_EGG`, `BUIL_BOA` and ``BUIL_FAT` | `0` |
+| `SKIP_BUI` | skip the build steps and keep `build` directory unchanged <br/> turn on this flag will ignore `REMO_DIR`, `BUIL_PYP`, `COPY_ONL`, `BUIL_EGG`, `BUIL_BOA` and `BUIL_FAT` | `0` |
 | `REMO_DIR` | remove the directory `build` before building | `1` |
 | `BUIL_PYP` | build and package Python packages (requires `docker`) | `1` |
 | `COPY_ONL` | skip running `mvn clean package` & `npm run build` | `0` |
 | `BUIL_EGG` | build and package Eggroll (requires `mvn`) | `1` |
 | `BUIL_BOA` | build and package FATE-Board (requires `npm` & `mvn`) | `1` |
 | `BUIL_FAT` | build and package FATE and FATE-Flow | `1` |
+| `SKIP_PKG` | skip packing the final archive `fate_cluster_install_${FATE_VER}_${RELE_VER}-c7-u18.tar.gz` <br/> turn on this flag will ignore `PATH_CON`, `PATH_JDK`, `PATH_MYS`, `PUSH_ARC`, `FATE_VER` and `RELE_VER` | `0` |
+| `PATH_CON` | the download path of Miniconda on COS (requires `coscli`) | `cos://fate/Miniconda3-4.5.4-Linux-x86_64.sh` |
+| `PATH_JDK` | the download path of JDK on COS (requires `coscli`) | `cos://fate/jdk-8u192-linux-x64.tar.gz` |
+| `PATH_MYS` | the download path of MySQL on COS (requires `coscli`) | `cos://fate/mysql-8.0.28.tar.gz` |
+| `FATE_VER` | the version number of FATE (used on the archive filename) | automatically get it from `$FATE_DIR/fate.env` |
+| `RELE_VER` | the release version (used on the archive filename) | `release` |
 | `PUSH_ARC` | push the archive to COS (requires `coscli`) | `0` |
 
 ## Usage
