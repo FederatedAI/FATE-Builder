@@ -27,7 +27,7 @@ shopt -s expand_aliases
 : "${PACK_ONL:=1}"
 : "${PUSH_ARC:=0}"
 
-commands=( 'date' 'dirname' 'readlink' 'mkdir' 'grep' 'printf' 'cp' 'ln' 'xargs' 'find' )
+commands=( 'date' 'dirname' 'readlink' 'mkdir' 'grep' 'printf' 'cp' 'ln' 'xargs' 'find' 'tar' )
 tools=( 'git' 'mvn' 'npm' 'docker' )
 modules=( 'fate' 'fateflow' 'fateboard' 'eggroll' )
 
@@ -75,9 +75,14 @@ function git_pull
     _git submodule foreach --recursive 'git -C "$toplevel/$sm_path" pull '"$PULL_OPT"
 }
 
-function get_version
+function get_versions
 {
-    versions["$1"]="$(ggrep -ioP "(?<=$1=).+" "$FATE_DIR/fate.env")"
+    declare -gA versions
+
+    for module in "${modules[@]}"
+    {
+        versions[$module]="$(ggrep -ioP "(?<=$module=).+" "$FATE_DIR/fate.env")"
+    }
 }
 
 function check_branch
@@ -102,6 +107,7 @@ function build_eggroll
     [ "$COPY_ONL" -gt 0 ] || mvn -DskipTests -f "$source/jvm/pom.xml" -q clean package
 
     gmkdir -p "$target/lib"
+
     for module in 'core' 'roll_pair' 'roll_site'
     {
         gcp -af "$source/jvm/$module/target/eggroll-"${module//_/-}"-${versions[eggroll]}.jar" \
@@ -173,23 +179,105 @@ function build_python_packages
 
 function build_fate
 {
-    gmkdir -p "$dir/build/fate" "$dir/build/fateflow" "$dir/build/fate_examples"
+    gmkdir -p "$dir/build/fate" "$dir/build/fateflow" "$dir/build/examples"
 
-    gcp -af "$FATE_DIR/python" "$dir/build/fate"
-    gcp -af "$FATE_DIR/examples" "$dir/build/fate_examples/fate"
+    gcp -af "$FATE_DIR/RELEASE.md" "$FATE_DIR/fate.env" "$FATE_DIR/python" "$dir/build/fate"
+    gcp -af "$FATE_DIR/examples" "$dir/build/examples/fate"
 
     gcp -af "$FATE_DIR/fateflow/"{bin,conf,python} "$dir/build/fateflow"
-    gcp -af "$FATE_DIR/fateflow/examples" "$dir/build/fate_examples/fateflow"
+    gcp -af "$FATE_DIR/fateflow/examples" "$dir/build/examples/fateflow"
+}
+
+function build_cleanup
+{
+    gfind "$dir/build" -type d -exec chmod 755 {} \;
+    gfind "$dir/build" -type f -exec chmod 644 {} \;
+
+    gfind "$dir/build" -iname '*.sh' -exec chmod a+x {} \;
+
+    gfind "$dir/build" -iname '__pycache__' -prune -exec rm -fr {} \;
+    gfind "$dir/build" -iname '*.pyc' -exec rm -f {} \;
+}
+
+function get_resources
+{
+    declare -gA resources=(
+        [conda]="$PATH_CON"
+        [jdk]="$PATH_JDK"
+        [mysql]="$PATH_MYS"
+    )
+
+    gmkdir -p "$dir/resources"
+
+    for key in "${!resources[@]}"
+    {
+        coscli sync "${resources[$key]}" "$dir/resources"
+
+        resources[$key]="$dir/resources/${resources[$key]##*/}"
+    }
+}
+
+function package_python
+{
+    local target="$target/python-install/files"
+
+    gmkdir -p "$target"
+    gcp -af "${resources[conda]}" "$dir/build/fate/python/requirements.txt" "$dir/build/pypkg" "$target"
+}
+
+function package_java
+{
+    local target="$target/java-install/files"
+
+    gmkdir -p "$target"
+    gcp -af "${resources[jdk]}" "$target"
+}
+
+function package_mysql
+{
+    local target="$target/mysql-install/files"
+
+    gmkdir -p "$target"
+    gcp -af "${resources[mysql]}" "$dir/build/eggroll/conf/create-eggroll-meta-tables.sql" "$target"
+}
+
+function package_eggroll
+{
+    local target="$target/eggroll-install/files"
+
+    gmkdir -p "$target"
+    gcp -af "$dir/build/eggroll" "$target"
+}
+
+function package_fate
+{
+    local target="$target/fate-install/files"
+
+    gmkdir -p "$target"
+    gcp -af "$dir/build/fate" "$dir/build/fateflow" "$dir/build/fateboard" "$dir/build/examples" "$target"
+}
+
+function package_cluster_install
+{
+    local source="$dir/templates/fate-cluster-install"
+    local target="$dir/packages/fate-cluster-install"
+
+    local modules=( 'python' 'java' 'mysql' 'eggroll' 'fate' )
+
+    rm -fr "$target"
+    gcp -af "$source" "$dir/packages"
+
+    for module in "${modules[@]}"
+    {
+        target="$target" "package_$module"
+    }
+
+    gtar -cpz -f "$dir/packages/fate_cluster_install_${FATE_VER}_${RELE_VER}-c7-u18.tar.gz" -C "$dir/packages" fate-cluster-install
 }
 
 [ "$PULL_GIT" -gt 0 ] && git_pull
 
-declare -A versions
-for module in "${modules[@]}"
-{
-    get_version "$module"
-}
-
+get_versions
 : "${FATE_VER:=${versions[fate]}}"
 
 [ "$CHEC_BRA" -gt 0 ] && check_branch
@@ -203,18 +291,16 @@ for module in "${modules[@]}"
     [ "$BUIL_BOA" -gt 0 ] && build_fateboard
     [ "$BUIL_FAT" -gt 0 ] && build_fate
 
-    gfind "$dir/build" -type d -exec chmod 755 {} \;
-    gfind "$dir/build" -type f -exec chmod 644 {} \;
-
-    gfind "$dir/build" -iname '*.sh' -exec chmod a+x {} \;
-
-    gfind "$dir/build" -iname '__pycache__' -prune -exec rm -fr {} \;
-    gfind "$dir/build" -iname '*.pyc' -exec rm -f {} \;
+    build_cleanup
 }
 
 [ "$SKIP_PKG" -gt 0 ] ||
 {
-    echo 'TODO'
+    get_resources
+
+    gmkdir -p "$dir/packages"
+
+    [ "$PACK_CLU" -gt 0 ] && package_cluster_install
 }
 
 [ "$PUSH_ARC" -gt 0 ] &&

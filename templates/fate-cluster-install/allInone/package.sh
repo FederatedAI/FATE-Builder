@@ -92,7 +92,7 @@ else
   if [ $? -eq 0 ];then
     cp -f build.tar.gz ${workdir}/../tools-install/files/
     cp -f deploy.tar.gz ${workdir}/../tools-install/files/
- 
+
     mv examples.tar.gz fate_examples-${version}.tar.gz
     mv fate.tar.gz fate-${version}.tar.gz
     mv fateflow.tar.gz fateflow-${version}.tar.gz
@@ -141,9 +141,9 @@ else
     fi
     if [ $pkname = "requirements.txt" ];then
       package_cp $pkname python-install
-      wget -P ${workdir}/../build ${url}/fate/${version}/${minversion}/pypi.tar.gz
-      echo -e "\ncp -vf ${workdir}/../build/pypi.tar.gz ${workdir}/../python-install/files/pypi.tar.gz\n"
-      cp -vf ${workdir}/../build/pypi.tar.gz ${workdir}/../python-install/files/pypi.tar.gz
+      wget -P ${workdir}/../build ${url}/fate/${version}/${minversion}/pypkg.tar.gz
+      echo -e "\ncp -vf ${workdir}/../build/pypkg.tar.gz ${workdir}/../python-install/files/pypkg.tar.gz\n"
+      cp -vf ${workdir}/../build/pypkg.tar.gz ${workdir}/../python-install/files/pypkg.tar.gz
       ls -l ${workdir}/../python-install/files/
       echo -e "\n"
       continue

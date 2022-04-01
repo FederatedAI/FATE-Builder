@@ -37,11 +37,11 @@ eval eggroll_db_passwd="\${${group}_eggroll_db_passwd}"
 
 if [  ! -f "${pbase}/${pname}/${role_name}" ]
 then
-  #mkdir -p  "${pbase}/${pname}/${role_name}"
-  mkdir -p  "${pbase}/${pname}/"
-  echo "untar ${workdir}/files/${role_name}-${eggroll_version}.tar.gz to ${pbase}/${pname}/"
-  tar xzf   "${workdir}/files/${role_name}-${eggroll_version}.tar.gz" -C "${pbase}/${pname}/"
+  mkdir -p "${pbase}/${pname}"
+  echo "copy ${workdir}/files/${role_name} to ${pbase}/${pname}"
+  cp -af "${workdir}/files/${role_name}" "${pbase}/${pname}"
 fi
+
 mkdir -p  "${pbase}/${pname}/bin"
 
 if [ ${roles_num} -gt 1 ]; then

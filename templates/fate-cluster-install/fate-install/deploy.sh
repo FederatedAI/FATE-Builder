@@ -20,37 +20,32 @@ function_check_env() {
   fi
 }
 
-function_install_fate_flow() {
+function_install_fate_flow()
+{
+  local role_name="fate_flow"
 
-  role_name="fate_flow"
-  #untar
+  mkdir -p ${pbase}/${pname}/conf
+
   if [  ! -f "${pbase}/${pname}/fateflow/python/${role_name}/fate_flow_server.py" ]
   then
-    mkdir -p  "${pbase}/${pname}/"
-    echo "untar ${workdir}/files/fateflow-${fate_version}.tar.gz to ${pbase}/${pname}/"
-    tar xzf   "${workdir}/files/fateflow-${fate_version}.tar.gz" -C "${pbase}/${pname}/"
-  fi
-  if [  ! -d "${pbase}/${pname}/examples" ]
-  then
-    mkdir -p  "${pbase}/${pname}/"
-    echo "untar  ${workdir}/files/fate_examples-${fate_version}.tar.gz to ${pbase}/${pname}/"
-    tar xzf   "${workdir}/files/fate_examples-${fate_version}.tar.gz" -C "${pbase}/${pname}/"
-  fi
-  if [  ! -f "${pbase}/${pname}/${pname}/python/__init__.py" ]
-  then
-    mkdir -p  "${pbase}/${pname}/"
-    echo "untar  ${workdir}/files/fate-${fate_version}.tar.gz to ${pbase}/${pname}/"
-    tar xzf   "${workdir}/files/fate-${fate_version}.tar.gz" -C "${pbase}/${pname}/"
-  fi
-  if [ ! -d ${pbase}/${pname}/conf ]
-  then
-    mkdir -p ${pbase}/${pname}/conf
+    echo "copy ${workdir}/files/fateflow to ${pbase}/${pname}"
+    cp -af "${workdir}/files/fateflow" "${pbase}/${pname}"
   fi
 
-  cp ${workdir}/files/transfer_conf.yaml  ${pbase}/${pname}/conf
-  cp ${workdir}/files/fate.env  ${pbase}/${pname}
-  cp ${workdir}/files/RELEASE.md  ${pbase}/${pname}
-  #cp ${workdir}/files/service.sh ${pbase}/${pname}/python/fate_flow/service.sh
+  if [  ! -d "${pbase}/${pname}/fate_examples" ]
+  then
+    echo "copy ${workdir}/files/fate_examples to ${pbase}/${pname}"
+    cp -af "${workdir}/files/fate_examples" "${pbase}/${pname}"
+  fi
+
+  if [  ! -f "${pbase}/${pname}/fate/python/__init__.py" ]
+  then
+    echo "copy ${workdir}/files/fate to ${pbase}/${pname}"
+    cp -af "${workdir}/files/fate" "${pbase}/${pname}"
+  fi
+
+  cp -af "${pbase}/${pname}/fate/python/federatedml/transfer_conf.yaml" "${pbase}/${pname}/conf"
+  ln -rfs "${pbase}/${pname}/fate/fate.env" "${pbase}/${pname}/fate/RELEASE.md" "${pbase}/${pname}"
 
   #compute cpu core number
   cores_per_node=$( cat /proc/cpuinfo |grep -cw 'core id' )
@@ -72,37 +67,22 @@ function_install_fate_flow() {
     tpl=$( cat ${workdir}/templates/single_fate_test_config.yaml.jinja )
   fi
   printf "$variables\ncat << EOF\n$tpl\nEOF" | bash > ${pbase}/${pname}/fate/python/fate_test/fate_test/fate_test_config.yaml
-
-  #make server_conf.json
-  #variables="fatemanager_ip=${fatemanager_ip} fatemanager_port=${fatemanager_port} rollsite_ip=${rollsite_ip} rollsite_port=${rollsite_port} fateboard_ip=${fateboard_ip} fateboard_port=${fateboard_port} roll_ip=${roll_ip} roll_port=${roll_port} federation_ip=${federation_ip} federation_port=${federation_port} fate_flow_ip=${fate_flow_ip} fate_flow_httpPort=${fate_flow_httpPort}  fate_flow_grpcPort=${fate_flow_grpcPort}"
-  #tpl=$( cat ${workdir}/templates/server_conf-${fate_version}.json.jinja )
-  #printf "$variables\ncat << EOF\n$tpl\nEOF" | bash > ${pbase}/${pname}/python/arch/conf/server_conf.json
-
-  #make service.sh
-  #variables="pypath=$pypath pyenv=$pyenv pbase=$pbase pname=$pname"
-  #tpl=$( cat ${workdir}/templates/service.sh.jinja )
-  #printf "$variables\ncat << EOF\n$tpl\nEOF" | bash > ${pbase}/${pname}/python/fate_flow/service.sh
 }
 
-function_install_fateboard() {
-
-  #untar
+function_install_fateboard()
+{
   if [  ! -f "${pbase}/${pname}/fateboard/fateboard-${fateboard_version}.jar" ]
   then
-    mkdir -p  "${pbase}/${pname}/"
-    echo "untar ${workdir}/files/fateboard-${fateboard_version}.tar.gz to ${pbase}/${pname}/"
-    tar xzf   "${workdir}/files/fateboard-${fateboard_version}.tar.gz" -C "${pbase}/${pname}/"
+    mkdir -p  "${pbase}/${pname}"
+
+    echo "copy ${workdir}/files/fateboard to ${pbase}/${pname}"
+    cp -af "${workdir}/files/fateboard" "${pbase}/${pname}"
   fi
 
   #make application.properties
   variables="fate_flow_ip=${fate_flow_ip} fate_flow_port=${fate_flow_httpPort} fateboard_port=${fateboard_port}"
   tpl=$( cat ${workdir}/templates/fateboard-application.properties.jinja )
   printf "$variables\ncat << EOF\n$tpl\nEOF" | bash > ${pbase}/${pname}/fateboard/conf/application.properties
-
-  #make service.sh
-  #variables="javahome=$javahome pbase=$pbase pname=$pname"
-  #tpl=$( cat ${workdir}/templates/fateboard-service.sh.jinja )
-  #printf "$variables\ncat << EOF\n$tpl\nEOF" | bash > ${pbase}/${pname}/fateboard/service.sh
 }
 
 
