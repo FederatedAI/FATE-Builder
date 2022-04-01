@@ -61,6 +61,7 @@ start=$(gdate +%s%N)
 PS4='+ [$(bc <<< "scale=3; x=($(gdate +%s%N) - $start) / 1000 / 1000 / 1000; if (x < 1) \"0\"; x")s \
 $BASHPID ${BASH_SOURCE}:${LINENO}${FUNCNAME:+ $BASH_LINENO:${FUNCNAME}}] '
 
+FATE_DIR="$(greadlink -f "$FATE_DIR")"
 dir="$(gdirname "$(greadlink -f "${BASH_SOURCE[0]}")")"
 
 alias _git="git -C '$FATE_DIR'"
