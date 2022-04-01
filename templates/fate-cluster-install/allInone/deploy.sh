@@ -4,6 +4,8 @@ workdir=$(cd $(dirname $0); pwd)
 
 . ${workdir}/conf/setup.conf
 
+mkdir -p "${workdir}/logs"
+
 function_init() {
   local module="init"
   local roles_num=${#roles[*]}
