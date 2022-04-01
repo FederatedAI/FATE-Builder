@@ -47,7 +47,7 @@ printf "$variables\ncat << EOF\n$tpl\nEOF" | bash > ${pbase}/${pname}/${mysql_pa
 
 #cp /create-eggroll-meta-tables.sql
 cp ${workdir}/files/create-eggroll-meta-tables.sql  ${pbase}/${pname}/${mysql_path}/${role_name}-${mysql_version}/sql/
-cp ${workdir}/files/service.sh  ${pbase}/${pname}/${mysql_path}/${role_name}-${mysql_version}/
+cp ${workdir}/templates/service.sh  ${pbase}/${pname}/${mysql_path}/${role_name}-${mysql_version}/
 
 #make ${pbase}/${pname}/${mysql_path}/${role_name}-${mysql_version}/sql/insert-node.sql
 eval clustermanager_ip=\${${group}_clustermanager_ip}

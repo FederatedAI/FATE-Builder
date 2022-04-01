@@ -2,7 +2,7 @@
 
 ## Dependencies
 
-* [bash](https://formulae.brew.sh/formula/bash), [coreutils](https://formulae.brew.sh/formula/coreutils), [findutils](https://formulae.brew.sh/formula/findutils), [grep](https://formulae.brew.sh/formula/grep) (macOS only)
+* [bash](https://formulae.brew.sh/formula/bash), [coreutils](https://formulae.brew.sh/formula/coreutils), [findutils](https://formulae.brew.sh/formula/findutils), [grep](https://formulae.brew.sh/formula/grep), [gnu-tar](https://formulae.brew.sh/formula/gnu-tar) (macOS only)
 
 * Git & Git LFS
 
