@@ -252,25 +252,26 @@ function package_fate
     local target="$target/fate-install/files"
 
     gmkdir -p "$target"
-    gcp -af "$dir/build/fate" "$dir/build/fateflow" "$dir/build/fateboard" "$dir/build/examples" "$target"
+    gcp -af "$dir/build/fate" "$dir/build/fateflow" "$dir/build/fateboard" "$target"
 }
 
 function package_cluster_install
 {
     local source="$dir/templates/fate-cluster-install"
-    local target="$dir/packages/fate-cluster-install"
+    local target="$dir/packages/fate-cluster-install-$FATE_VER"
 
     local modules=( 'python' 'java' 'mysql' 'eggroll' 'fate' )
 
     rm -fr "$target"
-    gcp -af "$source" "$dir/packages"
+    gcp -af "$source" "$target"
 
     for module in "${modules[@]}"
     {
         target="$target" "package_$module"
     }
 
-    gtar -cpz -f "$dir/packages/fate_cluster_install_${FATE_VER}_${RELE_VER}-c7-u18.tar.gz" -C "$dir/packages" fate-cluster-install
+    gtar -cpz -f "$dir/packages/fate_cluster_install_${FATE_VER}_${RELE_VER}-c7-u18.tar.gz" \
+        -C "$dir/packages" "fate-cluster-install-$FATE_VER"
 }
 
 [ "$PULL_GIT" -gt 0 ] && git_pull
