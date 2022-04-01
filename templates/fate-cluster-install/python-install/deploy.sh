@@ -6,8 +6,6 @@ workdir=$(cd $(dirname $0); pwd)
 
 echo "Install python"
 
-now=$( date +%s ); mkdir -p ${tbase}/fate-python-$now;
-
 #install base python
 if [ ! -f ${pydir}/bin/python ]
 then
@@ -25,16 +23,15 @@ then
   pip install -U -f ${workdir}/files/pypkg --no-index pip setuptools wheel
 
   #install fate python dependency package
-  echo "pip install -r ${workdir}/files/requirements.txt -b ${tbase}/fate-python-$now -f ${workdir}/files/pypkg --no-index"
-  pip install -r ${workdir}/files/requirements.txt -b ${tbase}/fate-python-$now -f ${workdir}/files/pypkg --no-index
+  echo "pip install -U -r ${workdir}/files/requirements.txt -f ${workdir}/files/pypkg --no-index"
+  pip install -U -r ${workdir}/files/requirements.txt -f ${workdir}/files/pypkg --no-index
   pnum=$( pip list | wc -l )
   rnum=$( grep -cE '=|>|<' ${workdir}/files/requirements.txt  )
   echo "install: $pnum require: $rnum"
   if [ $pnum -lt $rnum ]
   then
-    pip install -r ${workdir}/files/requirements.txt -b ${tbase}/fate-python-$now -f ${workdir}/files/pypkg --no-index
+    pip install -U -r ${workdir}/files/requirements.txt -f ${workdir}/files/pypkg --no-index
   fi
 fi
 
-rm -rf ${tbase}/fate-python-$now
 echo "deploy python ok"

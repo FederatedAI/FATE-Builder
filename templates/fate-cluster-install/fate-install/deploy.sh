@@ -6,16 +6,16 @@ workdir=$(cd $(dirname $0); pwd)
 
 function_check_env() {
   #check java
-  if [ ! -f "${pbase}/${pname}/common/jdk/jdk-8u192/bin/java" ]
+  if [ ! -f "${javahome}/bin/java" ]
   then
-    echo "first install jave to ${pbase}/${pname}"
+    echo "first install java to ${pbase}/${pname}"
     exit 1;
   fi
 
   #check python
-  if [ ! -f "${pbase}/${pname}/common/python/venv/bin/python" ]
+  if [ ! -f "${pyenv}/bin/python" ]
   then
-    echo "first install python and new virtual env ${pbase}/${pname}/common/python/venv"
+    echo "first install python and new virtual env ${pyenv}"
     exit 1;
   fi
 }

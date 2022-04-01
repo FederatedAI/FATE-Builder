@@ -11,19 +11,17 @@ then
   exit 1
 fi
 
+if [ ! -f "${javahome}/bin/java" ]
+then
+  echo "first install java to ${pbase}/${pname}"
+  exit 1;
+fi
 
 if [ ! -f "${pyenv}/bin/python" ]
 then
-  echo "first install python and new virtual env ${pbase}/${pname}/common/python/venv"
+  echo "first install python and new virtual env ${pyenv}"
   exit 1;
 fi
-
-if [ ! -f "${javahome}/bin/java" ]
-then
-  echo "first install jave to ${pbase}/${pname}"
-  exit 1;
-fi
-
 
 eval id=\${${group}_id}
 eval rollsite_ip=\${${group}_rollsite_ip}
