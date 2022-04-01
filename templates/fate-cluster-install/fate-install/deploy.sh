@@ -32,10 +32,10 @@ function_install_fate_flow()
     cp -af "${workdir}/files/fateflow" "${pbase}/${pname}"
   fi
 
-  if [  ! -d "${pbase}/${pname}/fate_examples" ]
+  if [  ! -d "${pbase}/${pname}/examples" ]
   then
-    echo "copy ${workdir}/files/fate_examples to ${pbase}/${pname}"
-    cp -af "${workdir}/files/fate_examples" "${pbase}/${pname}"
+    echo "copy ${workdir}/files/examples to ${pbase}/${pname}"
+    cp -af "${workdir}/files/examples" "${pbase}/${pname}"
   fi
 
   if [  ! -f "${pbase}/${pname}/fate/python/__init__.py" ]

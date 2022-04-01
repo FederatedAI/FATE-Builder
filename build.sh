@@ -180,13 +180,10 @@ function build_python_packages
 
 function build_fate
 {
-    gmkdir -p "$dir/build/fate" "$dir/build/fateflow" "$dir/build/examples"
+    gmkdir -p "$dir/build/fate" "$dir/build/fateflow"
 
-    gcp -af "$FATE_DIR/RELEASE.md" "$FATE_DIR/fate.env" "$FATE_DIR/python" "$dir/build/fate"
-    gcp -af "$FATE_DIR/examples" "$dir/build/examples/fate"
-
+    gcp -af "$FATE_DIR/RELEASE.md" "$FATE_DIR/fate.env" "$FATE_DIR/python" "$FATE_DIR/examples" "$dir/build/fate"
     gcp -af "$FATE_DIR/fateflow/"{bin,conf,python} "$dir/build/fateflow"
-    gcp -af "$FATE_DIR/fateflow/examples" "$dir/build/examples/fateflow"
 }
 
 function build_cleanup
