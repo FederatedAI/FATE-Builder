@@ -32,12 +32,6 @@ function_install_fate_flow()
     cp -af "${workdir}/files/fateflow" "${pbase}/${pname}"
   fi
 
-  if [  ! -d "${pbase}/${pname}/examples" ]
-  then
-    echo "copy ${workdir}/files/examples to ${pbase}/${pname}"
-    cp -af "${workdir}/files/examples" "${pbase}/${pname}"
-  fi
-
   if [  ! -f "${pbase}/${pname}/fate/python/__init__.py" ]
   then
     echo "copy ${workdir}/files/fate to ${pbase}/${pname}"
@@ -45,7 +39,7 @@ function_install_fate_flow()
   fi
 
   cp -af "${pbase}/${pname}/fate/python/federatedml/transfer_conf.yaml" "${pbase}/${pname}/conf"
-  ln -rfs "${pbase}/${pname}/fate/fate.env" "${pbase}/${pname}/fate/RELEASE.md" "${pbase}/${pname}"
+  ln -rfs "${pbase}/${pname}/fate/fate.env" "${pbase}/${pname}/fate/RELEASE.md" "${pbase}/${pname}/fate/examples" "${pbase}/${pname}"
 
   #compute cpu core number
   cores_per_node=$( cat /proc/cpuinfo |grep -cw 'core id' )
