@@ -274,6 +274,8 @@ function package_cluster_install
         target="$target" "package_$module"
     }
 
+    gmkdir -p "$target/allInone/logs"
+
     gtar -cpz -f "$dir/packages/fate_cluster_install_${FATE_VER}_${RELE_VER}-c7-u18.tar.gz" \
         -C "$dir/packages" "fate-cluster-install-$FATE_VER"
 }
