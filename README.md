@@ -47,7 +47,6 @@
 | `PULL_OPT` | the options for `git pull` <br/> use `PULL_OPT=' ' ./build.sh` to remove all options | `--rebase --stat --autostash` |
 | `CHEC_BRA` | check that the branch names of FATE, Flow, Board and Eggroll match the version numbers in `fate.env` | `1` |
 | `SKIP_BUI` | skip the build steps and keep `build` directory unchanged <br/> turn on this flag will ignore `REMO_DIR`, `BUIL_PYP`, `COPY_ONL`, `BUIL_EGG`, `BUIL_BOA` and `BUIL_FAT` | `0` |
-| `REMO_DIR` | remove the directory `build` before building | `1` |
 | `BUIL_PYP` | build and package Python packages (requires `docker`) | `1` |
 | `COPY_ONL` | skip running `mvn clean package` & `npm run build` | `0` |
 | `BUIL_EGG` | build and package Eggroll (requires `mvn`) | `1` |

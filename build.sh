@@ -8,7 +8,6 @@ shopt -s expand_aliases
 : "${PULL_OPT:=--rebase --stat --autostash}"
 : "${CHEC_BRA:=1}"
 : "${SKIP_BUI:=0}"
-: "${REMO_DIR:=1}"
 : "${COPY_ONL:=0}"
 : "${BUIL_PYP:=1}"
 : "${BUIL_EGG:=1}"
@@ -107,6 +106,7 @@ function build_eggroll
 
     [ "$COPY_ONL" -gt 0 ] || mvn -DskipTests -f "$source/jvm/pom.xml" -q clean package
 
+    rm -rf "$target"
     gmkdir -p "$target/lib"
 
     for module in 'core' 'roll_pair' 'roll_site'
@@ -136,7 +136,9 @@ function build_fateboard
         mvn -DskipTests -f "$source/pom.xml" -q clean package
     }
 
+    rm -rf "$target"
     gmkdir -p "$target/conf"
+
     gcp -af "$source/src/main/resources/application.properties" "$target/conf"
     gcp -af "$source/target/fateboard-${versions[fateboard]}.jar" \
             "$source/bin/service.sh" \
@@ -150,6 +152,7 @@ function build_python_packages
     local source="$FATE_DIR/python/requirements.txt"
     local target="$dir/build/pypkg"
 
+    rm -rf "$target"
     gmkdir -p "$target"
 
     docker run --rm \
@@ -180,6 +183,7 @@ function build_python_packages
 
 function build_fate
 {
+    rm -rf "$dir/build/fate" "$dir/build/fateflow"
     gmkdir -p "$dir/build/fate" "$dir/build/fateflow"
 
     gcp -af "$FATE_DIR/RELEASE.md" "$FATE_DIR/fate.env" "$FATE_DIR/python" "$FATE_DIR/examples" "$dir/build/fate"
@@ -283,8 +287,6 @@ get_versions
 
 [ "$SKIP_BUI" -gt 0 ] ||
 {
-    [ "$REMO_DIR" -gt 0 ] && rm -fr "$dir/build"
-
     [ "$BUIL_PYP" -gt 0 ] && build_python_packages
     [ "$BUIL_EGG" -gt 0 ] && build_eggroll
     [ "$BUIL_BOA" -gt 0 ] && build_fateboard
