@@ -157,18 +157,14 @@ function build_python_packages
 
     docker run --rm \
         -v "$(greadlink -f ~/.config/pip):/root/.config/pip:ro" \
-        -v "$(greadlink -f ~/.cache/pip):/root/.cache/pip:rw" \
         -v "$source:/requirements.txt:ro" \
         -v "$target:/wheelhouse:rw" \
         quay.io/pypa/manylinux2014_x86_64:latest \
         /bin/bash -c \
         'yum install -q -y gmp-devel mpfr-devel libmpc-devel && \
-        /opt/python/cp36-cp36m/bin/pip wheel -q -r /requirements.txt -w /wheelhouse'
+        /opt/python/cp36-cp36m/bin/pip wheel -q -r /requirements.txt -w /wheelhouse || \
+        exit 1
 
-    docker run --rm \
-        -v "$target:/wheelhouse:rw" \
-        quay.io/pypa/manylinux2014_x86_64:latest \
-        /bin/bash -c '
         for whl in /wheelhouse/*.whl
         {
             auditwheel show "$whl" &>/dev/null &&
