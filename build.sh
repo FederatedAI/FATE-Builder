@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -euxo pipefail
-shopt -s expand_aliases
+shopt -s expand_aliases extglob
 
 : "${FATE_DIR:=/data/projects/fate}"
 : "${PULL_GIT:=1}"
@@ -180,9 +180,11 @@ function build_python_packages
 function build_fate
 {
     rm -rf "$dir/build/fate" "$dir/build/fateflow"
-    gmkdir -p "$dir/build/fate" "$dir/build/fateflow"
+    gmkdir -p "$dir/build/fate/conf" "$dir/build/fateflow"
 
-    gcp -af "$FATE_DIR/RELEASE.md" "$FATE_DIR/fate.env" "$FATE_DIR/python" "$FATE_DIR/examples" "$dir/build/fate"
+    gcp -af "$FATE_DIR/RELEASE.md" "$FATE_DIR/fate.env" "$FATE_DIR/bin" "$FATE_DIR/python" "$FATE_DIR/examples" \
+        "$FATE_DIR/build/standalone-install-build/init.sh" "$dir/build/fate"
+    gcp -af "$FATE_DIR/conf/"!(local.*).yaml "$dir/build/fate/conf"
     gcp -af "$FATE_DIR/fateflow/"{bin,conf,python} "$dir/build/fateflow"
 }
 
@@ -255,6 +257,27 @@ function package_fate
     gcp -af "$dir/build/fate" "$dir/build/fateflow" "$dir/build/fateboard" "$target"
 }
 
+function package_standalone_install
+{
+    local target="$dir/packages/standalone_fate_install_$FATE_VER"
+
+    rm -fr "$target"
+    gmkdir -p "$target/fate"
+
+    gcp -af "$dir/build/fate/"!(python*) "$dir/build/"{fateboard,fateflow} "$target"
+    gcp -af  "$dir/build/fate/python" "$target/fate"
+    gln -frs "$target/fate/python/requirements.txt" "$target/requirements.txt"
+
+    gmkdir -p "$target/env/"{jdk,python36}
+    gcp -af "${resources[jdk]}" "$target/env/jdk"
+    gcp -af "${resources[conda]}" "$target/env/python36"
+
+    gcp -af "$dir/build/pypkg" "$target/env/pypi"
+
+    gtar -cpz -f "$dir/packages/standalone_fate_install_${FATE_VER}_${RELE_VER}.tar.gz" \
+        -C "$dir/packages" "standalone_fate_install_$FATE_VER"
+}
+
 function package_cluster_install
 {
     local source="$dir/templates/fate-cluster-install"
@@ -297,8 +320,7 @@ get_versions
 {
     get_resources
 
-    gmkdir -p "$dir/packages"
-
+    [ "$PACK_STA" -gt 0 ] && package_standalone_install
     [ "$PACK_CLU" -gt 0 ] && package_cluster_install
 }
 
