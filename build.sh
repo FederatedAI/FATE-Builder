@@ -4,10 +4,11 @@ set -euxo pipefail
 shopt -s expand_aliases extglob
 
 : "${FATE_DIR:=/data/projects/fate}"
-: "${PULL_GIT:=1}"
+: "${CLON_GIT:=0}"
+: "${PULL_GIT:=0}"
 : "${PULL_OPT:=--rebase --stat --autostash}"
 : "${CHEC_BRA:=1}"
-: "${SKIP_BUI:=0}"
+: "${SKIP_BUI:=1}"
 : "${COPY_ONL:=0}"
 : "${BUIL_PYP:=1}"
 : "${BUIL_EGG:=1}"
@@ -17,16 +18,19 @@ shopt -s expand_aliases extglob
 : "${PATH_CON:=cos://fate/Miniconda3-4.5.4-Linux-x86_64.sh}"
 : "${PATH_JDK:=cos://fate/jdk-8u192-linux-x64.tar.gz}"
 : "${PATH_MYS:=cos://fate/mysql-8.0.28.tar.gz}"
+: "${SYNC_RES:=0}"
 : "${RELE_VER:=release}"
-: "${PACK_ARC:=1}"
-: "${PACK_STA:=1}"
-: "${PACK_DOC:=1}"
-: "${PACK_CLU:=1}"
-: "${PACK_OFF:=1}"
-: "${PACK_ONL:=1}"
+: "${PACK_ARC:=0}"
+: "${PACK_PYP:=0}"
+: "${PACK_STA:=0}"
+: "${PACK_DOC:=0}"
+: "${PACK_CLU:=0}"
+: "${PACK_OFF:=0}"
+: "${PACK_ONL:=0}"
 : "${PUSH_ARC:=0}"
 
-commands=( 'date' 'dirname' 'readlink' 'mkdir' 'grep' 'printf' 'cp' 'ln' 'xargs' 'find' 'tar' )
+commands=( 'date' 'dirname' 'readlink' 'mkdir' 'grep' 'printf' 'cp' 'ln'
+           'xargs' 'chmod' 'rm' 'awk' 'find' 'tar' 'md5sum' )
 tools=( 'git' 'mvn' 'npm' 'docker' )
 modules=( 'fate' 'fateflow' 'fateboard' 'eggroll' )
 
@@ -45,7 +49,8 @@ then
 else
     for command in "${commands[@]}"
     {
-        alias "g$command=$command"
+        eval "function g$command { $command \"\$@\"; }"
+        declare -fx "g$command"
     }
 fi
 
@@ -106,7 +111,7 @@ function build_eggroll
 
     [ "$COPY_ONL" -gt 0 ] || mvn -DskipTests -f "$source/jvm/pom.xml" -q clean package
 
-    rm -rf "$target"
+    grm -rf "$target"
     gmkdir -p "$target/lib"
 
     for module in 'core' 'roll_pair' 'roll_site'
@@ -136,7 +141,7 @@ function build_fateboard
         mvn -DskipTests -f "$source/pom.xml" -q clean package
     }
 
-    rm -rf "$target"
+    grm -rf "$target"
     gmkdir -p "$target/conf"
 
     gcp -af "$source/src/main/resources/application.properties" "$target/conf"
@@ -152,10 +157,10 @@ function build_python_packages
     local source="$FATE_DIR/python/requirements.txt"
     local target="$dir/build/pypkg"
 
-    rm -rf "$target"
+    grm -rf "$target"
     gmkdir -p "$target"
 
-    docker run --rm \
+    docker run --pull --rm \
         -v "$(greadlink -f ~/.config/pip):/root/.config/pip:ro" \
         -v "$source:/requirements.txt:ro" \
         -v "$target:/wheelhouse:rw" \
@@ -179,24 +184,24 @@ function build_python_packages
 
 function build_fate
 {
-    rm -rf "$dir/build/fate" "$dir/build/fateflow"
+    grm -rf "$dir/build/fate" "$dir/build/fateflow"
     gmkdir -p "$dir/build/fate/conf" "$dir/build/fateflow"
 
-    gcp -af "$FATE_DIR/RELEASE.md" "$FATE_DIR/fate.env" "$FATE_DIR/bin" "$FATE_DIR/python" "$FATE_DIR/examples" \
+    gcp -af "$FATE_DIR/"{RELEASE.md,fate.env,bin,build,deploy,examples,python,c/proxy} \
         "$FATE_DIR/build/standalone-install-build/init.sh" "$dir/build/fate"
     gcp -af "$FATE_DIR/conf/"!(local.*).yaml "$dir/build/fate/conf"
-    gcp -af "$FATE_DIR/fateflow/"{bin,conf,python} "$dir/build/fateflow"
+    gcp -af "$FATE_DIR/fateflow/"{bin,conf,examples,python} "$dir/build/fateflow"
 }
 
 function build_cleanup
 {
-    gfind "$dir/build" -type d -exec chmod 755 {} \;
-    gfind "$dir/build" -type f -exec chmod 644 {} \;
+    gfind "$dir/build" -type d -print0 | parallel -0Xj1 gchmod 755
+    gfind "$dir/build" -type f -print0 | parallel -0Xj1 gchmod 644
 
-    gfind "$dir/build" -iname '*.sh' -exec chmod a+x {} \;
+    gfind "$dir/build" -iname '*.sh' -print0 | parallel -0Xj1 gchmod a+x
 
-    gfind "$dir/build" -iname '__pycache__' -prune -exec rm -fr {} \;
-    gfind "$dir/build" -iname '*.pyc' -exec rm -f {} \;
+    gfind "$dir/build" -iname '__pycache__' -prune -print0 | parallel -0Xj1 grm -fr
+    gfind "$dir/build" -iname '*.pyc' -print0 | parallel -0Xj1 grm -f
 }
 
 function get_resources
@@ -211,7 +216,7 @@ function get_resources
 
     for key in "${!resources[@]}"
     {
-        coscli sync "${resources[$key]}" "$dir/resources"
+        [ "$SYNC_RES" -gt 0 ] && coscli sync "${resources[$key]}" "$dir/resources"
 
         resources[$key]="$dir/resources/${resources[$key]##*/}"
     }
@@ -257,11 +262,47 @@ function package_fate
     gcp -af "$dir/build/fate" "$dir/build/fateflow" "$dir/build/fateboard" "$target"
 }
 
+function package_fate_install
+{
+    local source="$dir/build/fate"
+    local target="$dir/packages/FATE_install_$FATE_VER"
+
+    local modules=( 'eggroll' 'fateboard' 'fateflow' )
+
+    grm -fr "$target"
+    gmkdir -p "$target"
+
+    for module in "${modules[@]}"
+    {
+        gtar -cpz -f "$target/$module.tar.gz" -C "$dir/build" "$module"
+    }
+
+    gfind "$source" -mindepth 1 -maxdepth 1 -type d -not -iname 'python' -print0 | \
+        parallel -0 gtar -cpz -f "$target/{/}.tar.gz" -C "$source" '{/}'
+    gtar -cpz -f "$target/fate.tar.gz" -C "$source" --transform 's#^python#fate/python#' 'python'
+
+    gmd5sum "$target/"*.tar.gz | gawk '{ sub(/.*\//, ""); sub(/\.tar\.gz$/, ""); print $2 ":" $1 }' \
+        >"$target/packages_md5.txt"
+
+    gfind "$source" -mindepth 1 -maxdepth 1 -type f -not -iname 'init.sh' -print0 | \
+        parallel -0Xj1 gcp -af '{}' "$target"
+    gcp -af "$source/python/requirements.txt" "$target"
+
+    gtar -cpz -f "${target}_${RELE_VER}.tar.gz" -C "$dir/packages" "${target##*/}"
+}
+
+function package_python_packages
+{
+    local name="pip-packages-fate-$FATE_VER"
+
+    gtar -cpz -f "$dir/packages/$name.tar.gz" -C "$dir/build" --transform "s/^pypkg/$name/" 'pypkg'
+}
+
 function package_standalone_install
 {
     local target="$dir/packages/standalone_fate_install_$FATE_VER"
 
-    rm -fr "$target"
+    grm -fr "$target"
     gmkdir -p "$target/fate"
 
     gcp -af "$dir/build/fate/"!(python*) "$dir/build/"{fateboard,fateflow} "$target"
@@ -274,8 +315,7 @@ function package_standalone_install
 
     gcp -af "$dir/build/pypkg" "$target/env/pypi"
 
-    gtar -cpz -f "$dir/packages/standalone_fate_install_${FATE_VER}_${RELE_VER}.tar.gz" \
-        -C "$dir/packages" "standalone_fate_install_$FATE_VER"
+    gtar -cpz -f "${target}_${RELE_VER}.tar.gz" -C "$dir/packages" "${target##*/}"
 }
 
 function package_cluster_install
@@ -285,7 +325,7 @@ function package_cluster_install
 
     local modules=( 'python' 'java' 'mysql' 'eggroll' 'fate' )
 
-    rm -fr "$target"
+    grm -fr "$target"
     gcp -af "$source" "$target"
 
     for module in "${modules[@]}"
@@ -295,8 +335,7 @@ function package_cluster_install
 
     gmkdir -p "$target/allInone/logs"
 
-    gtar -cpz -f "$dir/packages/fate_cluster_install_${FATE_VER}_${RELE_VER}-c7-u18.tar.gz" \
-        -C "$dir/packages" "fate-cluster-install-$FATE_VER"
+    gtar -cpz -f "${target}-${RELE_VER}.tar.gz" -C "$dir/packages" "${target##*/}"
 }
 
 [ "$PULL_GIT" -gt 0 ] && git_pull
@@ -320,13 +359,10 @@ get_versions
 {
     get_resources
 
+    [ "$PACK_ARC" -gt 0 ] && package_fate_install
+    [ "$PACK_PYP" -gt 0 ] && package_python_packages
     [ "$PACK_STA" -gt 0 ] && package_standalone_install
     [ "$PACK_CLU" -gt 0 ] && package_cluster_install
-}
-
-[ "$PUSH_ARC" -gt 0 ] &&
-{
-    echo 'TODO'
 }
 
 echo 'Done'
