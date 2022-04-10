@@ -2,7 +2,9 @@
 
 ## Dependencies
 
-* [bash](https://formulae.brew.sh/formula/bash), [coreutils](https://formulae.brew.sh/formula/coreutils), [findutils](https://formulae.brew.sh/formula/findutils), [grep](https://formulae.brew.sh/formula/grep), [gnu-tar](https://formulae.brew.sh/formula/gnu-tar) (macOS only)
+* [bash](https://formulae.brew.sh/formula/bash), [coreutils](https://formulae.brew.sh/formula/coreutils), [findutils](https://formulae.brew.sh/formula/findutils), [grep](https://formulae.brew.sh/formula/grep), [gawk](https://formulae.brew.sh/formula/gawk), [gnu-tar](https://formulae.brew.sh/formula/gnu-tar) (macOS only)
+
+* [GNU parallel](https://www.gnu.org/software/parallel/)
 
 * Git & Git LFS
 
@@ -59,6 +61,7 @@
 | `FATE_VER` | the version number of FATE (used on the archive filename) | automatically get it from `$FATE_DIR/fate.env` |
 | `RELE_VER` | the release version (used on the archive filename) | `release` |
 | `PACK_ARC` | package the archive `FATE_install_${FATE_VER}_${RELE_VER}.tar.gz` | `1` |
+| `PACK_PYP` | package the archive `pip-packages-fate-${FATE_VER}.tar.gz` | `1` |
 | `PACK_STA` | package the archive `standalone_fate_install_${FATE_VER}_${RELE_VER}.tar.gz` | `1` |
 | `PACK_DOC` | package the archive `standalone_fate_docker_image_${FATE_VER}_${RELE_VER}.tar` | `1` |
 | `PACK_CLU` | package the archive `fate_cluster_install_${FATE_VER}_${RELE_VER}-c7-u18.tar.gz` | `1` |
