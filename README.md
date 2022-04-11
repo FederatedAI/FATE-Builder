@@ -97,5 +97,5 @@ FATE_DIR=/path/to/fate PUSH_ARC=1 /usr/bin/env bash ./build.sh
 ## Docker (**UNTESTED**)
 
 ```bash
-docker buildx build --compress --no-cache --progress=plain --pull --push --rm --squash --tag ccr.ccs.tencentyun.com/fate.ai/fate-builder:latest .
+docker buildx build --compress --no-cache --progress=plain --pull --push --rm --tag ccr.ccs.tencentyun.com/fate.ai/fate-builder:latest .
 ```

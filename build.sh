@@ -10,10 +10,10 @@ shopt -s expand_aliases extglob
 : "${CHEC_BRA:=1}"
 : "${SKIP_BUI:=1}"
 : "${COPY_ONL:=0}"
-: "${BUIL_PYP:=1}"
-: "${BUIL_EGG:=1}"
-: "${BUIL_BOA:=1}"
-: "${BUIL_FAT:=1}"
+: "${BUIL_PYP:=0}"
+: "${BUIL_EGG:=0}"
+: "${BUIL_BOA:=0}"
+: "${BUIL_FAT:=0}"
 : "${SKIP_PKG:=0}"
 : "${PATH_CON:=cos://fate/Miniconda3-4.5.4-Linux-x86_64.sh}"
 : "${PATH_JDK:=cos://fate/jdk-8u192-linux-x64.tar.gz}"
@@ -23,14 +23,14 @@ shopt -s expand_aliases extglob
 : "${PACK_ARC:=0}"
 : "${PACK_PYP:=0}"
 : "${PACK_STA:=0}"
-: "${PACK_DOC:=0}"
+: "${PACK_DOC:=1}"
 : "${PACK_CLU:=0}"
 : "${PACK_OFF:=0}"
 : "${PACK_ONL:=0}"
 : "${PUSH_ARC:=0}"
 
-commands=( 'date' 'dirname' 'readlink' 'mkdir' 'grep' 'printf' 'cp' 'ln'
-           'xargs' 'chmod' 'rm' 'awk' 'find' 'tar' 'md5sum' )
+commands=( 'date' 'dirname' 'readlink' 'mkdir' 'printf' 'cp' 'ln'
+           'grep' 'xargs' 'chmod' 'rm' 'awk' 'find' 'tar' 'md5sum' )
 tools=( 'git' 'mvn' 'npm' 'docker' )
 modules=( 'fate' 'fateflow' 'fateboard' 'eggroll' )
 
@@ -185,10 +185,11 @@ function build_python_packages
 function build_fate
 {
     grm -rf "$dir/build/fate" "$dir/build/fateflow"
-    gmkdir -p "$dir/build/fate/conf" "$dir/build/fateflow"
+    gmkdir -p "$dir/build/fate/conf" "$dir/build/fate/proxy" "$dir/build/fateflow"
 
-    gcp -af "$FATE_DIR/"{RELEASE.md,fate.env,bin,build,deploy,examples,python,c/proxy} \
+    gcp -af "$FATE_DIR/"{RELEASE.md,fate.env,bin,build,deploy,examples,python} \
         "$FATE_DIR/build/standalone-install-build/init.sh" "$dir/build/fate"
+    gcp -af "$FATE_DIR/c/proxy" "$dir/build/fate/proxy/nginx"
     gcp -af "$FATE_DIR/conf/"!(local.*).yaml "$dir/build/fate/conf"
     gcp -af "$FATE_DIR/fateflow/"{bin,conf,examples,python} "$dir/build/fateflow"
 }
@@ -298,14 +299,12 @@ function package_python_packages
     gtar -cpz -f "$dir/packages/$name.tar.gz" -C "$dir/build" --transform "s/^pypkg/$name/" 'pypkg'
 }
 
-function package_standalone_install
+function package_standalone
 {
-    local target="$dir/packages/standalone_fate_install_$FATE_VER"
-
     grm -fr "$target"
     gmkdir -p "$target/fate"
 
-    gcp -af "$dir/build/fate/"!(python*) "$dir/build/"{fateboard,fateflow} "$target"
+    gcp -af "$dir/build/fate/"!(python*|proxy*) "$dir/build/"{fateboard,fateflow} "$target"
     gcp -af  "$dir/build/fate/python" "$target/fate"
     gln -frs "$target/fate/python/requirements.txt" "$target/requirements.txt"
 
@@ -314,8 +313,35 @@ function package_standalone_install
     gcp -af "${resources[conda]}" "$target/env/python36"
 
     gcp -af "$dir/build/pypkg" "$target/env/pypi"
+}
+
+function package_standalone_install
+{
+    local target="$dir/packages/standalone_fate_install_$FATE_VER"
+    target="$target" package_standalone
 
     gtar -cpz -f "${target}_${RELE_VER}.tar.gz" -C "$dir/packages" "${target##*/}"
+}
+
+function package_standalone_docker
+{
+    local target="$dir/packages/standalone_fate_docker_image_$FATE_VER"
+
+    local image_hub='federatedai/standalone_fate'
+    local image_tcr='ccr.ccs.tencentyun.com/fate.ai/standalone_fate'
+
+    local image_tag="$FATE_VER"
+    [ "$RELE_VER" == 'release' ] || image_tag+="-$RELE_VER"
+
+    target="$target" package_standalone
+
+    docker buildx build --compress --no-cache --progress=plain --pull --rm \
+        --file "$dir/Dockerfile.Centos" --tag "$image_hub:$image_tag" "$target"
+
+    docker save "$image_hub:$image_tag" | gzip > "${target##*/}_$RELE_VER.tar.gz"
+
+    docker tag "$image_hub:$image_tag" "$image_tcr:$image_tag"
+    docker push "$image_tcr:$image_tag"
 }
 
 function package_cluster_install
@@ -362,6 +388,7 @@ get_versions
     [ "$PACK_ARC" -gt 0 ] && package_fate_install
     [ "$PACK_PYP" -gt 0 ] && package_python_packages
     [ "$PACK_STA" -gt 0 ] && package_standalone_install
+    [ "$PACK_DOC" -gt 0 ] && package_standalone_docker
     [ "$PACK_CLU" -gt 0 ] && package_cluster_install
 }
 
