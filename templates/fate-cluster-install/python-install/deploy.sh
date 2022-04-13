@@ -10,7 +10,7 @@ echo "Install python"
 if [ ! -f ${pydir}/bin/python ]
 then
   mkdir -p ${pydir%/*}
-  bash ${workdir}/files/Miniconda3-*-Linux-x86_64.sh -b -p ${pydir}
+  bash ${workdir}/files/Miniconda3-*-Linux-x86_64.sh -b -f -p ${pydir}
 fi
 
 if [ ! -f ${pyenv}/bin/python ]
@@ -18,7 +18,7 @@ then
   ${pydir}/bin/pip install -U -f ${workdir}/files/pypkg --no-index virtualenv
 
   #install python env
-  ${pydir}/bin/virtualenv -p ${pydir}/bin/python3.6 --no-download ${pyenv}
+  ${pydir}/bin/virtualenv -p ${pydir}/bin/python3 --no-wheel --no-setuptools --no-download ${pyenv}
   source ${pyenv}/bin/activate
   pip install -U -f ${workdir}/files/pypkg --no-index pip setuptools wheel
 

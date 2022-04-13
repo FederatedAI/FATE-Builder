@@ -93,19 +93,17 @@ else
     cp -f build.tar.gz ${workdir}/../tools-install/files/
     cp -f deploy.tar.gz ${workdir}/../tools-install/files/
 
-    mv examples.tar.gz fate_examples-${version}.tar.gz
     mv fate.tar.gz fate-${version}.tar.gz
     mv fateflow.tar.gz fateflow-${version}.tar.gz
     mv fateboard.tar.gz fateboard-${version}.tar.gz
     mv eggroll.tar.gz eggroll-${version}.tar.gz
-    mv ./temp/examples.tar.gz ./temp/fate_examples-${version}.tar.gz
     mv ./temp/fate.tar.gz ./temp/fate-${version}.tar.gz
     mv ./temp/fateflow.tar.gz ./temp/fateflow-${version}.tar.gz
     mv ./temp/fateboard.tar.gz ./temp/fateboard-${version}.tar.gz
     mv ./temp/eggroll.tar.gz ./temp/eggroll-${version}.tar.gz
   fi
 
-  for pkname in "eggroll-${version}.tar.gz" "fate_examples-${version}.tar.gz" "fateboard-${version}.tar.gz" "fate-${version}.tar.gz" "fateflow-${version}.tar.gz" "RELEASE.md" "requirements.txt" "fate.env" "conf.tar.gz" "bin.tar.gz"
+  for pkname in "eggroll-${version}.tar.gz" "fateboard-${version}.tar.gz" "fate-${version}.tar.gz" "fateflow-${version}.tar.gz" "RELEASE.md" "requirements.txt" "fate.env" "conf.tar.gz" "bin.tar.gz"
   do
     md5_new=`md5sum $pkname | awk '{print $1}'`
     md5_old=`md5sum ${workdir}/../build/temp/${pkname} | awk '{print $1}'`

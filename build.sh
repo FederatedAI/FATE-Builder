@@ -8,7 +8,7 @@ shopt -s expand_aliases extglob
 : "${PULL_GIT:=0}"
 : "${PULL_OPT:=--rebase --stat --autostash}"
 : "${CHEC_BRA:=1}"
-: "${SKIP_BUI:=1}"
+: "${SKIP_BUI:=0}"
 : "${COPY_ONL:=0}"
 : "${BUIL_PYP:=0}"
 : "${BUIL_EGG:=0}"
@@ -16,14 +16,15 @@ shopt -s expand_aliases extglob
 : "${BUIL_FAT:=0}"
 : "${SKIP_PKG:=0}"
 : "${PATH_CON:=cos://fate/Miniconda3-4.5.4-Linux-x86_64.sh}"
-: "${PATH_JDK:=cos://fate/jdk-8u192-linux-x64.tar.gz}"
+: "${PATH_JDK:=cos://fate/jdk-8u192.tar.gz}"
 : "${PATH_MYS:=cos://fate/mysql-8.0.28.tar.gz}"
-: "${SYNC_RES:=0}"
+: "${PATH_RMQ:=cos://fate/rabbitmq-server-generic-unix-3.9.14.tar.xz}"
+: "${SYNC_RES:=1}"
 : "${RELE_VER:=release}"
 : "${PACK_ARC:=0}"
 : "${PACK_PYP:=0}"
 : "${PACK_STA:=0}"
-: "${PACK_DOC:=1}"
+: "${PACK_DOC:=0}"
 : "${PACK_CLU:=0}"
 : "${PACK_OFF:=0}"
 : "${PACK_ONL:=0}"
@@ -121,7 +122,7 @@ function build_eggroll
                 "$target/lib"
     }
 
-    gcp -af "$source/"{bin,conf,data,deploy,python} "$target"
+    gcp -af "$source/"{BUILD_INFO,bin,conf,data,deploy,python} "$target"
     gcp -af "$source/jvm/core/main/resources/"*.sql "$target/conf"
 }
 
@@ -191,7 +192,7 @@ function build_fate
         "$FATE_DIR/build/standalone-install-build/init.sh" "$dir/build/fate"
     gcp -af "$FATE_DIR/c/proxy" "$dir/build/fate/proxy/nginx"
     gcp -af "$FATE_DIR/conf/"!(local.*).yaml "$dir/build/fate/conf"
-    gcp -af "$FATE_DIR/fateflow/"{bin,conf,examples,python} "$dir/build/fateflow"
+    gcp -af "$FATE_DIR/fateflow/"{RELEASE.md,bin,conf,examples,python} "$dir/build/fateflow"
 }
 
 function build_cleanup
@@ -211,6 +212,7 @@ function get_resources
         [conda]="$PATH_CON"
         [jdk]="$PATH_JDK"
         [mysql]="$PATH_MYS"
+        [rabbitmq]="$PATH_RMQ"
     )
 
     gmkdir -p "$dir/resources"
@@ -221,46 +223,6 @@ function get_resources
 
         resources[$key]="$dir/resources/${resources[$key]##*/}"
     }
-}
-
-function package_python
-{
-    local target="$target/python-install/files"
-
-    gmkdir -p "$target"
-    gcp -af "${resources[conda]}" "$dir/build/fate/python/requirements.txt" "$dir/build/pypkg" "$target"
-}
-
-function package_java
-{
-    local target="$target/java-install/files"
-
-    gmkdir -p "$target"
-    gcp -af "${resources[jdk]}" "$target"
-}
-
-function package_mysql
-{
-    local target="$target/mysql-install/files"
-
-    gmkdir -p "$target"
-    gcp -af "${resources[mysql]}" "$dir/build/eggroll/conf/create-eggroll-meta-tables.sql" "$target"
-}
-
-function package_eggroll
-{
-    local target="$target/eggroll-install/files"
-
-    gmkdir -p "$target"
-    gcp -af "$dir/build/eggroll" "$target"
-}
-
-function package_fate
-{
-    local target="$target/fate-install/files"
-
-    gmkdir -p "$target"
-    gcp -af "$dir/build/fate" "$dir/build/fateflow" "$dir/build/fateboard" "$target"
 }
 
 function package_fate_install
@@ -289,7 +251,7 @@ function package_fate_install
         parallel -0Xj1 gcp -af '{}' "$target"
     gcp -af "$source/python/requirements.txt" "$target"
 
-    gtar -cpz -f "${target}_${RELE_VER}.tar.gz" -C "$dir/packages" "${target##*/}"
+    gtar -cpz -f "${target}_${RELE_VER}.tar.gz" -C "${target%/*}" "${target##*/}"
 }
 
 function package_python_packages
@@ -320,7 +282,7 @@ function package_standalone_install
     local target="$dir/packages/standalone_fate_install_$FATE_VER"
     target="$target" package_standalone
 
-    gtar -cpz -f "${target}_${RELE_VER}.tar.gz" -C "$dir/packages" "${target##*/}"
+    gtar -cpz -f "${target}_${RELE_VER}.tar.gz" -C "${target%/*}" "${target##*/}"
 }
 
 function package_standalone_docker
@@ -346,22 +308,66 @@ function package_standalone_docker
 
 function package_cluster_install
 {
-    local source="$dir/templates/fate-cluster-install"
-    local target="$dir/packages/fate-cluster-install-$FATE_VER"
-
-    local modules=( 'python' 'java' 'mysql' 'eggroll' 'fate' )
+    local name='fate-cluster-install'
+    local source="$dir/templates/$name"
+    local target="$dir/packages/$name-$FATE_VER"
 
     grm -fr "$target"
     gcp -af "$source" "$target"
 
-    for module in "${modules[@]}"
-    {
-        target="$target" "package_$module"
-    }
+    gmkdir -p "$target/python-install/files"
+    gcp -af "${resources[conda]}" "$dir/build/fate/python/requirements.txt" "$dir/build/pypkg" "$target/python-install/files"
+
+    gmkdir -p "$target/java-install/files"
+    gcp -af "${resources[jdk]}" "$target/java-install/files"
+
+    gmkdir -p "$target/mysql-install/files"
+    gcp -af "${resources[mysql]}" "$dir/build/eggroll/conf/create-eggroll-meta-tables.sql" "$target/mysql-install/files"
+
+    gmkdir -p "$target/eggroll-install/files"
+    gcp -af "$dir/build/eggroll" "$target/eggroll-install/files"
+
+    gmkdir -p "$target/fate-install/files"
+    gcp -af "$dir/build/fate" "$dir/build/fateflow" "$dir/build/fateboard" "$target/fate-install/files"
 
     gmkdir -p "$target/allInone/logs"
+    gtar -cpz -f "${target%/*}/${name//-/_}_${FATE_VER}_${RELE_VER}-c7-u18.tar.gz" -C "${target%/*}" "${target##*/}"
+}
 
-    gtar -cpz -f "${target}-${RELE_VER}.tar.gz" -C "$dir/packages" "${target##*/}"
+function package_ansible_offline
+{
+    local name='AnsibleFATE'
+    local source="$dir/templates/$name"
+    local target="$dir/packages/$name-$FATE_VER-$RELE_VER-offline"
+
+    grm -fr "$target"
+    gcp -af "$source" "$target"
+
+    gmkdir -p "$target/roles/python/files"
+    gcp -af "${resources[conda]}" "$dir/build/fate/python/requirements.txt" "$target/roles/python/files"
+    gtar -cpz -f "$target/roles/python/files/pypi.tar.gz" -C "$dir/build" --transform "s/^pypkg/pypi/" 'pypkg'
+
+    gmkdir -p "$target/roles/java/files"
+    gcp -af "${resources[jdk]}" "$target/roles/java/files"
+
+    gmkdir -p "$target/roles/mysql/files"
+    gcp -af "${resources[mysql]}" "$target/roles/mysql/files"
+
+    gmkdir -p "$target/roles/rabbitmq/files"
+    gcp -af "${resources[rabbitmq]}" "$target/roles/rabbitmq/files"
+
+    # TODO
+    gmkdir -p "$target/roles/supervisor/files"
+    gcp -af "${resources[supervisor]}" "$target/roles/supervisor/files"
+
+    gmkdir -p "$target/roles/eggroll/files"
+    gtar -cpz -f "$target/roles/eggroll/files/eggroll-${versions[eggroll]}-release.tar.gz" -C "$dir/build" 'eggroll'
+
+    gmkdir -p "$target/roles/fateflow/files"
+    gtar -cpz -f "$target/roles/fateflow/files/fate-${versions[fate]}-release.tar.gz" -C "$dir/build" 'fate'
+    gtar -cpz -f "$target/roles/fateflow/files/fateflow-${versions[fateflow]}-release.tar.gz" -C "$dir/build" 'fateflow'
+
+    gtar -cpz -f "${target}.tar.gz" -C "${target%/*}" "${target##*/}"
 }
 
 [ "$PULL_GIT" -gt 0 ] && git_pull

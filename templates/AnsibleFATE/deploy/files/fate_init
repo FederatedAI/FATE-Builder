@@ -1,0 +1,30 @@
+pname: fate
+
+deploy_mode: deploy
+deploy_modules: []
+deploy_roles: []
+default_engines: eggroll
+
+version: 1.8.0
+versions: {}
+
+python:
+  version: 4.5.4
+  dest: "miniconda3"
+  venv: "common/python/venv"
+  pip: "pypi/1.8.0"
+java:
+  name: "jdk"
+  version: "8u192"
+  path: "common/jdk"
+mysql:
+  version: "8.0.28"
+  path: "common/mysql"
+  user: "root"
+  passwd: "fatE168dev"
+redis:
+  version: "5.0.2"
+  path: "common/redis"
+rabbitmq:
+  version: "3.9.14"
+  path: "common/rabbitmq"
