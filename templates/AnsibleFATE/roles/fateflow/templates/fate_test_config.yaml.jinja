@@ -1,0 +1,71 @@
+# base dir for data upload conf eg, data_base_dir={FATE}
+# examples/data/breast_hetero_guest.csv -> $data_base_dir/examples/data/breast_hetero_guest.csv
+data_base_dir: {{pbase}}/{{pname}}
+# fate_test job Dedicated directory, File storage location,cache_directory={FATE}/examples/fate_test/cache/
+cache_directory: examples/cache/
+performance_template_directory: examples/benchmark_performance/
+flow_test_config_directory: examples/flow_test_template/hetero_lr/flow_test_config.yaml
+fate_base: {{pbase}}/{{pname}}/{{pname}}
+clean_data: true
+{% if deploy_roles|length == 1 %}
+parties:
+  guest: [{{partyid}}]
+  host: [{{partyid}}]
+  arbiter: [{{partyid}}]
+services:
+  - flow_services:
+      - {address: {{ansible_ssh_host}}:{{fate_flow.get('httpPort',9380)}}, parties: [{{partyid}}]}
+{% else %}
+parties:
+{% if 'host' in deploy_roles and 'guest' in deploy_roles %}
+{% if 'host' == deploy_role %}
+  guest: [{{host.get('partyid',10000)}}]
+  host: [{{guest.get('partyid',9999)}},{{host.get('partyid',10000)}}]
+  arbiter: [{{guest.get('partyid',9999)}}]
+{% else %}
+  guest: [{{guest.get('partyid',9999)}}]
+  host: [{{host.get('partyid',10000)}},{{guest.get('partyid',9999)}}]
+  arbiter: [{{host.get('partyid',10000)}}]
+{% endif %}
+{% else %}
+  guest: [{{partyid}}]
+  host: [{{partyid}}]
+  arbiter: [{{partyid}}]
+{% endif %}
+services:
+  - flow_services:
+{% if 'host' in deploy_roles %}
+      - {address: {{host['fate_flow'].get('ips',['127.0.0.1'])[0]}}:{{host['fate_flow'].get('httpPort',9380)}}, parties: [{{host.get('partyid',10000)}}]}
+{% endif %}
+{% if 'guest' in deploy_roles %}
+      - {address: {{guest['fate_flow'].get('ips',['127.0.0.1'])[0]}}:{{guest['fate_flow'].get('httpPort',9380)}}, parties: [{{guest.get('partyid',9999)}}]}
+{% endif %}
+{% endif %}
+    serving_setting:
+      address: 127.0.0.1:8059
+
+    ssh_tunnel: # optional
+      enable: false
+      ssh_address: <remote ip>:<remote port>
+      ssh_username:
+      ssh_password: # optional
+      ssh_priv_key: "~/.ssh/id_rsa"
+
+
+# what is ssh_tunnel?
+# to open the ssh tunnel(s) if the remote service
+# cannot be accessed directly from the location where the test suite is run!
+#
+#                       +---------------------+
+#                       |    ssh address      |
+#                       |    ssh username     |
+#                       |    ssh password/    |
+#         +--------+    |    ssh priv_key     |        +----------------+
+#         |local ip+----------ssh tuunel-------------->+remote local ip |
+#         +--------+    |                     |        +----------------+
+#                       |                     |
+# request local ip:port +----- as if --------->request remote's local ip:port from remote side
+#                       |                     |
+#                       |                     |
+#                       +---------------------+
+#

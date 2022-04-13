@@ -1,7 +1,5 @@
-build/
-packages/
-resources/
-templates/**/files/
-!templates/fate-cluster-install/tools-install/files/
-cos.yaml
+/build/
+/packages/
+/resources/
+/cos.yaml
 *.log
