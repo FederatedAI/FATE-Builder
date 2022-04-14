@@ -19,7 +19,9 @@ shopt -s expand_aliases extglob
 : "${PATH_JDK:=cos://fate/jdk-8u192.tar.gz}"
 : "${PATH_MYS:=cos://fate/mysql-8.0.28.tar.gz}"
 : "${PATH_RMQ:=cos://fate/rabbitmq-server-generic-unix-3.9.14.tar.xz}"
-: "${SYNC_RES:=1}"
+: "${PATH_SVR:=cos://fate/supervisor-4.2.4-py2.py3-none-any.whl}"
+: "${PATH_PYM:=cos://fate/PyMySQL-1.0.2-py3-none-any.whl}"
+: "${SYNC_RES:=0}"
 : "${RELE_VER:=release}"
 : "${PACK_ARC:=0}"
 : "${PACK_PYP:=0}"
@@ -181,6 +183,8 @@ function build_python_packages
             }
         }
         :'
+
+    sudo chown "$(id -u):$(id -g)" "$target/"*
 }
 
 function build_fate
@@ -213,6 +217,8 @@ function get_resources
         [jdk]="$PATH_JDK"
         [mysql]="$PATH_MYS"
         [rabbitmq]="$PATH_RMQ"
+        [supervisor]="$PATH_SVR"
+        [pymysql]="$PATH_PYM"
     )
 
     gmkdir -p "$dir/resources"
@@ -356,9 +362,9 @@ function package_ansible_offline
     gmkdir -p "$target/roles/rabbitmq/files"
     gcp -af "${resources[rabbitmq]}" "$target/roles/rabbitmq/files"
 
-    # TODO
     gmkdir -p "$target/roles/supervisor/files"
-    gcp -af "${resources[supervisor]}" "$target/roles/supervisor/files"
+    gln -frs "$target/roles/python/files/${resources[conda]##*/}" "$target/roles/supervisor/files"
+    gcp -af "${resources[supervisor]}" "${resources[pymysql]}" "$target/roles/supervisor/files"
 
     gmkdir -p "$target/roles/eggroll/files"
     gtar -cpz -f "$target/roles/eggroll/files/eggroll-${versions[eggroll]}-release.tar.gz" -C "$dir/build" 'eggroll'
@@ -396,6 +402,7 @@ get_versions
     [ "$PACK_STA" -gt 0 ] && package_standalone_install
     [ "$PACK_DOC" -gt 0 ] && package_standalone_docker
     [ "$PACK_CLU" -gt 0 ] && package_cluster_install
+    [ "$PACK_OFF" -gt 0 ] && package_ansible_offline
 }
 
 echo 'Done'
