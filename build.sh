@@ -306,13 +306,13 @@ function package_standalone_docker
 
     target="$target" package_standalone
 
-    docker buildx build --compress --no-cache --progress=plain --pull --rm \
+    docker buildx build --compress --progress=plain --pull --rm \
         --file "$dir/Dockerfile.Centos" --tag "$image_hub:$image_tag" "$target"
 
     docker save "$image_hub:$image_tag" | gzip > "${target}_$RELE_VER.tar.gz"
 
     docker tag "$image_hub:$image_tag" "$image_tcr:$image_tag"
-    docker push "$image_tcr:$image_tag"
+    [ "$PUSH_ARC" -gt 0 ] && docker push "$image_tcr:$image_tag"
 }
 
 function package_cluster_install
@@ -379,6 +379,14 @@ function package_ansible_offline
     gtar -cpz -f "${target}.tar.gz" -C "${target%/*}" "${target##*/}"
 }
 
+function push_archives
+{
+    for file in "$dir/packages/"*.tar.gz
+    {
+        coscli sync "$file" 'cos://fate'
+    }
+}
+
 [ "$PULL_GIT" -gt 0 ] && git_pull
 
 get_versions
@@ -407,5 +415,7 @@ get_versions
     [ "$PACK_CLU" -gt 0 ] && package_cluster_install
     [ "$PACK_OFF" -gt 0 ] && package_ansible_offline
 }
+
+[ "$PUSH_ARC" -gt 0 ] && push_archives
 
 echo 'Done'
