@@ -383,7 +383,8 @@ function push_archives
 {
     for file in "$dir/packages/"*.tar.gz
     {
-        coscli sync "$file" 'cos://fate'
+        coscli sync "$file" "cos://fate/fate/$FATE_VER/$RELE_VER/${file##*/}"
+        coscli sync -r "cos://fate/fate/$FATE_VER/$RELE_VER/" "cos://fate/"
     }
 }
 
