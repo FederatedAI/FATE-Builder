@@ -7,7 +7,7 @@ shopt -s expand_aliases extglob
 : "${CLON_GIT:=0}"
 : "${PULL_GIT:=0}"
 : "${PULL_OPT:=--rebase --stat --autostash}"
-: "${CHEC_BRA:=1}"
+: "${CHEC_BRA:=0}"
 : "${SKIP_BUI:=0}"
 : "${COPY_ONL:=0}"
 : "${BUIL_PYP:=0}"
@@ -163,7 +163,7 @@ function build_python_packages
     grm -rf "$target"
     gmkdir -p "$target"
 
-    docker run --pull --rm \
+    docker run --pull=always --rm \
         -v "$(greadlink -f ~/.config/pip):/root/.config/pip:ro" \
         -v "$source:/requirements.txt:ro" \
         -v "$target:/wheelhouse:rw" \
@@ -229,6 +229,9 @@ function get_resources
 
         resources[$key]="$dir/resources/${resources[$key]##*/}"
     }
+
+    chmod 644 "$dir/resources/"*
+    chmod 755 "$dir/resources/"*.sh
 }
 
 function package_fate_install
@@ -296,7 +299,7 @@ function package_standalone_docker
     local target="$dir/packages/standalone_fate_docker_image_$FATE_VER"
 
     local image_hub='federatedai/standalone_fate'
-    local image_tcr='ccr.ccs.tencentyun.com/fate.ai/standalone_fate'
+    local image_tcr='ccr.ccs.tencentyun.com/federatedai/standalone_fate'
 
     local image_tag="$FATE_VER"
     [ "$RELE_VER" == 'release' ] || image_tag+="-$RELE_VER"
@@ -306,7 +309,7 @@ function package_standalone_docker
     docker buildx build --compress --no-cache --progress=plain --pull --rm \
         --file "$dir/Dockerfile.Centos" --tag "$image_hub:$image_tag" "$target"
 
-    docker save "$image_hub:$image_tag" | gzip > "${target##*/}_$RELE_VER.tar.gz"
+    docker save "$image_hub:$image_tag" | gzip > "${target}_$RELE_VER.tar.gz"
 
     docker tag "$image_hub:$image_tag" "$image_tcr:$image_tag"
     docker push "$image_tcr:$image_tag"
