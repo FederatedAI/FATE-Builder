@@ -5,7 +5,7 @@ fate:
     fateflow:
     - 1.8.0
     eggroll:
-    - 2.4.3
+    - 2.4.4
     spark:
     - 2.4.1
   1.7.2:
