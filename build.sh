@@ -370,11 +370,15 @@ function package_ansible_offline
     gcp -af "${resources[supervisor]}" "${resources[pymysql]}" "$target/roles/supervisor/files"
 
     gmkdir -p "$target/roles/eggroll/files"
+    gcp -af "$dir/build/eggroll/conf/create-eggroll-meta-tables.sql" "$target/roles/eggroll/files"
     gtar -cpz -f "$target/roles/eggroll/files/eggroll-${versions[eggroll]}-release.tar.gz" -C "$dir/build" 'eggroll'
 
     gmkdir -p "$target/roles/fateflow/files"
     gtar -cpz -f "$target/roles/fateflow/files/fate-${versions[fate]}-release.tar.gz" -C "$dir/build" 'fate'
     gtar -cpz -f "$target/roles/fateflow/files/fateflow-${versions[fateflow]}-release.tar.gz" -C "$dir/build" 'fateflow'
+
+    gmkdir -p "$target/roles/fateboard/files"
+    gtar -cpz -f "$target/roles/fateboard/files/fateboard-${versions[fateboard]}-release.tar.gz" -C "$dir/build" 'fateboard'
 
     gtar -cpz -f "${target}.tar.gz" -C "${target%/*}" "${target##*/}"
 }

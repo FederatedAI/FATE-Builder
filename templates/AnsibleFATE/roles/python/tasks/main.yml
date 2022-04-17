@@ -1,12 +1,6 @@
 ---
 - name: "mkdir({{deploy_mode}}): {{tbase}}/{{pname}}"
-  file:
-    path: "{{item}}"
-    state: directory
-    mode: 0755
-  with_items:
-  - "{{tbase}}/{{pname}}"
-  - "{{tbase}}/{{pname}}/{{python['pip']}}"
+  shell: "rm -fr {{tbase}}/{{pname}}/{{python['pip']}} && mkdir -p {{tbase}}/{{pname}}/{{python['pip']}}"
 
 - name: "copy({{deploy_mode}}): requirements.txt"
   copy:
@@ -35,18 +29,12 @@
     chdir: "{{tbase}}/{{pname}}"
   when: py_reg.stat.exists == False
 
-- name: "check({{deploy_mode}}): pip3 package"
-  stat: path="{{tbase}}/{{pname}}/{{python['pip']}}"
-  register: pp_reg
-
 - name: "untar({{deploy_mode}}): pypi.tar.gz"
   unarchive:
     src: "pypi.tar.gz"
     dest: "{{tbase}}/{{pname}}/{{python['pip']}}"
     extra_opts:
-    - "--strip-components"
-    - "1"
-  when: pp_reg.stat.exists == False
+    - "--strip-components=1"
 
 - name: "check({{deploy_mode}}): {{cbase}}/{{python['dest']}}/bin/virtualenv"
   stat: path="{{cbase}}/{{python['dest']}}/bin/virtualenv"
@@ -77,7 +65,7 @@
     - "pip"
     - "setuptools"
     - "wheel"
-    chdir: "{{tbase}}/{{pname}}"
+    extra_args: "-U -f {{tbase}}/{{pname}}/{{python['pip']}} --no-index"
     virtualenv: "{{pbase}}/{{pname}}/{{python['venv']}}"
   when: venv_reg.stat.exists == False and venv2_reg.stat.exists == True
 
