@@ -59,9 +59,9 @@
 - when: "ansible_ssh_host in nodemanager.get('ips',[]) and nodemanager.get('enable', False) == True"
   block:
   - name: "update({{deploy_mode}}): {{tbase}}/node_conn.py"
-    template: src=templates/conn.py.jinja dest={{tbase}}/node_conn.py
+    template: "src=templates/conn.py.jinja dest={{tbase}}/node_conn_{{item}}.py"
     vars:
-      rrole: nodemanager
+      rrole: "nodemanager"
       rip: "{{item}}"
       rport: "{{nodemanager.get('port')}}"
       admin_user: "{{mysql.get('user','root')}}"
@@ -75,10 +75,17 @@
     - "{{nodemanager.get('ips',[])}}"
 
   - name: "commit({{deploy_mode}}): node_conn.py"
-    shell: "{{cbase}}/miniconda3/bin/python {{tbase}}/node_conn.py"
-    register: mysql_load
+    shell: "{{cbase}}/miniconda3/bin/python {{tbase}}/node_conn_{{item}}.py"
+    register: "mysql_load_{{item}}"
+    with_items:
+    - "{{nodemanager.get('ips',[])}}"
 
-  - debug: var=mysql_load.get('stderr_lines')
-  - debug: var=mysql_load.get('stdout_lines')
+  - debug: "var=mysql_load_{{item}}.get('stderr_lines')"
+    with_items:
+    - "{{nodemanager.get('ips',[])}}"
+
+  - debug: "var=mysql_load_{{item}}.get('stdout_lines')"
+    with_items:
+    - "{{nodemanager.get('ips',[])}}"
 
 
