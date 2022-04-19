@@ -76,16 +76,9 @@
 
   - name: "commit({{deploy_mode}}): node_conn.py"
     shell: "{{cbase}}/miniconda3/bin/python {{tbase}}/node_conn_{{item}}.py"
-    register: "mysql_load_{{item}}"
+    register: mysql_load
     with_items:
     - "{{nodemanager.get('ips',[])}}"
 
-  - debug: "var=mysql_load_{{item}}.get('stderr_lines')"
-    with_items:
-    - "{{nodemanager.get('ips',[])}}"
-
-  - debug: "var=mysql_load_{{item}}.get('stdout_lines')"
-    with_items:
-    - "{{nodemanager.get('ips',[])}}"
-
-
+  - debug: var=mysql_load.get('stderr_lines')
+  - debug: var=mysql_load.get('stdout_lines')
