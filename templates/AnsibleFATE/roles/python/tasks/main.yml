@@ -1,6 +1,8 @@
 ---
 - name: "mkdir({{deploy_mode}}): {{tbase}}/{{pname}}"
   shell: "rm -fr {{tbase}}/{{pname}}/{{python['pip']}} && mkdir -p {{tbase}}/{{pname}}/{{python['pip']}}"
+  args:
+    warn: False
 
 - name: "copy({{deploy_mode}}): requirements.txt"
   copy:
