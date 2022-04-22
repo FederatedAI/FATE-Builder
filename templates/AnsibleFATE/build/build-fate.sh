@@ -77,87 +77,98 @@ get_pinfo() {
 
 
 download() {
-  url="https://webank-ai-1251170195.cos.ap-guangzhou.myqcloud.com"
-  mysql="mysql-8.0.28.tar.gz"
-  python="fate_python.tar.gz"
-  supervisor="fate_supervisor.tar.gz"
-  rabbitmq="rabbitmq-server-generic-unix-3.9.14.tar.xz"
-  if [ ! -f ${workdir}/../roles/python/files/setuptools-50.3.2-py3-none-any.whl ]; then
-    echo "-------------Download python package-----------"
+  url='https://webank-ai-1251170195.cos.ap-guangzhou.myqcloud.com'
+
+  python='Miniconda3-4.5.4-Linux-x86_64.sh'
+  java='jdk-8u192.tar.gz'
+  mysql='mysql-8.0.28.tar.gz'
+  rabbitmq='rabbitmq-server-generic-unix-3.9.14.tar.xz'
+  supervisor='supervisor-4.2.4-py2.py3-none-any.whl'
+  pymysql='PyMySQL-1.0.2-py3-none-any.whl'
+
+  if [ ! -f ${workdir}/../roles/python/files/${python} ]; then
+    echo "-------------Download mysql package---------"
     echo "+++++++++download: ${workdir}/../roles/python/files/ -o ${url}/${python}"
     wget -P ${workdir}/../roles/python/files/ ${url}/${python}
-    tar xf ${workdir}/../roles/python/files/${python} -C ${workdir}/../roles/python/files/
-    rm ${workdir}/../roles/python/files/${python}
   fi
-  if [ ! -f ${workdir}/../roles/mysql/files/$mysql ]; then
+
+  if [ ! -f ${workdir}/../roles/java/files/${java} ]; then
+    echo "-------------Download mysql package---------"
+    echo "+++++++++download: ${workdir}/../roles/java/files/ -o ${url}/${java}"
+    wget -P ${workdir}/../roles/java/files/ ${url}/${java}
+  fi
+
+  if [ ! -f ${workdir}/../roles/mysql/files/${mysql} ]; then
     echo "-------------Download mysql package---------"
     echo "+++++++++download: ${workdir}/../roles/mysql/files/ -o ${url}/${mysql}"
     wget -P ${workdir}/../roles/mysql/files/ ${url}/${mysql}
   fi
-  if [ ! -f ${workdir}/../roles/supervisor/files/supervisord-conf-1.1.4.tar.gz ]; then
-    echo "-------------Download supervisor package-----------"
-    echo "+++++++++download: ${workdir}/../roles/supervisor/files/ -o ${url}/${supervisor}"
-    wget -P ${workdir}/../roles/supervisor/files/ ${url}/${supervisor}
-    tar xf  ${workdir}/../roles/supervisor/files/${supervisor} -C  ${workdir}/../roles/supervisor/files/
-    rm ${workdir}/../roles/supervisor/files/${supervisor}
-  fi
-  if [ ! -f ${workdir}/../roles/rabbitmq/files/$rabbitmq ]; then
+
+  if [ ! -f ${workdir}/../roles/rabbitmq/files/${rabbitmq} ]; then
     echo "-------------Download rabbitmq package-----------"
     echo "++++++++++download: ${workdir}/../roles/rabbitmq/files/ -o ${url}/${rabbitmq}"
     wget -P ${workdir}/../roles/rabbitmq/files/ ${url}/${rabbitmq}
   fi
 
+  if [ ! -f ${workdir}/../roles/supervisor/files/${supervisor} ]; then
+    echo "-------------Download supervisor package-----------"
+    echo "+++++++++download: ${workdir}/../roles/supervisor/files/ -o ${url}/${supervisor}"
+    wget -P ${workdir}/../roles/supervisor/files/ ${url}/${supervisor}
+  fi
+
+  if [ ! -f ${workdir}/../roles/supervisor/files/${pymysql} ]; then
+    echo "-------------Download supervisor package-----------"
+    echo "+++++++++download: ${workdir}/../roles/supervisor/files/ -o ${url}/${pymysql}"
+    wget -P ${workdir}/../roles/supervisor/files/ ${url}/${pymysql}
+  fi
+
+  if [ ! -f ${workdir}/../roles/supervisor/files/${python} ]; then
+    echo "-------------Download supervisor package-----------"
+    echo "+++++++++link: ${workdir}/../roles/supervisor/files/${python} to ${workdir}/../roles/python/files/${python}"
+    ln -frs ${workdir}/../roles/python/files/${python} ${workdir}/../roles/supervisor/files/${python}
+  fi
+
   echo "-------------Download $project package-----------"
-  if [ "${product_fate_version%-*}" == "${product_fate_version#*-}" ]; then
-    purl="https://webank-ai-1251170195.cos.ap-guangzhou.myqcloud.com/$project/${product_fate_version}/release"
-  else
-    purl="https://webank-ai-1251170195.cos.ap-guangzhou.myqcloud.com/$project/${product_fate_version/-//}"
+  purl="https://webank-ai-1251170195.cos.ap-guangzhou.myqcloud.com/$project/${product_fate_version}/release"
+
+  if [ ! -f ../roles/check/files/build.tar.gz -o ! -f ../roles/check/files/deploy.tar.gz ]; then
+    echo "+++++++++download: ${purl}/build.tar.gz -o ../roles/check/files/build.tar.gz"
+    curl ${purl}/build.tar.gz -o ../roles/check/files/build.tar.gz
+    echo "+++++++++download: ${purl}/deploy.tar.gz -o ../roles/check/files/deploy.tar.gz"
+    curl ${purl}/deploy.tar.gz -o ../roles/check/files/deploy.tar.gz
   fi
 
   if [ ! -f ../roles/python/files/pypi.tar.gz -o ! -f ../roles/python/files/requirements.txt ]; then
      echo "+++++++++download: ${purl}/requirements.txt -o ../roles/python/files/requirements.txt"
      curl ${purl}/requirements.txt -o ../roles/python/files/requirements.txt
-     echo "++++++++++download: ${purl}/pypi.tar.gz -o ../roles/python/files/pypi.tar.gz"
-     curl ${purl}/pypi.tar.gz -o ../roles/python/files/pypi.tar.gz
+     echo "+++++++++download: ${purl}/pip-packages-fate-${product_fate_version}.tar.gz -o ../roles/python/files/pypi.tar.gz"
+     curl ${purl}/pip-packages-fate-${product_fate_version}.tar.gz -o ../roles/python/files/pypi.tar.gz
   fi
 
-  if [ ! -f ../roles/check/files/deploy.tar.gz -o ! -f ../roles/check/files/build.tar.gz ]; then
-    echo "download: ${purl}/deploy.tar.gz -o ../roles/check/files/deploy.tar.gz"
-    curl ${purl}/deploy.tar.gz -o ../roles/check/files/deploy.tar.gz
-    echo "+++++++++download: ${purl}/build.tar.gz -o ../roles/check/files/build.tar.gz"
-    curl ${purl}/build.tar.gz -o ../roles/check/files/build.tar.gz
+  eggroll_version=$( ${workdir}/bin/yq eval '.product_fate_versions.eggroll' ${workdir}/conf/setup.conf )
+  echo "eggroll_version: $eggroll_version"
+  if [ ! -f ../roles/eggroll/files/eggroll-${eggroll_version}.tar.gz -o ! -f ../roles/eggroll/files/create-eggroll-meta-tables.sql ]; then
+    echo "+++++++++download: ${purl}/eggroll-${eggroll_version}.tar.gz -o ../roles/eggroll/files/eggroll-${eggroll_version}.tar.gz"
+    curl ${purl}/eggroll-${eggroll_version}.tar.gz -o ../roles/eggroll/files/eggroll-${eggroll_version}.tar.gz
+    echo "+++++++++download: ${purl}/create-eggroll-meta-tables.sql -o ../roles/eggroll/files/create-eggroll-meta-tables.sql"
+    curl ${purl}/create-eggroll-meta-tables.sql -o ../roles/eggroll/files/create-eggroll-meta-tables.sql
   fi
 
-  if [ ! -f ../roles/java/files/jdk-8u192.tar.gz ]; then
-    echo "+++++++++download: ${purl}/jdk.tar.gz -o ../roles/java/files/jdk.tar.gz"
-    curl ${purl}/jdk.tar.gz -o ../roles/java/files/jdk.tar.gz
-    tar xf ../roles/java/files/jdk.tar.gz -C ../roles/java/files/
-    cp ../roles/java/files/jdk/jdk-8u192.tar.gz ../roles/java/files/
-    rm -rf ../roles/java/files/jdk.tar.gz ../roles/java/files/jdk
+  fateflow_version=$( ${workdir}/bin/yq eval '.product_fate_versions.fateflow' ${workdir}/conf/setup.conf )
+  echo "fateflow_version: $fateflow_version"
+  if [ ! -f ../roles/fateflow/files/fate-${fateflow_version}.tar.gz -o ! -f ../roles/fateflow/files/fateflow-${fateflow_version}.tar.gz ]; then
+    echo "+++++++++download: ${purl}/fate-${fateflow_version}.tar.gz -o ../roles/fateflow/files/fate-${fateflow_version}.tar.gz"
+    curl ${purl}/fate-${fateflow_version}.tar.gz -o ../roles/fateflow/files/fate-${fateflow_version}.tar.gz
+    echo "+++++++++download: ${purl}/fateflow.tar.gz -o ../roles/fateflow/files/fateflow-${fateflow_version}.tar.gz"
+    curl ${purl}/fateflow-${fateflow_version}.tar.gz -o ../roles/fateflow/files/fateflow-${fateflow_version}.tar.gz
   fi
 
-  for name in $( ${workdir}/bin/yq eval '.product_fate_versions|keys|.[]' ${workdir}/conf/setup.conf); do
-    fversion=$( ${workdir}/bin/yq eval '.product_fate_versions.'"$name"'' ${workdir}/conf/setup.conf )
-    src="${name}.tar.gz"
-    dest="${name}-${fversion}.tar.gz"
-    link="${purl}/$src"
-    if [ ! -f ../roles/${name}/files/$dest ]
-    then
-      if [ "$name" == "eggroll" ]; then
-        link="https://webank-ai-1251170195.cos.ap-guangzhou.myqcloud.com/${name}/${fversion/-//}/$src"
-      fi
-      if [ "$name" == "fateflow" ]; then
-        echo "++++++++++download: ${purl}/fate.tar.gz -o ../roles/${name}/files/fate-${fversion}.tar.gz"
-        curl ${purl}/fate.tar.gz -o ../roles/${name}/files/fate-${fversion}.tar.gz
-        echo "++++++++++download:  ${purl}/fate.env -o ../roles/${name}/files/fate.env"
-        curl ${purl}/fate.env -o ../roles/${name}/files/fate.env
-        echo "++++++++++download: ${purl}/RELEASE.md -o ../roles/${name}/files/RELEASE.md"
-        curl ${purl}/RELEASE.md -o ../roles/${name}/files/RELEASE.md
-      fi
-      echo "$link  ../roles/${name}/files/$dest"
-      curl  $link -o ../roles/${name}/files/$dest
-    fi
-  done
+  fateboard_version=$( ${workdir}/bin/yq eval '.product_fate_versions.fateboard' ${workdir}/conf/setup.conf )
+  echo "fateboard_version: $fateboard_version"
+  if [ ! -f ../roles/fateboard/files/fateboard-${fateboard_version}.tar.gz ]; then
+    echo "+++++++++download: ${purl}/fateboard-${fateboard_version}.tar.gz -o ../roles/fateboard/files/fateboard-${fateboard_version}.tar.gz"
+    curl ${purl}/fateboard-${fateboard_version}.tar.gz -o ../roles/fateboard/files/fateboard-${fateboard_version}.tar.gz
+  fi
 }
 
 case $1 in
