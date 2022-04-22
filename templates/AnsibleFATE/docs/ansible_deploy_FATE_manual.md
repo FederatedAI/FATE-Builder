@@ -131,7 +131,7 @@ FATE官方网站：https://fate.fedai.org/
 - 离线包： 可以直接进行部署的包。
    - 部署包名称：`AnsibleFATE_${version}_release-offline.tar.gz`
    - 部署包根目录名称：`AnsibleFATE-${version}-release-offline`
-- 在线包： 部署的包，但不包括模块的资源包，不能直接进行部署。 可通过下载(可参考2.6.1.3一节）或者自编译模块(可参考2.6.1.4一节）的资源包，组装成离线包。
+- 在线包： 部署的包，但不包括模块的资源包，不能直接进行部署。 可通过下载资源包（参考2.6.1.3一节），组装成离线包。
 
   - 部署包名称： `AnsibleFATE_${version}_release-online.tar.gz`
   - 部署包根目录名称：   `AnsibleFATE-${version}-release-online`
@@ -1493,18 +1493,8 @@ cd AnsibleFATE-${version}-release-offline
 //version>=1.7.0，按需设置
 ```
 
-###### 2.6.1.2下载非离线包
 
-- 方法1 git获取
-
-```
-git clone -b ${version} https://github.com/FederatedAI/AnsibleFATE
-cd AnsibleFATE
-
-//${version}表示代码的版本分支
-```
-
-- 方法2 下载在线包
+###### 2.6.1.2下载在线包
 
 ```
 wget https://webank-ai-1251170195.cos.ap-guangzhou.myqcloud.com/AnsibleFATE_${version}_release-online.tar.gz
@@ -1514,13 +1504,8 @@ cd AnsibleFATE-${version}-release-online
 //version>=1.7.0
 ```
 
-说明： 下载非离线包后，在2.6.1.3 和2.6.1.4 中二选一。
-
-
 
 ###### 2.6.1.3 按需下载模块的资源包
-
-​	说明： 2.6.1.3 和2.6.1.4 二选一。
 
 - 初始化配置（使用最新版本的包）
 
@@ -1541,13 +1526,6 @@ vi build/conf/setup.conf
 ```
 bash build/build.sh do
 ```
-
-###### 2.6.1.4 按需自编译模块的资源包
-
-   说明： 2.6.1.3 和2.6.1.4 二选一。
-
-- 参考<< [编译模块资源包](https://github.com/FederatedAI/FATE/blob/master/build/package-build/build.zh.md) >>编译，获取源代码后使用构建命令<< [编译模块资源包](https://github.com/FederatedAI/FATE/blob/master/build/package-build/build.zh.md) >>的第9小节 构建包含FATE系统软件和环境依赖的整体包，来完成构建fate软件包；注意构建时pip版本需大于21
-- 参考 2.9 节进行打包
 
 
 
@@ -1894,6 +1872,3 @@ mysql:
   user: "root"			---mysql数据库管理账号，修改为实际使用的管理账号
   passwd: "fatE168dev"	---mysql数据库管理密码，修改为实际使用的管理密码
 ```
-
-
-

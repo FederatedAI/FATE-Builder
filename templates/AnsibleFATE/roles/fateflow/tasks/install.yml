@@ -51,7 +51,8 @@
     state: link
   when: flow_stat.stat.exists == False
 
-- name: "link({{deploy_mode}}): {{pbase}}/{{pname}}/{fate.env,RELEASE.md,examples}"
-  shell: "ln -frs '{{pbase}}/{{pname}}/{{pname}}/fate.env' '{{pbase}}/{{pname}}/{{pname}}/RELEASE.md' '{{pbase}}/{{pname}}/{{pname}}/examples' '{{pbase}}/{{pname}}'"
+- name: "link({{deploy_mode}}): {{pbase}}/{{pname}}/{RELEASE.md,fate.env,examples}"
+  shell: "ln -frs '{{pbase}}/{{pname}}/{{pname}}/'{RELEASE.md,fate.env,examples} '{{pbase}}/{{pname}}'"
   args:
+    executable: /bin/bash
     warn: False
