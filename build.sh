@@ -390,6 +390,9 @@ function package_ansible_offline
     gln -frs "$target/roles/python/files/${resources[conda]##*/}" "$target/roles/supervisor/files"
     gcp -af "${resources[supervisor]}" "${resources[pymysql]}" "$target/roles/supervisor/files"
 
+    gtar -cpz -f "$target/roles/check/files/build.tar.gz" -C "$dir/build/fate" 'build'
+    gtar -cpz -f "$target/roles/check/files/deploy.tar.gz" -C "$dir/build/fate" 'deploy'
+
     gmkdir -p "$target/roles/eggroll/files"
     gcp -af "$dir/build/eggroll/conf/create-eggroll-meta-tables.sql" "$target/roles/eggroll/files"
     gtar -cpz -f "$target/roles/eggroll/files/eggroll-${versions[eggroll]}-release.tar.gz" -C "$dir/build" 'eggroll'
