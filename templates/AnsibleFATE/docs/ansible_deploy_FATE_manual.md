@@ -1,7 +1,3 @@
-
-
-
-
 # ansible 部署FATE集群手册
 
 <!-- TOC -->
@@ -65,17 +61,11 @@
         - [**2.7.3.2 快速模式**](#2732-快速模式)
         - [**2.7.3.3 正常模式**](#2733-正常模式)
 - [2.8 服务运维](#28-服务运维)
-- [2.9 打包](#29-打包)
-    - [2.9.1 下载在线包](#291-下载在线包)
-    - [2.9.2 执行脚本进行打包](#292-执行脚本进行打包)
 - [3.1 使用自签证书](#31-使用自签证书)
 - [3.2 单边部署使用证书场景](#32-单边部署使用证书场景)
 - [3.3 mysql使用外部数据库](#33-mysql使用外部数据库)
 
 <!-- /TOC -->
-
-
-
 
 
 
@@ -947,8 +937,6 @@ python:					---python部署信息
   dest: "miniconda3"
   venv: "common/python/venv"
   pip: pip-packages-fate-1.7.0
-  must:
-  - setuptools-50.3.2-py3-none-any.whl
 
 java:					---java部署信息
   name: "jdk"
@@ -1792,36 +1780,6 @@ bash service.sh start/stop/status fate-clustermanager
 | fate_flow | fate_flow_server                      | /data/logs/fate/fateflow/  |
 | mysql     | mysql                                 | /data/logs/mysql/          |
 | fateboard | fateboard                             | /data/logs/fate/fateboard/ |
-
-
-
-#### 2.9 打包
-
-##### 2.9.1 下载在线包
-
-​     参考2.6.1.2一节。
-
-
-
-##### 2.9.2 执行脚本进行打包
-
-```
-bash tools/fate_package.sh $args
-
-Usage: tools/fate_package.sh --version|--minversion|--type|--dir|--archive
-     args:
-         --version=1.7.0
-         --minversion=release
-         --type=local(default) or online
-         --dir=/data/temp
-         --archive
-```
-
-- --version参数表示大版本号，例如1.7.0
-- --minversion参数表示小版本号，例如rc2、release
-- --type参数表示获取包的方式，默认为local是本地获取，需要指定包路径--dir； online从网络下载，可以通过--dir指定下载包路径（临时路径）
-- --dir参数表示资源包路径，也可以指定归档的存放路径
-- --archive 开启归档，产生离线包存放在脚本目录的packages目录；默认不归档压缩；
 
 
 

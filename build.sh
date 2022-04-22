@@ -253,7 +253,7 @@ function package_fate_install
         parallel -0 gtar -cpz -f "$target/{/}.tar.gz" -C "$source" '{/}'
     gtar -cpz -f "$target/fate.tar.gz" -C "$source" --transform 's#^python#fate/python#' 'python'
 
-    gmd5sum "$target/"*.tar.gz | gawk '{ sub(/.*\//, ""); sub(/\.tar\.gz$/, ""); print $2 ":" $1 }' \
+    gmd5sum "$target/"*.tar.gz | gawk '{ sub(/\/.+\//, ""); sub(/\.tar\.gz/, ""); print $2 ":" $1 }' \
         >"$target/packages_md5.txt"
 
     gfind "$source" -mindepth 1 -maxdepth 1 -type f -not -iname 'init.sh' -print0 | \
@@ -383,6 +383,25 @@ function package_ansible_offline
     gtar -cpz -f "${target}.tar.gz" -C "${target%/*}" "${target##*/}"
 }
 
+function package_ansible_online
+{
+    local name='AnsibleFATE'
+    local source="$dir/templates/$name"
+    local target="$dir/packages/$name-$FATE_VER-$RELE_VER-online"
+
+    local modules=( 'python' 'java' 'mysql' 'rabbitmq' 'supervisor' 'eggroll' 'fateflow' 'fateboard' )
+
+    grm -fr "$target"
+    gcp -af "$source" "$target"
+
+    for module in "${modules[@]}"
+    {
+        gmkdir -p "$target/roles/$module/files"
+    }
+
+    gtar -cpz -f "${target}.tar.gz" -C "${target%/*}" "${target##*/}"
+}
+
 function push_archives
 {
     for file in "$dir/packages/"*.tar.gz
@@ -419,6 +438,7 @@ get_versions
     [ "$PACK_DOC" -gt 0 ] && package_standalone_docker
     [ "$PACK_CLU" -gt 0 ] && package_cluster_install
     [ "$PACK_OFF" -gt 0 ] && package_ansible_offline
+    [ "$PACK_ONL" -gt 0 ] && package_ansible_online
 }
 
 [ "$PUSH_ARC" -gt 0 ] && push_archives
