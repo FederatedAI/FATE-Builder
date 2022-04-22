@@ -10,10 +10,10 @@ shopt -s expand_aliases extglob
 : "${CHEC_BRA:=0}"
 : "${SKIP_BUI:=0}"
 : "${COPY_ONL:=0}"
-: "${BUIL_PYP:=0}"
-: "${BUIL_EGG:=0}"
-: "${BUIL_BOA:=0}"
-: "${BUIL_FAT:=0}"
+: "${BUIL_PYP:=1}"
+: "${BUIL_EGG:=1}"
+: "${BUIL_BOA:=1}"
+: "${BUIL_FAT:=1}"
 : "${SKIP_PKG:=0}"
 : "${PATH_CON:=cos://fate/Miniconda3-4.5.4-Linux-x86_64.sh}"
 : "${PATH_JDK:=cos://fate/jdk-8u192.tar.gz}"
@@ -23,13 +23,13 @@ shopt -s expand_aliases extglob
 : "${PATH_PYM:=cos://fate/PyMySQL-1.0.2-py3-none-any.whl}"
 : "${SYNC_RES:=0}"
 : "${RELE_VER:=release}"
-: "${PACK_ARC:=0}"
-: "${PACK_PYP:=0}"
-: "${PACK_STA:=0}"
-: "${PACK_DOC:=0}"
-: "${PACK_CLU:=0}"
-: "${PACK_OFF:=0}"
-: "${PACK_ONL:=0}"
+: "${PACK_ARC:=1}"
+: "${PACK_PYP:=1}"
+: "${PACK_STA:=1}"
+: "${PACK_DOC:=1}"
+: "${PACK_CLU:=1}"
+: "${PACK_OFF:=1}"
+: "${PACK_ONL:=1}"
 : "${PUSH_ARC:=0}"
 
 commands=( 'date' 'dirname' 'readlink' 'mkdir' 'printf' 'cp' 'ln'
@@ -234,10 +234,19 @@ function get_resources
     chmod 755 "$dir/resources/"*.sh
 }
 
+function push_archive
+{
+    [ "$PUSH_ARC" -gt 0 ] || return
+
+    coscli sync "$filepath" "cos://fate/fate/$FATE_VER/$RELE_VER/${filepath##*/}"
+    coscli sync "cos://fate/fate/$FATE_VER/$RELE_VER/${filepath##*/}" "cos://fate/${filepath##*/}"
+}
+
 function package_fate_install
 {
     local source="$dir/build/fate"
     local target="$dir/packages/FATE_install_$FATE_VER"
+    local filepath="${target}_${RELE_VER}.tar.gz"
 
     local modules=( 'eggroll' 'fateboard' 'fateflow' )
 
@@ -260,14 +269,17 @@ function package_fate_install
         parallel -0Xj1 gcp -af '{}' "$target"
     gcp -af "$source/python/requirements.txt" "$target"
 
-    gtar -cpz -f "${target}_${RELE_VER}.tar.gz" -C "${target%/*}" "${target##*/}"
+    gtar -cpz -f "$filepath" -C "${target%/*}" "${target##*/}"
+    filepath="$filepath" push_archive
 }
 
 function package_python_packages
 {
     local name="pip-packages-fate-$FATE_VER"
+    local filepath="$dir/packages/$name.tar.gz"
 
-    gtar -cpz -f "$dir/packages/$name.tar.gz" -C "$dir/build" --transform "s/^pypkg/$name/" 'pypkg'
+    gtar -cpz -f "$filepath" -C "$dir/build" --transform "s/^pypkg/$name/" 'pypkg'
+    filepath="$filepath" push_archive
 }
 
 function package_standalone
@@ -289,14 +301,18 @@ function package_standalone
 function package_standalone_install
 {
     local target="$dir/packages/standalone_fate_install_$FATE_VER"
+    local filepath="${target}_${RELE_VER}.tar.gz"
+
     target="$target" package_standalone
 
-    gtar -cpz -f "${target}_${RELE_VER}.tar.gz" -C "${target%/*}" "${target##*/}"
+    gtar -cpz -f "$filepath" -C "${target%/*}" "${target##*/}"
+    filepath="$filepath" push_archive
 }
 
 function package_standalone_docker
 {
     local target="$dir/packages/standalone_fate_docker_image_$FATE_VER"
+    local filepath="${target}_${RELE_VER}.tar.gz"
 
     local image_hub='federatedai/standalone_fate'
     local image_tcr='ccr.ccs.tencentyun.com/federatedai/standalone_fate'
@@ -309,7 +325,8 @@ function package_standalone_docker
     docker buildx build --compress --progress=plain --pull --rm \
         --file "$dir/Dockerfile.Centos" --tag "$image_hub:$image_tag" "$target"
 
-    docker save "$image_hub:$image_tag" | gzip > "${target}_$RELE_VER.tar.gz"
+    docker save "$image_hub:$image_tag" | gzip > "$filepath"
+    filepath="$filepath" push_archive
 
     docker tag "$image_hub:$image_tag" "$image_tcr:$image_tag"
     [ "$PUSH_ARC" -gt 0 ] && docker push "$image_tcr:$image_tag"
@@ -320,6 +337,7 @@ function package_cluster_install
     local name='fate-cluster-install'
     local source="$dir/templates/$name"
     local target="$dir/packages/$name-$FATE_VER"
+    local filepath="${target%/*}/${name//-/_}_${FATE_VER}_${RELE_VER}-c7-u18.tar.gz"
 
     grm -fr "$target"
     gcp -af "$source" "$target"
@@ -340,7 +358,9 @@ function package_cluster_install
     gcp -af "$dir/build/fate" "$dir/build/fateflow" "$dir/build/fateboard" "$target/fate-install/files"
 
     gmkdir -p "$target/allInone/logs"
-    gtar -cpz -f "${target%/*}/${name//-/_}_${FATE_VER}_${RELE_VER}-c7-u18.tar.gz" -C "${target%/*}" "${target##*/}"
+
+    gtar -cpz -f "$filepath" -C "${target%/*}" "${target##*/}"
+    filepath="$filepath" push_archive
 }
 
 function package_ansible_offline
@@ -348,6 +368,7 @@ function package_ansible_offline
     local name='AnsibleFATE'
     local source="$dir/templates/$name"
     local target="$dir/packages/$name-$FATE_VER-$RELE_VER-offline"
+    local filepath="${target%/*}/${name}_${FATE_VER}_${RELE_VER}-offline.tar.gz"
 
     grm -fr "$target"
     gcp -af "$source" "$target"
@@ -380,7 +401,8 @@ function package_ansible_offline
     gmkdir -p "$target/roles/fateboard/files"
     gtar -cpz -f "$target/roles/fateboard/files/fateboard-${versions[fateboard]}-release.tar.gz" -C "$dir/build" 'fateboard'
 
-    gtar -cpz -f "${target}.tar.gz" -C "${target%/*}" "${target##*/}"
+    gtar -cpz -f "$filepath" -C "${target%/*}" "${target##*/}"
+    filepath="$filepath" push_archive
 }
 
 function package_ansible_online
@@ -388,6 +410,7 @@ function package_ansible_online
     local name='AnsibleFATE'
     local source="$dir/templates/$name"
     local target="$dir/packages/$name-$FATE_VER-$RELE_VER-online"
+    local filepath="${target%/*}/${name}_${FATE_VER}_${RELE_VER}-online.tar.gz"
 
     local modules=( 'python' 'java' 'mysql' 'rabbitmq' 'supervisor' 'eggroll' 'fateflow' 'fateboard' )
 
@@ -399,16 +422,8 @@ function package_ansible_online
         gmkdir -p "$target/roles/$module/files"
     }
 
-    gtar -cpz -f "${target}.tar.gz" -C "${target%/*}" "${target##*/}"
-}
-
-function push_archives
-{
-    for file in "$dir/packages/"*.tar.gz
-    {
-        coscli sync "$file" "cos://fate/fate/$FATE_VER/$RELE_VER/${file##*/}"
-        coscli sync -r "cos://fate/fate/$FATE_VER/$RELE_VER/" "cos://fate/"
-    }
+    gtar -cpz -f "$filepath" -C "${target%/*}" "${target##*/}"
+    filepath="$filepath" push_archive
 }
 
 [ "$PULL_GIT" -gt 0 ] && git_pull
@@ -440,7 +455,5 @@ get_versions
     [ "$PACK_OFF" -gt 0 ] && package_ansible_offline
     [ "$PACK_ONL" -gt 0 ] && package_ansible_online
 }
-
-[ "$PUSH_ARC" -gt 0 ] && push_archives
 
 echo 'Done'
