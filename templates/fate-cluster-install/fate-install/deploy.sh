@@ -39,7 +39,7 @@ function_install_fate_flow()
   fi
 
   cp -af "${pbase}/${pname}/fate/python/federatedml/transfer_conf.yaml" "${pbase}/${pname}/conf"
-  ln -frs "${pbase}/${pname}/fate/fate.env" "${pbase}/${pname}/fate/RELEASE.md" "${pbase}/${pname}/fate/examples" "${pbase}/${pname}"
+  ln -frs "${pbase}/${pname}/fate/"{RELEASE.md,fate.env,examples} "${pbase}/${pname}"
 
   #compute cpu core number
   cores_per_node=$( cat /proc/cpuinfo |grep -cw 'core id' )
