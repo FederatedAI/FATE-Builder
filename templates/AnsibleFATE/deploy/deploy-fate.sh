@@ -489,31 +489,14 @@ def_render_fate_init() {
   local deploy_roles="[$( echo ${roles[*]} | tr -s ' ' ',' )]"
   local deploy_modules="[$( echo ${modules[*]} | tr -s ' ' ',' )]"
   local ssl_roles="[$( echo ${ssl_roles[*]} | tr -s ' ' ',' )]"
-  local fversion="$( ./bin/yq  eval '.product_fate_versions.fateflow' ${base}/build/conf/setup.conf )"
-  local bversion="$( ./bin/yq  eval '.product_fate_versions.fateboard' ${base}/build/conf/setup.conf )"
-  local eversion="$( ./bin/yq  eval '.product_fate_versions.eggroll' ${base}/build/conf/setup.conf )"
-  local pversion="$( ./bin/yq  eval '.product_fate_version' ${base}/build/conf/setup.conf )"
-  local version=${pversion%-*}
-  local version=${pversion}
-  if [ "${pversion#*-}" == "release" ]
-  then
-    local version=${pversion%-*}
-  fi
-  local pip="pypi/${version}/pypi"
-  #echo "-------------${fversion} ${eversion}"
-  myvars="deploy_mode=${deploy_mode} deploy_modules=${deploy_modules} pip=${pip} version=${version} fversion=${fversion} bversion=${bversion} eversion=${eversion} roles=${deploy_roles} ssl_roles=${ssl_roles} pname=${pname} default_engines=${default_engines}"
+
+  myvars="deploy_mode=${deploy_mode} deploy_modules=${deploy_modules} roles=${deploy_roles} ssl_roles=${ssl_roles} default_engines=${default_engines}"
   eval eval  ${myvars} "${workdir}/bin/yq  e  \' "\
-          " .pname \|\=env\(pname\) \| "\
           " .deploy_mode \|\=env\(deploy_mode\) \| "\
           " .deploy_modules \|\=env\(deploy_modules\) \| "\
           " .deploy_roles \|\=env\(roles\) \| "\
           " .ssl_roles \|\=env\(ssl_roles\) \| "\
           " .default_engines\|\=env\(default_engines\) \| "\
-          " .python.pip \|\=env\(pip\) \| "\
-          " .version \|\=env\(version\) \| "\
-          " .versions.eggroll \|\=env\(eversion\) \| "\
-          " .versions.fate_flow \|\=env\(fversion\) \| "\
-          " .versions.fateboard \|\=env\(fversion\) "\
           " \' ${workdir}/files/fate_init -I 2 -P " > $dfile
 }
 
@@ -596,6 +579,8 @@ def_render_playbook() {
 }
 
 def_render_setup() {
+  mkdir -p ${workdir}/conf
+
   local deploy_host_ips="[$( echo ${host_ips[*]} | tr -s ' ' ',' )]"
   local deploy_guest_ips="[$( echo ${guest_ips[*]} | tr -s ' ' ',' )]"
   if [ ${#exchange_ips[*]} -gt 1 ]

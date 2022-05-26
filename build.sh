@@ -32,8 +32,8 @@ shopt -s expand_aliases extglob
 : "${PACK_ONL:=1}"
 : "${PUSH_ARC:=0}"
 
-commands=( 'date' 'dirname' 'readlink' 'mkdir' 'printf' 'cp' 'ln'
-           'grep' 'xargs' 'chmod' 'rm' 'awk' 'find' 'tar' 'md5sum' )
+commands=( 'date' 'dirname' 'readlink' 'mkdir' 'printf' 'cp' 'ln' 'grep'
+           'xargs' 'chmod' 'rm' 'awk' 'find' 'tar' 'sed' 'md5sum')
 tools=( 'git' 'mvn' 'npm' 'docker' )
 modules=( 'fate' 'fateflow' 'fateboard' 'eggroll' )
 
@@ -68,8 +68,10 @@ start=$(gdate +%s%N)
 PS4='+ [$(bc <<< "scale=3; x=($(gdate +%s%N) - $start) / 1000 / 1000 / 1000; if (x < 1) \"0\"; x")s \
 $BASHPID ${BASH_SOURCE}:${LINENO}${FUNCNAME:+ $BASH_LINENO:${FUNCNAME}}] '
 
-FATE_DIR="$(greadlink -f "$FATE_DIR")"
 dir="$(gdirname "$(greadlink -f "${BASH_SOURCE[0]}")")"
+[ -f "$dir/.env" ] && . "$dir/.env"
+
+FATE_DIR="$(greadlink -f "$FATE_DIR")"
 
 alias _git="git -C '$FATE_DIR'"
 _git status >/dev/null
@@ -248,12 +250,10 @@ function package_fate_install
     local target="$dir/packages/FATE_install_$FATE_VER"
     local filepath="${target}_${RELE_VER}.tar.gz"
 
-    local modules=( 'eggroll' 'fateboard' 'fateflow' )
-
     grm -fr "$target"
     gmkdir -p "$target"
 
-    for module in "${modules[@]}"
+    for module in 'eggroll' 'fateboard' 'fateflow'
     {
         gtar -cpz -f "$target/$module.tar.gz" -C "$dir/build" "$module"
     }
@@ -342,6 +342,8 @@ function package_cluster_install
     grm -fr "$target"
     gcp -af "$source" "$target"
 
+    gsed -i "s/#VERSION#/${versions[fate]}/" "$target/allInone/conf/setup.conf"
+
     gmkdir -p "$target/python-install/files"
     gcp -af "${resources[conda]}" "$dir/build/fate/python/requirements.txt" "$dir/build/pypkg" "$target/python-install/files"
 
@@ -373,6 +375,8 @@ function package_ansible_offline
     grm -fr "$target"
     gcp -af "$source" "$target"
 
+    gsed -i "s/#VERSION#/${versions[fate]}/" "$target/deploy/files/fate_init"
+
     gmkdir -p "$target/roles/python/files"
     gcp -af "${resources[conda]}" "$dir/build/fate/python/requirements.txt" "$target/roles/python/files"
     gtar -cpz -f "$target/roles/python/files/pypi.tar.gz" -C "$dir/build" --transform "s/^pypkg/pypi/" 'pypkg'
@@ -395,14 +399,14 @@ function package_ansible_offline
 
     gmkdir -p "$target/roles/eggroll/files"
     gcp -af "$dir/build/eggroll/conf/create-eggroll-meta-tables.sql" "$target/roles/eggroll/files"
-    gtar -cpz -f "$target/roles/eggroll/files/eggroll-${versions[eggroll]}-release.tar.gz" -C "$dir/build" 'eggroll'
+    gtar -cpz -f "$target/roles/eggroll/files/eggroll.tar.gz" -C "$dir/build" 'eggroll'
 
     gmkdir -p "$target/roles/fateflow/files"
-    gtar -cpz -f "$target/roles/fateflow/files/fate-${versions[fate]}-release.tar.gz" -C "$dir/build" 'fate'
-    gtar -cpz -f "$target/roles/fateflow/files/fateflow-${versions[fateflow]}-release.tar.gz" -C "$dir/build" 'fateflow'
+    gtar -cpz -f "$target/roles/fateflow/files/fate.tar.gz" -C "$dir/build" 'fate'
+    gtar -cpz -f "$target/roles/fateflow/files/fateflow.tar.gz" -C "$dir/build" 'fateflow'
 
     gmkdir -p "$target/roles/fateboard/files"
-    gtar -cpz -f "$target/roles/fateboard/files/fateboard-${versions[fateboard]}-release.tar.gz" -C "$dir/build" 'fateboard'
+    gtar -cpz -f "$target/roles/fateboard/files/fateboard.tar.gz" -C "$dir/build" 'fateboard'
 
     gtar -cpz -f "$filepath" -C "${target%/*}" "${target##*/}"
     filepath="$filepath" push_archive
@@ -415,12 +419,12 @@ function package_ansible_online
     local target="$dir/packages/$name-$FATE_VER-$RELE_VER-online"
     local filepath="${target%/*}/${name}_${FATE_VER}_${RELE_VER}-online.tar.gz"
 
-    local modules=( 'python' 'java' 'mysql' 'rabbitmq' 'supervisor' 'eggroll' 'fateflow' 'fateboard' )
-
     grm -fr "$target"
     gcp -af "$source" "$target"
 
-    for module in "${modules[@]}"
+    gsed -i "s/#VERSION#/${versions[fate]}/" "$target/deploy/files/fate_init"
+
+    for module in 'python' 'java' 'mysql' 'rabbitmq' 'supervisor' 'eggroll' 'fateflow' 'fateboard'
     {
         gmkdir -p "$target/roles/$module/files"
     }

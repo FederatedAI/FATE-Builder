@@ -5,14 +5,12 @@ deploy_modules: []
 deploy_roles: []
 default_engines: eggroll
 
-version: 1.8.0
-versions: {}
+version: "#VERSION"
 
 python:
   version: 4.5.4
   dest: "miniconda3"
   venv: "common/python/venv"
-  pip: "pypi/1.8.0"
 java:
   name: "jdk"
   version: "8u192"
