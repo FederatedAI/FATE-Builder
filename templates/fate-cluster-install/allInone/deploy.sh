@@ -7,12 +7,14 @@ workdir=$(cd $(dirname $0); pwd)
 mkdir -p "${workdir}/logs"
 
 function_init() {
-  local module="init"
-  local roles_num=${#roles[*]}
-  variables="roles_num=${roles_num} host_id=${host_id} guest_id=${guest_id} host_ip=${host_ip} host_mysql_ip=${host_mysql_ip} guest_ip=${guest_ip} guest_mysql_ip=${guest_mysql_ip} pbase=${pbase} tbase=${tbase} pname=${pname} lbase=${lbase} version=${version} user=${ssh_user} group=${ssh_group} mysql_port=${mysql_port}  host_mysql_pass=${host_mysql_pass} guest_mysql_pass=${guest_mysql_pass} eggroll_dbname=${eggroll_dbname} fate_flow_dbname=${fate_flow_dbname} mysql_admin_pass=${mysql_admin_pass} redis_pass=${redis_pass} rollsite_port=${rollsite_port} clustermanager_port=${clustermanager_port} nodemanager_port=${nodemanager_port} fateflow_grpc_port=${fateflow_grpc_port} fateflow_http_port=${fateflow_http_port} fateboard_port=${fateboard_port}"
-  tpl=$( cat ${workdir}/templates/${module}-setup.conf )
-  printf "$variables\ncat << EOF\n$tpl\nEOF" | bash > ${workdir}/../${module}/conf/setup.conf
-  /bin/bash ${workdir}/../${module}/init.sh
+  mkdir -p ${workdir}/../init/conf
+
+  variables="roles_num=${#roles[@]} host_id=${host_id} guest_id=${guest_id} host_ip=${host_ip} host_mysql_ip=${host_mysql_ip} guest_ip=${guest_ip} guest_mysql_ip=${guest_mysql_ip} pbase=${pbase} tbase=${tbase} pname=${pname} lbase=${lbase} version=${version} user=${ssh_user} group=${ssh_group} mysql_port=${mysql_port}  host_mysql_pass=${host_mysql_pass} guest_mysql_pass=${guest_mysql_pass} eggroll_dbname=${eggroll_dbname} fate_flow_dbname=${fate_flow_dbname} mysql_admin_pass=${mysql_admin_pass} redis_pass=${redis_pass} rollsite_port=${rollsite_port} clustermanager_port=${clustermanager_port} nodemanager_port=${nodemanager_port} fateflow_grpc_port=${fateflow_grpc_port} fateflow_http_port=${fateflow_http_port} fateboard_port=${fateboard_port}"
+
+  tpl=$( cat ${workdir}/templates/init-setup.conf )
+  printf "$variables\ncat << EOF\n$tpl\nEOF" | bash > ${workdir}/../init/conf/setup.conf
+
+  /bin/bash ${workdir}/../init/init.sh
   echo "init over" > ${workdir}/logs/deploy.log
 }
 

@@ -1,6 +1,6 @@
 ---
 - name: "mkdir({{deploy_mode}}): {{tbase}}/{{pname}}"
-  shell: "rm -fr {{tbase}}/{{pname}}/{{python['pip']}} && mkdir -p {{tbase}}/{{pname}}/{{python['pip']}}"
+  shell: "rm -fr {{tbase}}/{{pname}}/pypi && mkdir -p {{tbase}}/{{pname}}/pypi"
   args:
     warn: False
 
@@ -34,7 +34,7 @@
 - name: "untar({{deploy_mode}}): pypi.tar.gz"
   unarchive:
     src: "pypi.tar.gz"
-    dest: "{{tbase}}/{{pname}}/{{python['pip']}}"
+    dest: "{{tbase}}/{{pname}}/pypi"
     extra_opts:
     - "--strip-components=1"
 
@@ -44,7 +44,7 @@
 
 - name: "pip({{deploy_mode}}): install virtualenv"
   pip:
-    extra_args: "-U -f {{tbase}}/{{pname}}/{{python['pip']}} --no-index"
+    extra_args: "-U -f {{tbase}}/{{pname}}/pypi --no-index"
     executable: "{{cbase}}/{{python['dest']}}/bin/pip"
     name: "virtualenv"
   when: virtualenv_reg.stat.exists == False
@@ -67,13 +67,13 @@
     - "pip"
     - "setuptools"
     - "wheel"
-    extra_args: "-U -f {{tbase}}/{{pname}}/{{python['pip']}} --no-index"
+    extra_args: "-U -f {{tbase}}/{{pname}}/pypi --no-index"
     virtualenv: "{{pbase}}/{{pname}}/{{python['venv']}}"
   when: venv_reg.stat.exists == False and venv2_reg.stat.exists == True
 
 - name: "pip({{deploy_mode}}): venv install packages"
   pip:
-    extra_args: "-U -f {{tbase}}/{{pname}}/{{python['pip']}} --no-index"
+    extra_args: "-U -f {{tbase}}/{{pname}}/pypi --no-index"
     requirements: "{{tbase}}/{{pname}}/requirements.txt"
     virtualenv: "{{pbase}}/{{pname}}/{{python['venv']}}"
   when: venv_reg.stat.exists == False and venv2_reg.stat.exists == True
@@ -87,13 +87,10 @@
 
 - name: "pip({{deploy_mode}}): venv reinstall packages"
   pip:
-    extra_args: "-U -f {{tbase}}/{{pname}}/{{python['pip']}} --no-index"
+    extra_args: "-U -f {{tbase}}/{{pname}}/pypi --no-index"
     requirements: "{{tbase}}/{{pname}}/requirements.txt"
     virtualenv: "{{pbase}}/{{pname}}/{{python['venv']}}"
   when: pip_check.stdout.find("fate_pip_check_pass") != -1
-
-- name: "update({{deploy_mode}}): {{pbase}}/{{pname}}/tools/clean_tmp.sh"
-  template: src=clean_tmp.sh.jinja dest={{pbase}}/{{pname}}/tools/clean_tmp.sh
 
 - name: "spark miniconda install"
   include_tasks: spark_miniconda.yml

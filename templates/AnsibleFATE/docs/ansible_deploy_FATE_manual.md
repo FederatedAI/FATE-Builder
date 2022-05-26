@@ -252,58 +252,6 @@ FATE官方网站：https://fate.fedai.org/
 
 #### 2.5 辅助脚本和配置文件
 
-##### 2.5.1 下载脚本和下载配置文件
-
-脚本：**build/build.sh**
-
-文件：**build/conf/setup.conf**
-
-###### 2.5.1.1 下载脚本的使用
-
-- 初始化下载配置文件
-
-  ```
-  命令格式：bash build/build.sh init pname version minversion
-  参数说明：
-          pname： 项目名称
-          version： 资源包大版本号
-          minversion： 资源包小版本号
-  使用示例：
-  bash build/build.sh init fate 1.7.0 release
-  ```
-
-​
-
-- 按需编辑下载配置文件
-
-  ```
-  vim build/conf/setup.conf
-  ```
-
-- 执行下载
-
-  ```
-  bash build/build.sh do
-  ```
-
-
-###### 2.5.1.2 下载配置文件
-
-- 部署fate的下载配置文件
-
-  ```
-  project: fate
-  products:
-  - fate
-  - eggroll
-  product_fate_version: 1.7.0
-  product_fate_versions:
-    fateflow: 1.7.0-release
-    fateboard: 1.7.0-release
-    eggroll: 2.4.0-release
-  ```
-
-
 ##### 2.5.2 部署辅助脚本和部署配置文件
 
 部署辅助脚本：   deploy/deploy.sh
@@ -927,16 +875,11 @@ ssl_roles:			---证书角色
 
 default_engines: eggroll	---默认后端引擎
 pname: "fate"			---项目名称
-versions:				---各服务版本号
-  fateboard: 1.7.0-release
-  eggroll: 2.4.0-release
-  fate_flow: 1.7.0-release
 
 python:					---python部署信息
   version: 4.5.4        --不同的包会随安全更新版本
   dest: "miniconda3"
   venv: "common/python/venv"
-  pip: pip-packages-fate-1.7.0
 
 java:					---java部署信息
   name: "jdk"
@@ -1503,30 +1446,6 @@ cd AnsibleFATE-${version}-release-online
 
 //version>=1.7.0
 ```
-
-
-###### 2.6.1.3 按需下载模块的资源包
-
-- 初始化配置（使用最新版本的包）
-
-```
-bash build/build.sh init pname [version] [minversion]
-// pname表示项目，如fate, version表示项目的大版本号，minversion表示小版本号
-// 例：sh build/build.sh init fate 1.7.0 release
-```
-
-- 按需调整配置（默认无需修改）
-
-```
-vi build/conf/setup.conf
-```
-
-- 执行下载
-
-```
-bash build/build.sh do
-```
-
 
 
 ##### 2.6.2 使用初始化脚本生成部署配置文件

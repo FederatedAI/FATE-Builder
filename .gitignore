@@ -1,5 +1,6 @@
 /build/
 /packages/
 /resources/
+/.env
 /cos.yaml
 *.log

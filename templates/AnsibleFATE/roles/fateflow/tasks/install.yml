@@ -16,9 +16,9 @@
     path: "{{pbase}}/{{pname}}/{{role_name}}/python/fate_flow/fate_flow_server.py"
   register: flow_stat
 
-- name: "untar({{deploy_mode}}): {{role_name}}-{{versions.get('fate_flow')}}.tar.gz"
+- name: "untar({{deploy_mode}}): fateflow.tar.gz"
   unarchive:
-    src: "{{role_name}}-{{versions.get('fate_flow')}}.tar.gz"
+    src: "fateflow.tar.gz"
     dest: "{{pbase}}/{{pname}}"
   when: flow_stat.stat.exists == False
 
@@ -27,9 +27,9 @@
     path: "{{pbase}}/{{pname}}/{{pname}}/python/__init__.py"
   register: fate_stat
 
-- name: "untar({{deploy_mode}}): {{pname}}-{{versions.get('fate_flow')}}.tar.gz"
+- name: "untar({{deploy_mode}}): fate.tar.gz"
   unarchive:
-    src: "{{pname}}-{{versions.get('fate_flow')}}.tar.gz"
+    src: "fate.tar.gz"
     dest: "{{pbase}}/{{pname}}"
   when: fate_stat.stat.exists == False
 
