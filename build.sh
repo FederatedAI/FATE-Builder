@@ -21,15 +21,15 @@ shopt -s expand_aliases extglob
 : "${PATH_RMQ:=cos://fate/rabbitmq-server-generic-unix-3.9.14.tar.xz}"
 : "${PATH_SVR:=cos://fate/supervisor-4.2.4-py2.py3-none-any.whl}"
 : "${PATH_PYM:=cos://fate/PyMySQL-1.0.2-py3-none-any.whl}"
-: "${SYNC_RES:=0}"
+: "${SYNC_RES:=1}"
 : "${RELE_VER:=release}"
-: "${PACK_ARC:=1}"
-: "${PACK_PYP:=1}"
-: "${PACK_STA:=1}"
-: "${PACK_DOC:=1}"
-: "${PACK_CLU:=1}"
-: "${PACK_OFF:=1}"
-: "${PACK_ONL:=1}"
+: "${PACK_ARC:=0}"
+: "${PACK_PYP:=0}"
+: "${PACK_STA:=0}"
+: "${PACK_DOC:=0}"
+: "${PACK_CLU:=0}"
+: "${PACK_OFF:=0}"
+: "${PACK_ONL:=0}"
 : "${PUSH_ARC:=0}"
 
 commands=( 'date' 'dirname' 'readlink' 'mkdir' 'printf' 'cp' 'ln' 'grep'
@@ -238,7 +238,7 @@ function get_resources
 
 function push_archive
 {
-    [ "$PUSH_ARC" -gt 0 ] || return
+    [ "$PUSH_ARC" -gt 0 ] || return 0
 
     coscli sync "$filepath" "cos://fate/fate/$FATE_VER/$RELE_VER/${filepath##*/}"
     coscli sync "cos://fate/fate/$FATE_VER/$RELE_VER/${filepath##*/}" "cos://fate/${filepath##*/}"
@@ -453,6 +453,8 @@ get_versions
 [ "$SKIP_PKG" -gt 0 ] ||
 {
     get_resources
+
+    gmkdir -p "$dir/packages"
 
     [ "$PACK_ARC" -gt 0 ] && package_fate_install
     [ "$PACK_PYP" -gt 0 ] && package_python_packages
