@@ -84,14 +84,11 @@ Examples:
 ```bash
 ./build.sh
 
-/usr/local/bin/bash ./build.sh
+export FATE_DIR=/path/to/fate && ./build.sh
 
-export FATE_DIR=/path/to/fate
-./build.sh
+echo 'FATE_DIR=/path/to/fate' > .env && ./build.sh
 
 FATE_DIR=/path/to/fate ./build.sh
-
-FATE_DIR=/path/to/fate PUSH_ARC=1 /usr/bin/env bash ./build.sh
 ```
 
 ## Docker (**UNTESTED**)

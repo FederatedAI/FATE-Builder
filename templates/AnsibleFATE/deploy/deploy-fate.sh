@@ -496,7 +496,7 @@ def_render_fate_init() {
           " .deploy_modules \|\=env\(deploy_modules\) \| "\
           " .deploy_roles \|\=env\(roles\) \| "\
           " .ssl_roles \|\=env\(ssl_roles\) \| "\
-          " .default_engines\|\=env\(default_engines\) \| "\
+          " .default_engines\|\=env\(default_engines\)  "\
           " \' ${workdir}/files/fate_init -I 2 -P " > $dfile
 }
 

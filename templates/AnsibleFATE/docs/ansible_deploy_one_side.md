@@ -240,7 +240,7 @@ bash deploy/deploy.sh render
 如需要自定义高级配置，可参考<<[部署手册](ansible_deploy_FATE_manual.md)>> 2.5.3一节，修改如下文件，默认可以不修改。
 
 ```
-vi var_files/prod/fate_host
+vim var_files/prod/fate_host
 ```
 
 内容如下：
