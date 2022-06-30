@@ -90,6 +90,7 @@ federatedai/python-nn                            <TAG>
 federatedai/fate-test                            <TAG>
 federatedai/nginx                                <TAG>
 federatedai/spark-master                         <TAG>
+federatedai/spark-worker                         <TAG>
 federatedai/spark-base                           <TAG>
 federatedai/python-spark                         <TAG>
 federatedai/client                               <TAG>
