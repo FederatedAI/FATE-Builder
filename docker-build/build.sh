@@ -85,7 +85,7 @@ buildComponentEggrollModule() {
 
 buildComponentSparkModule(){
         echo "START BUILDING Spark Module IMAGE"
-        for module in "python-spark" "spark-base" "spark-master"; do
+        for module in "python-spark" "spark-base" "spark-master" "spark-worker"; do
                 echo "### START BUILDING ${module} ###"
                 docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/${module}:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${WORKING_DIR}/modules/${module}/
                 echo "### FINISH BUILDING ${module} ###"
@@ -132,7 +132,7 @@ buildModule(){
 
 pushImage() {
         ## push image
-        for module in "python" "eggroll" "fateboard" "python-nn"; do
+        for module in "python" "fateboard" "eggroll" "client" "python-spark" "spark-master" "spark-worker" "nginx" "python-nn" "fate-test"; do
                 echo "### START PUSH ${module} ###"
                 docker push ${PREFIX}/${module}:${TAG}
                 echo "### FINISH PUSH ${module} ###"
