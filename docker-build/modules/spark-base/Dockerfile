@@ -1,7 +1,8 @@
 # Refer to https://github.com/big-data-europe/docker-spark/tree/2.4.1-hadoop2.7/base
 ARG PREFIX=prefix
 ARG BASE_TAG=tag
-FROM ${PREFIX}/python:${BASE_TAG}
+ARG BASE_IMAGE=image
+FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG}
 
 ENV ENABLE_INIT_DAEMON true
 ENV INIT_DAEMON_BASE_URI http://identifier/init-daemon
