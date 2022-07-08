@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2019-2020 VMware, Inc.
+# Copyright 2022 VMware, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,6 +20,20 @@ set -euxo pipefail
 : "${PREFIX:=federatedai}"
 : "${version_tag:=release}"
 : "${docker_options:=""}"
+
+#IPCL
+if [[ ${version_tag} = "ipcl" ]]; then
+  if [[ -z "${IPCL_PKG_DIR}" ]]; then
+    echo "[INFO] IPCL_PKG_DIR not set - setting default value (/opt/intel_pkg/v1.1.3/ipcl)"
+    export IPCL_PKG_DIR="/opt/intel_pkg/v1.1.3/ipcl"
+  fi
+
+  if [ ! -f "${IPCL_PKG_DIR}/ipcl_pkg.tar.gz" ]; then
+      echo "[ERROR] ipcl package NOT FOUND in ${IPCL_PKG_DIR}"
+      exit 1
+  fi
+  echo "[INFO] ipcl package FOUND in: ${IPCL_PKG_DIR}"
+fi
 
 BASE_DIR=$(dirname "$0")
 cd $BASE_DIR
@@ -67,27 +81,51 @@ check_fate_dir() {
 buildBase() {
         echo "START BUILDING BASE IMAGE"
         #cd ${WORKING_DIR}
-        docker build --build-arg version=${version} -f ${WORKING_DIR}/base/Dockerfile -t ${PREFIX}/base-image:${BASE_TAG} ${PACKAGE_DIR_CACHE}
+        docker build --build-arg version=${version} -f ${WORKING_DIR}/base/Dockerfile \
+          -t ${PREFIX}/base-image:${BASE_TAG} ${PACKAGE_DIR_CACHE}
         echo "FINISH BUILDING BASE IMAGE"
 }
 
 buildComponentEggrollModule() {
         echo "START BUILDING Eggroll Module IMAGE"
-        for module in "python" "fateboard" "eggroll" "client"; do
-        #cd ${WORKING_DIR}
-                echo "### START BUILDING ${module} ###"
-                docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/${module}:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${PACKAGE_DIR_CACHE}
-                echo "### FINISH BUILDING ${module} ###"
-                echo ""
-        done
+
+        echo "### START BUILDING python ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/python:${TAG} \
+                -f ${WORKING_DIR}/modules/python/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING python ###"
+        echo ""
+        echo "### START BUILDING fateboard ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/fateboard:${TAG} \
+                -f ${WORKING_DIR}/modules/fateboard/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING fateboard ###"
+        echo ""
+
+        echo "### START BUILDING eggroll ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/eggroll:${TAG} \
+                -f ${WORKING_DIR}/modules/eggroll/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING eggroll ###"
+        echo ""
+
         echo "END BUILDING IMAGE"
 }
 
 buildComponentSparkModule(){
         echo "START BUILDING Spark Module IMAGE"
-        for module in "python-spark" "spark-base" "spark-master" "spark-worker"; do
+
+
+        echo "### START BUILDING python-spark ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=python --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/python-spark:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${WORKING_DIR}/modules/python-spark/
+        echo "### FINISH BUILDING python-spark ###"
+        echo ""
+
+        echo "### START BUILDING spark-base ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=python --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/spark-base:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${WORKING_DIR}/modules/spark-base/
+        echo "### FINISH BUILDING spark-base ###"
+        echo ""
+
+        for module in "spark-master" "spark-worker"; do
                 echo "### START BUILDING ${module} ###"
-                docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/${module}:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${WORKING_DIR}/modules/${module}/
+                docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=spark-base --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/${module}:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${WORKING_DIR}/modules/${module}/
                 echo "### FINISH BUILDING ${module} ###"
                 echo ""
         done
@@ -109,11 +147,46 @@ buildAlgorithmNN(){
         echo ""
 }
 
+buildDeviceIPCL(){
+        echo "### START BUILDING base-ipcl ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/base-image-ipcl:${TAG} -f ${WORKING_DIR}/modules/python-nn/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING base-ipcl ###"
+        echo ""
+
+        echo "### START BUILDING python-ipcl ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image-ipcl --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/python-ipcl:${TAG} \
+                -f ${WORKING_DIR}/modules/python-nn/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING python-ipcl ###"
+        echo ""
+
+        echo "### START BUILDING eggroll-ipcl ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image-ipcl --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/eggroll-ipcl:${TAG} \
+                -f ${WORKING_DIR}/modules/${module}/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING eggroll-ipcl ###"
+        echo ""
+
+        echo "### START BUILDING spark-base-ipcl ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=python-ipcl --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/spark-base-ipcl:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${WORKING_DIR}/modules/spark-base/
+        echo "### FINISH BUILDING spark-base ###"
+        echo ""
+
+        echo "### START BUILDING spark-worker ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=spark-base-ipcl --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/spark-worker-ipcl:${TAG} -f ${WORKING_DIR}/modules/python-nn/Dockerfile ${WORKING_DIR}/modules/spark-worker/
+        echo "### FINISH BUILDING spark-worker ###"
+        echo ""
+}
+
 buildOptionalModule(){
 
         echo "START BUILDING Optional Module IMAGE"
+
+        echo "### START BUILDING client ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/client:${TAG} \
+                -f ${WORKING_DIR}/modules/client/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING client ###"
+        echo ""
+
         for module in "fate-test"; do
-        #cd ${WORKING_DIR}
                 echo "### START BUILDING ${module} ###"
                 docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/${module}:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${WORKING_DIR}/modules/${module}/
                 echo "### FINISH BUILDING ${module} ###"
@@ -128,6 +201,7 @@ buildModule(){
         buildComponentSparkModule
         buildOptionalModule
         buildAlgorithmNN
+        buildDeviceIPCL
 }
 
 pushImage() {
