@@ -11,12 +11,14 @@ COPY eggroll.tar.gz .
 COPY examples.tar.gz .
 COPY conf.tar.gz .
 COPY fate.env .
+COPY deploy.tar.gz .
 
 RUN tar -xzf fate.tar.gz; \
     tar -xzf fateflow.tar.gz; \
     tar -xzf eggroll.tar.gz; \
     tar -xzf examples.tar.gz; \
-    tar -xzf conf.tar.gz;
+    tar -xzf conf.tar.gz; \
+    tar -xzf deploy.tar.gz;
 
 FROM ${PREFIX}/base-image:${BASE_TAG}
 
@@ -28,6 +30,7 @@ COPY  --from=builder /data/projects/fate/eggroll /data/projects/fate/eggroll
 COPY  --from=builder /data/projects/fate/examples /data/projects/fate/examples
 COPY  --from=builder /data/projects/fate/conf /data/projects/fate/conf
 COPY  --from=builder /data/projects/fate/fate.env /data/projects/fate/
+COPY  --from=builder /data/projects/fate/deploy/upgrade/sql /data/projects/fate/deploy/upgrade/sql
 
 RUN mkdir -p ./fml_agent/data; 
 
