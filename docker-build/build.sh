@@ -109,6 +109,14 @@ buildAlgorithmNN(){
         echo ""
 }
 
+buildFateUpgradeManager(){
+        echo "START BUILDING fate-upgrade-manager"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t
+        ${PREFIX}/fate-upgrade-manager:${TAG} -f ${WORKING_DIR}/modules/fate-upgrade-manager/Dockerfile
+        ${PACKAGE_DIR_CACHE}
+        echo "FINISH BUILDING fate-upgrade-manager"
+}
+
 buildOptionalModule(){
 
         echo "START BUILDING Optional Module IMAGE"
