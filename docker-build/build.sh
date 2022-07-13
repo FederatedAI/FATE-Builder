@@ -136,6 +136,7 @@ buildModule(){
         buildComponentSparkModule
         buildOptionalModule
         buildAlgorithmNN
+        buildFateUpgradeManager
 }
 
 pushImage() {
