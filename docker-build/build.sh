@@ -20,6 +20,11 @@ set -euxo pipefail
 : "${PREFIX:=federatedai}"
 : "${version_tag:=release}"
 : "${docker_options:=""}"
+: "${Build_Basic:=1}"
+: "${Build_OP:=1}"
+: "${Build_NN:=0}"
+: "${Build_Spark:=0}"
+: "${Build_IPCL:=0}"
 
 #IPCL
 if [[ ${version_tag} = "ipcl" ]]; then
@@ -81,12 +86,14 @@ check_fate_dir() {
 buildBase() {
         echo "START BUILDING BASE IMAGE"
         #cd ${WORKING_DIR}
-        docker build --build-arg version=${version} -f ${WORKING_DIR}/base/Dockerfile \
+        docker build --build-arg version=${version} -f ${WORKING_DIR}/base/basic/Dockerfile \
           -t ${PREFIX}/base-image:${BASE_TAG} ${PACKAGE_DIR_CACHE}
         echo "FINISH BUILDING BASE IMAGE"
 }
 
-buildComponentEggrollModule() {
+# build function name  build+[Component: Spark/Eggroll]+[Algorithm: Basic/NN]+[Device: CPU/IPCL]
+
+buildEggrollBasicCPU() {
         echo "START BUILDING Eggroll Module IMAGE"
 
         echo "### START BUILDING python ###"
@@ -109,17 +116,17 @@ buildComponentEggrollModule() {
         echo "END BUILDING IMAGE"
 }
 
-buildComponentSparkModule(){
+buildSparkBasicCPU(){
         echo "START BUILDING Spark Module IMAGE"
 
 
         echo "### START BUILDING python-spark ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=python --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/python-spark:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${WORKING_DIR}/modules/python-spark/
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=python --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/python-spark:${TAG} -f ${WORKING_DIR}/modules/python-spark/Dockerfile ${WORKING_DIR}/modules/python-spark/
         echo "### FINISH BUILDING python-spark ###"
         echo ""
 
         echo "### START BUILDING spark-base ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=python --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/spark-base:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${WORKING_DIR}/modules/spark-base/
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=python --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/spark-base:${TAG} -f ${WORKING_DIR}/modules/spark-base/Dockerfile ${WORKING_DIR}/modules/spark-base/
         echo "### FINISH BUILDING spark-base ###"
         echo ""
 
@@ -140,39 +147,55 @@ buildComponentSparkModule(){
         echo "END BUILDING IMAGE"
 }
 
-buildAlgorithmNN(){
+buildEggrollNNCPU(){
         echo "### START BUILDING python-nn ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/python-nn:${TAG} -f ${WORKING_DIR}/modules/python-nn/Dockerfile ${PACKAGE_DIR_CACHE}
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=python --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/python-nn:${TAG} -f ${WORKING_DIR}/modules/python-nn/Dockerfile ${PACKAGE_DIR_CACHE}
         echo "### FINISH BUILDING python-nn ###"
         echo ""
 }
 
-buildDeviceIPCL(){
+buildSparkNNCPU(){
+        echo "### START BUILDING python-spark-nn ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=python-spark --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/python-spark-nn:${TAG} -f ${WORKING_DIR}/modules/python-nn/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING python-spark-nn ###"
+        echo ""
+}
+
+buildEggrollBasicIPCL(){
         echo "### START BUILDING base-ipcl ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/base-image-ipcl:${TAG} -f ${WORKING_DIR}/modules/python-nn/Dockerfile ${PACKAGE_DIR_CACHE}
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/base-image-ipcl:${TAG} -f ${WORKING_DIR}/base/ipcl/Dockerfile ${PACKAGE_DIR_CACHE}
         echo "### FINISH BUILDING base-ipcl ###"
         echo ""
 
         echo "### START BUILDING python-ipcl ###"
         docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image-ipcl --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/python-ipcl:${TAG} \
-                -f ${WORKING_DIR}/modules/python-nn/Dockerfile ${PACKAGE_DIR_CACHE}
+                -f ${WORKING_DIR}/modules/python/Dockerfile ${PACKAGE_DIR_CACHE}
         echo "### FINISH BUILDING python-ipcl ###"
         echo ""
 
         echo "### START BUILDING eggroll-ipcl ###"
         docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image-ipcl --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/eggroll-ipcl:${TAG} \
-                -f ${WORKING_DIR}/modules/${module}/Dockerfile ${PACKAGE_DIR_CACHE}
+                -f ${WORKING_DIR}/modules/eggroll/Dockerfile ${PACKAGE_DIR_CACHE}
         echo "### FINISH BUILDING eggroll-ipcl ###"
+        echo ""
+}
+
+buildSparkBasicIPCL(){
+        echo "### START BUILDING python-spark-ipcl ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=python-ipcl --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/python-spark-ipcl:${TAG} \
+                -f ${WORKING_DIR}/modules/python-spark/Dockerfile ${WORKING_DIR}/modules/python-spark/
+        echo "### FINISH BUILDING python-spark-ipcl ###"
         echo ""
 
         echo "### START BUILDING spark-base-ipcl ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=python-ipcl --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/spark-base-ipcl:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${WORKING_DIR}/modules/spark-base/
-        echo "### FINISH BUILDING spark-base ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=python-ipcl --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/spark-base-ipcl:${TAG} \
+                -f ${WORKING_DIR}/modules/spark-base/Dockerfile ${WORKING_DIR}/modules/spark-base/
+        echo "### FINISH BUILDING spark-base-ipcl ###"
         echo ""
 
-        echo "### START BUILDING spark-worker ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=spark-base-ipcl --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/spark-worker-ipcl:${TAG} -f ${WORKING_DIR}/modules/python-nn/Dockerfile ${WORKING_DIR}/modules/spark-worker/
-        echo "### FINISH BUILDING spark-worker ###"
+        echo "### START BUILDING spark-worker-ipcl ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=spark-base-ipcl --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/spark-worker-ipcl:${TAG} -f ${WORKING_DIR}/modules/spark-worker/Dockerfile ${WORKING_DIR}/modules/spark-worker/
+        echo "### FINISH BUILDING spark-worker-ipcl ###"
         echo ""
 }
 
@@ -181,7 +204,7 @@ buildOptionalModule(){
         echo "START BUILDING Optional Module IMAGE"
 
         echo "### START BUILDING client ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/client:${TAG} \
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=python --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/client:${TAG} \
                 -f ${WORKING_DIR}/modules/client/Dockerfile ${PACKAGE_DIR_CACHE}
         echo "### FINISH BUILDING client ###"
         echo ""
@@ -197,11 +220,14 @@ buildOptionalModule(){
 
 buildModule(){
         # TODO selective build
-        buildComponentEggrollModule
-        buildComponentSparkModule
-        buildOptionalModule
-        buildAlgorithmNN
-        buildDeviceIPCL
+
+        [ "$Build_Basic" -gt 0 ] && buildEggrollBasicCPU
+        [ "$Build_Spark" -gt 0 ] && buildSparkBasicCPU
+        [ "$Build_OP" -gt 0 ] && buildOptionalModule
+        [ "$Build_NN" -gt 0 ] && buildEggrollNNCPU
+        [ "$Build_NN" -gt 0 ] && [ "$Build_IPCL" -gt 0 ] && buildSparkNNCPU
+        [ "$Build_IPCL" -gt 0 ] && buildEggrollBasicIPCL
+        [ "$Build_Spark" -gt 0 ] && [ "$Build_IPCL" -gt 0 ] && buildSparkBasicIPCL
 }
 
 pushImage() {
