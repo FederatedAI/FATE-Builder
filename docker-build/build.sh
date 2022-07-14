@@ -111,7 +111,7 @@ buildAlgorithmNN(){
 
 buildFateUpgradeManager(){
         echo "START BUILDING fate-upgrade-manager"
-        cp ${WORKING_DIR}/fate-upgrade-manager/upgrade-mysql.py ${PACKAGE_DIR_CACHE}
+        cp ${WORKING_DIR}/modules/fate-upgrade-manager/upgrade-mysql.py ${PACKAGE_DIR_CACHE}
         docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/fate-upgrade-manager:${TAG} -f ${WORKING_DIR}/modules/fate-upgrade-manager/Dockerfile ${PACKAGE_DIR_CACHE}
         echo "FINISH BUILDING fate-upgrade-manager"
 }
