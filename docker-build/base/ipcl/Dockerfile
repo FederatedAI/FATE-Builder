@@ -8,10 +8,11 @@ RUN yum install -y flex devtoolset-8 numactl-devel
 SHELL ["/usr/bin/scl", "enable", "devtoolset-8"]
 
 # install cmake
-RUN wget http://cmake.org/files/v3.22/cmake-3.22.0.tar.gz \
-    && tar zxf cmake-3.22.0.tar.gz && cd cmake-3.22.0 \
-    && ./configure && make install -j \
-    && cd .. && rm -rf cmake-*
+# RUN wget http://cmake.org/files/v3.22/cmake-3.22.0.tar.gz \
+#     && tar zxf cmake-3.22.0.tar.gz && cd cmake-3.22.0 \
+#     && ./configure && make install -j \
+#     && cd .. && rm -rf cmake-*
+RUN pip install cmake==3.22
 
 # install nasm
 RUN wget --no-check-certificate https://www.nasm.us/pub/nasm/releasebuilds/2.15.05/nasm-2.15.05.tar.gz \
