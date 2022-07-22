@@ -199,6 +199,13 @@ buildSparkBasicIPCL(){
         echo ""
 }
 
+buildFateUpgradeManager(){
+        echo "START BUILDING fate-upgrade-manager"
+        cp ${WORKING_DIR}/modules/fate-upgrade-manager/upgrade-mysql.py ${PACKAGE_DIR_CACHE}
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/fate-upgrade-manager:${TAG} -f ${WORKING_DIR}/modules/fate-upgrade-manager/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "FINISH BUILDING fate-upgrade-manager"
+}
+
 buildOptionalModule(){
 
         echo "START BUILDING Optional Module IMAGE"
@@ -223,11 +230,12 @@ buildModule(){
 
         [ "$Build_Basic" -gt 0 ] && buildEggrollBasicCPU
         [ "$Build_Spark" -gt 0 ] && buildSparkBasicCPU
-        [ "$Build_OP" -gt 0 ] && buildOptionalModule
+        [ "$Build_OP" -gt 0 ] && buildOptionalModule && buildFateUpgradeManager
         [ "$Build_NN" -gt 0 ] && buildEggrollNNCPU
         [ "$Build_NN" -gt 0 ] && [ "$Build_IPCL" -gt 0 ] && buildSparkNNCPU
         [ "$Build_IPCL" -gt 0 ] && buildEggrollBasicIPCL
         [ "$Build_Spark" -gt 0 ] && [ "$Build_IPCL" -gt 0 ] && buildSparkBasicIPCL
+
 }
 
 pushImage() {
