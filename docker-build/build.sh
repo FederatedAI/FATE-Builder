@@ -184,7 +184,7 @@ buildEggrollBasicIPCL(){
 buildSparkBasicIPCL(){
         echo "### START BUILDING fateflow-spark-ipcl ###"
         docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-ipcl --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/fateflow-spark-ipcl:${TAG} \
-                -f ${WORKING_DIR}/modules/fa te flow-spark/Dockerfile ${WORKING_DIR}/modules/fateflow-spark/
+                -f ${WORKING_DIR}/modules/fateflow-spark/Dockerfile ${WORKING_DIR}/modules/fateflow-spark/
         echo "### FINISH BUILDING fateflow-spark-ipcl ###"
         echo ""
 
