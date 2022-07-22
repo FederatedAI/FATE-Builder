@@ -22,6 +22,7 @@ set -euxo pipefail
 : "${docker_options:=""}"
 : "${Build_Basic:=1}"
 : "${Build_OP:=1}"
+: "${Build_FUM:=1}"
 : "${Build_NN:=0}"
 : "${Build_Spark:=0}"
 : "${Build_IPCL:=0}"
@@ -230,7 +231,8 @@ buildModule(){
 
         [ "$Build_Basic" -gt 0 ] && buildEggrollBasicCPU
         [ "$Build_Spark" -gt 0 ] && buildSparkBasicCPU
-        [ "$Build_OP" -gt 0 ] && buildOptionalModule && buildFateUpgradeManager
+        [ "$Build_OP" -gt 0 ] && buildOptionalModule
+        [ "$Build_FUM" -gt 0 ] && buildFateUpgradeManager
         [ "$Build_NN" -gt 0 ] && buildEggrollNNCPU
         [ "$Build_NN" -gt 0 ] && [ "$Build_IPCL" -gt 0 ] && buildSparkNNCPU
         [ "$Build_IPCL" -gt 0 ] && buildEggrollBasicIPCL
