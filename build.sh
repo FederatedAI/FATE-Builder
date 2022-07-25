@@ -77,7 +77,7 @@ alias _git="git -C '$FATE_DIR'"
 _git status >/dev/null
 
 alias coscli="'$dir/bin/coscli-$plat' -c '$dir/cos.yaml'"
-coscli ls 'cos://fate' >/dev/null
+# coscli ls 'cos://fate' >/dev/null
 
 function git_pull
 {
