@@ -137,12 +137,6 @@ function build_fateboard
 
     [ "$COPY_ONL" -gt 0 ] ||
     {
-        [ -n "$(node --help | ggrep -i -- '--openssl-legacy-provider')" ] && \
-            declare -x NODE_OPTIONS="--openssl-legacy-provider ${NODE_OPTIONS:-}"
-
-        npm --prefix "$source/resources-front-end" --quiet install
-        npm --prefix "$source/resources-front-end" --quiet run build
-
         mvn -DskipTests -f "$source/pom.xml" -q clean package
     }
 

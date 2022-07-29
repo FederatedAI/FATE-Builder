@@ -28,12 +28,6 @@
 
 - Node.js LTS version (v16) and the latest npm
 
-  Node.js Current version (v17) is also supported, but you need to add `--openssl-legacy-provider` to `NODE_OPTIONS`. E.g:
-
-  ```bash
-  NODE_OPTIONS="--openssl-legacy-provider $NODE_OPTIONS" npm run build
-  ```
-
 - Java 8 and latest Maven
 
   FATE-Board works on both Java SE 8 and 17 (should work on Java SE 11 as well but not tested), Eggroll only works on Java SE 8.
