@@ -1,4 +1,26 @@
 use_registry: false
+use_deserialize_safe_module: false
+dependent_distribution: false
+encrypt_password: false
+encrypt_module: fate_arch.common.encrypt_utils#pwdecrypt
+private_key:
+party_id: ${party_id}
+hook_module:
+  client_authentication: fate_flow.hook.flow.client_authentication
+  site_authentication: fate_flow.hook.flow.site_authentication
+  permission: fate_flow.hook.flow.permission
+hook_server_name:
+authentication:
+  client:
+    switch: false
+    http_app_key:
+    http_secret_key:
+  site:
+    switch: false
+permission:
+  switch: false
+  component: false
+  dataset: false
 fateflow:
   host: ${fate_flow_ip}
   http_port: ${fate_flow_httpPort}
