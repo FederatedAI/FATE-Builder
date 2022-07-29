@@ -2,6 +2,8 @@ import sys
 import time
 from kubernetes import client, config
 APP_NAME = "python"
+
+
 def shutdown_flow(namespace, api, app):
     if type(app) == client.V1Deployment:
         update_deployment(namespace, api, app)
@@ -23,6 +25,8 @@ def shutdown_flow(namespace, api, app):
             time.sleep(10)
     print("cannot shutdown the flow's pod")
     return 1
+
+
 def get_flow_app(namespace, api):
     deployments = api.list_namespaced_deployment(namespace)
     stss = api.list_namespaced_stateful_set(namespace)
@@ -33,17 +37,23 @@ def get_flow_app(namespace, api):
         if sts.metadata.name == APP_NAME:
             return sts
     return None
+
+
 def update_deployment(namespace, api, app):
     # Update container image
     app.spec.replicas = 0
     api.patch_namespaced_deployment(
         name=APP_NAME, namespace=namespace, body=app
     )
+
+
 def update_sts(namespace, api, app):
     app.spec.replicas = 0
     api.patch_namespaced_stateful_set(
         name=APP_NAME, namespace=namespace, body=app
     )
+
+
 if __name__ == '__main__':
     _, namespace = sys.argv
     config.load_incluster_config()
