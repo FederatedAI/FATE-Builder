@@ -6,6 +6,7 @@ FROM python:3.6
 
 WORKDIR /data/projects/fate/
 
+COPY pipeline /data/projects/fate/pipeline
 RUN pip install notebook fate-client pandas sklearn
 RUN mkdir /data/projects/fate/logs
 COPY --from=data /data/projects/fate/examples /data/projects/fate/examples
