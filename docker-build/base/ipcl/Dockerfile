@@ -33,11 +33,7 @@ ENV OPENSSL_ROOT_DIR=/usr/local/openssl
 
 WORKDIR /data/projects/fate/
 ENV WORKDIR /data/projects/fate
-COPY ipcl_pkg.tar.gz .
-COPY ipcl_demo.tar.gz .
-RUN tar -xzf ipcl_pkg.tar.gz; \
-    tar -xzf ipcl_demo.tar.gz;
 
-# install ipcl-python
-ENV IPCL_DIR=${WORKDIR}/ipcl_pkg/ipcl
-RUN cd ./ipcl_pkg/ipcl-python/ && python setup.py install
+ENV IPCL_DIR=${WORKDIR}/pailliercryptolib_python
+RUN git clone https://github.com/intel/pailliercryptolib_python \
+     && cd pailliercryptolib_python && python setup.py install
