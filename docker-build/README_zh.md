@@ -90,7 +90,7 @@ FATE_DIR=/root/FATE bash build.sh all
 | `Docker_Options` | 构建镜像的docker运行参数 | 默认空，可以使用 `--no-cache`去除构建缓存 |
 | `Build_Basic` | 构建基本的镜像 | 1 |
 | `Build_OP` | 构建拓展的镜像（包含client和fate-test） | 1 |
-| `Build_FUM` | 构建FUM镜像 | 1 |
+| `Build_FUM` | 构建FUM镜像 | 0 |
 | `Build_NN` | 构建包含NN算法的镜像 | 1 |
 | `Build_Spark` | 构建Spark计算引擎的镜像 | 1 |
 | `Build_IPCL` | 构建支持IPCL的镜像 | 0 |

@@ -22,7 +22,7 @@ set -euxo pipefail
 : "${Docker_Options:=""}"
 : "${Build_Basic:=1}"
 : "${Build_OP:=1}"
-: "${Build_FUM:=1}"
+: "${Build_FUM:=0}"
 : "${Build_NN:=1}"
 : "${Build_Spark:=1}"
 : "${Build_IPCL:=0}"
@@ -199,7 +199,7 @@ buildOptionalModule(){
 
         echo "### START BUILDING client ###"
         docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/client:${TAG} \
-                -f ${WORKING_DIR}/modules/client/Dockerfile ${WORKING_DIR}/modules/${module}/
+                -f ${WORKING_DIR}/modules/client/Dockerfile ${WORKING_DIR}/modules/client/
         echo "### FINISH BUILDING client ###"
         echo ""
 
