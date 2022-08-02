@@ -73,6 +73,7 @@ buildBase() {
 
 buildComponentEggrollModule() {
         echo "START BUILDING Eggroll Module IMAGE"
+        cp -r ${WORKING_DIR}/modules/client/pipeline ${PACKAGE_DIR_CACHE}
         for module in "python" "fateboard" "eggroll" "client"; do
         #cd ${WORKING_DIR}
                 echo "### START BUILDING ${module} ###"
