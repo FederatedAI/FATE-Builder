@@ -79,7 +79,7 @@ After configuring `.env`, use the following command to build all images:
 FATE_DIR=/root/FATE bash build.sh all
 ```
 
-## 环境变量配置
+## Environments
 
 | name | description | default |
 | --- | --- | --- |
@@ -89,7 +89,7 @@ FATE_DIR=/root/FATE bash build.sh all
 | `Docker_Options` | build images docker options | The default is empty, you can use `--no-cache` to remove the build cache |
 | `Build_Basic` | build basic images | 1 |
 | `Build_OP` | build optional images (including client and fate-test) | 1 |
-| `Build_FUM` | build FUM images | 1 |
+| `Build_FUM` | build FUM images | 0 |
 | `Build_NN` | Build images containing the NN algorithm | 1 |
 | `Build_Spark` | Build images of the Spark computing engine | 1 |
 | `Build_IPCL` | Build images that supports IPCL | 0 |
