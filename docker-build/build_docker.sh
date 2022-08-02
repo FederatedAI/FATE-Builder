@@ -22,7 +22,7 @@ source_dir=$(
     cd ../
     pwd
 )
-support_modules=(bin conf examples build deploy proxy fate fateflow fateboard eggroll ipcl_pkg ipcl_demo)
+support_modules=(bin conf examples build deploy proxy fate fateflow fateboard eggroll)
 environment_modules=(python36 jdk pypi)
 packaging_modules=()
 echo ${source_dir}
@@ -129,23 +129,6 @@ packaging_eggroll() {
     tar xzf eggroll.tar.gz
     rm -rf eggroll.tar.gz
     echo "[INFO] package eggroll done"
-}
-
-packaging_ipcl_pkg(){
-    echo "[INFO] package ipcl_pkg start"
-    ipcl_pkg_tarball="${IPCL_PKG_DIR}/ipcl_pkg.tar.gz"
-    echo "[INFO] -- Processing ipcl_pkg in ${ipcl_pkg_tarball}"
-    mkdir -p ipcl
-    tar -zxf ${ipcl_pkg_tarball} -C ipcl
-    cp -r ipcl/ipcl_pkg ${package_dir}
-    rm -rf ipcl
-    echo "[INFO] package ipcl_pkg done"
-}
-
-packaging_ipcl_demo(){
-    echo "[INFO] package ipcl_demo start"
-    cp -r ipcl_demo ${package_dir}
-    echo "[INFO] package ipcl_demo done"
 }
 
 pull_fateflow() {
