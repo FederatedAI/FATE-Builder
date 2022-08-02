@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2019-2020 VMware, Inc.
+# Copyright 2022 VMware, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,13 @@ set -euxo pipefail
 : "${TAG:=latest}"
 : "${PREFIX:=federatedai}"
 : "${version_tag:=release}"
-: "${docker_options:=""}"
+: "${Docker_Options:=""}"
+: "${Build_Basic:=1}"
+: "${Build_OP:=1}"
+: "${Build_FUM:=0}"
+: "${Build_NN:=1}"
+: "${Build_Spark:=1}"
+: "${Build_IPCL:=0}"
 
 BASE_DIR=$(dirname "$0")
 cd $BASE_DIR
@@ -67,35 +73,60 @@ check_fate_dir() {
 buildBase() {
         echo "START BUILDING BASE IMAGE"
         #cd ${WORKING_DIR}
-        docker build --build-arg version=${version} -f ${WORKING_DIR}/base/Dockerfile -t ${PREFIX}/base-image:${BASE_TAG} ${PACKAGE_DIR_CACHE}
+        docker build --build-arg version=${version} -f ${WORKING_DIR}/base/basic/Dockerfile \
+          -t ${PREFIX}/base-image:${BASE_TAG} ${PACKAGE_DIR_CACHE}
         echo "FINISH BUILDING BASE IMAGE"
 }
 
-buildComponentEggrollModule() {
+# build function name  build+[Component: Spark/Eggroll]+[Algorithm: Basic/NN]+[Device: CPU/IPCL]
+
+buildEggrollBasicCPU() {
         echo "START BUILDING Eggroll Module IMAGE"
-        cp -r ${WORKING_DIR}/modules/client/pipeline ${PACKAGE_DIR_CACHE}
-        for module in "python" "fateboard" "eggroll" "client"; do
-        #cd ${WORKING_DIR}
-                echo "### START BUILDING ${module} ###"
-                docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/${module}:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${PACKAGE_DIR_CACHE}
-                echo "### FINISH BUILDING ${module} ###"
-                echo ""
-        done
+
+        echo "### START BUILDING fateflow ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow:${TAG} \
+                -f ${WORKING_DIR}/modules/fateflow/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING fateflow ###"
+        echo ""
+        echo "### START BUILDING fateboard ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateboard:${TAG} \
+                -f ${WORKING_DIR}/modules/fateboard/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING fateboard ###"
+        echo ""
+
+        echo "### START BUILDING eggroll ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/eggroll:${TAG} \
+                -f ${WORKING_DIR}/modules/eggroll/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING eggroll ###"
+        echo ""
+
         echo "END BUILDING IMAGE"
 }
 
-buildComponentSparkModule(){
+buildSparkBasicCPU(){
         echo "START BUILDING Spark Module IMAGE"
-        for module in "python-spark" "spark-base" "spark-master" "spark-worker"; do
+
+
+        echo "### START BUILDING fateflow-spark ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-spark:${TAG} -f ${WORKING_DIR}/modules/fateflow-spark/Dockerfile ${WORKING_DIR}/modules/fateflow-spark/
+        echo "### FINISH BUILDING fateflow-spark ###"
+        echo ""
+
+        echo "### START BUILDING spark-base ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/spark-base:${TAG} -f ${WORKING_DIR}/modules/spark-base/Dockerfile ${WORKING_DIR}/modules/spark-base/
+        echo "### FINISH BUILDING spark-base ###"
+        echo ""
+
+        for module in "spark-master" "spark-worker"; do
                 echo "### START BUILDING ${module} ###"
-                docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/${module}:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${WORKING_DIR}/modules/${module}/
+                docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=spark-base --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/${module}:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${WORKING_DIR}/modules/${module}/
                 echo "### FINISH BUILDING ${module} ###"
                 echo ""
         done
 
         for module in "nginx"; do
                 echo "### START BUILDING ${module} ###"
-                docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/${module}:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${PACKAGE_DIR_CACHE}
+                docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/${module}:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${PACKAGE_DIR_CACHE}
                 echo "### FINISH BUILDING ${module} ###"
                 echo ""
         done
@@ -103,27 +134,78 @@ buildComponentSparkModule(){
         echo "END BUILDING IMAGE"
 }
 
-buildAlgorithmNN(){
-        echo "### START BUILDING python-nn ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/python-nn:${TAG} -f ${WORKING_DIR}/modules/python-nn/Dockerfile ${PACKAGE_DIR_CACHE}
-        echo "### FINISH BUILDING python-nn ###"
+buildEggrollNNCPU(){
+        echo "### START BUILDING fateflow-nn ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-nn:${TAG} -f ${WORKING_DIR}/modules/fateflow-nn/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING fateflow-nn ###"
+        echo ""
+}
+
+buildSparkNNCPU(){
+        echo "### START BUILDING fateflow-spark-nn ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-spark --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-spark-nn:${TAG} -f ${WORKING_DIR}/modules/fateflow-nn/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING fateflow-spark-nn ###"
+        echo ""
+}
+
+buildEggrollBasicIPCL(){
+        echo "### START BUILDING base-ipcl ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/base-image-ipcl:${TAG} -f ${WORKING_DIR}/base/ipcl/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING base-ipcl ###"
+        echo ""
+
+        echo "### START BUILDING fateflow-ipcl ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image-ipcl --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-ipcl:${TAG} \
+                -f ${WORKING_DIR}/modules/fateflow/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING fateflow-ipcl ###"
+        echo ""
+
+        echo "### START BUILDING eggroll-ipcl ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image-ipcl --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/eggroll-ipcl:${TAG} \
+                -f ${WORKING_DIR}/modules/eggroll/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING eggroll-ipcl ###"
+        echo ""
+}
+
+buildSparkBasicIPCL(){
+        echo "### START BUILDING fateflow-spark-ipcl ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-ipcl --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-spark-ipcl:${TAG} \
+                -f ${WORKING_DIR}/modules/fateflow-spark/Dockerfile ${WORKING_DIR}/modules/fateflow-spark/
+        echo "### FINISH BUILDING fateflow-spark-ipcl ###"
+        echo ""
+
+        echo "### START BUILDING spark-base-ipcl ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-ipcl --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/spark-base-ipcl:${TAG} \
+                -f ${WORKING_DIR}/modules/spark-base/Dockerfile ${WORKING_DIR}/modules/spark-base/
+        echo "### FINISH BUILDING spark-base-ipcl ###"
+        echo ""
+
+        echo "### START BUILDING spark-worker-ipcl ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=spark-base-ipcl --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/spark-worker-ipcl:${TAG} -f ${WORKING_DIR}/modules/spark-worker/Dockerfile ${WORKING_DIR}/modules/spark-worker/
+        echo "### FINISH BUILDING spark-worker-ipcl ###"
         echo ""
 }
 
 buildFateUpgradeManager(){
         echo "START BUILDING fate-upgrade-manager"
         cp ${WORKING_DIR}/modules/fate-upgrade-manager/*.py ${PACKAGE_DIR_CACHE}
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/fate-upgrade-manager:${TAG} -f ${WORKING_DIR}/modules/fate-upgrade-manager/Dockerfile ${PACKAGE_DIR_CACHE}
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fate-upgrade-manager:${TAG} -f ${WORKING_DIR}/modules/fate-upgrade-manager/Dockerfile ${PACKAGE_DIR_CACHE}
         echo "FINISH BUILDING fate-upgrade-manager"
 }
 
 buildOptionalModule(){
 
         echo "START BUILDING Optional Module IMAGE"
+
+        echo "### START BUILDING client ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/client:${TAG} \
+                -f ${WORKING_DIR}/modules/client/Dockerfile ${WORKING_DIR}/modules/client/
+        echo "### FINISH BUILDING client ###"
+        echo ""
+
         for module in "fate-test"; do
-        #cd ${WORKING_DIR}
                 echo "### START BUILDING ${module} ###"
-                docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${docker_options} -t ${PREFIX}/${module}:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${WORKING_DIR}/modules/${module}/
+                docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/${module}:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${WORKING_DIR}/modules/${module}/
                 echo "### FINISH BUILDING ${module} ###"
                 echo ""
         done
@@ -132,16 +214,21 @@ buildOptionalModule(){
 
 buildModule(){
         # TODO selective build
-        buildComponentEggrollModule
-        buildComponentSparkModule
-        buildOptionalModule
-        buildAlgorithmNN
-        buildFateUpgradeManager
+
+        [ "$Build_Basic" -gt 0 ] && buildEggrollBasicCPU
+        [ "$Build_Spark" -gt 0 ] && buildSparkBasicCPU
+        [ "$Build_OP" -gt 0 ] && buildOptionalModule
+        [ "$Build_FUM" -gt 0 ] && buildFateUpgradeManager
+        [ "$Build_NN" -gt 0 ] && buildEggrollNNCPU
+        [ "$Build_NN" -gt 0 ] && [ "$Build_IPCL" -gt 0 ] && buildSparkNNCPU
+        [ "$Build_IPCL" -gt 0 ] && buildEggrollBasicIPCL
+        [ "$Build_Spark" -gt 0 ] && [ "$Build_IPCL" -gt 0 ] && buildSparkBasicIPCL
+
 }
 
 pushImage() {
         ## push image
-        for module in "python" "fateboard" "eggroll" "client" "python-spark" "spark-master" "spark-worker" "nginx" "python-nn" "fate-test"; do
+        for module in "fateflow" "fateboard" "eggroll" "client" "fateflow-spark" "spark-master" "spark-worker" "nginx" "fateflow-nn" "fate-test"; do
                 echo "### START PUSH ${module} ###"
                 docker push ${PREFIX}/${module}:${TAG}
                 echo "### FINISH PUSH ${module} ###"

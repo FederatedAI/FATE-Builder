@@ -80,7 +80,20 @@ PREFIX=<ip_address_of_registry>/federatedai
 FATE_DIR=/root/FATE bash build.sh all
 ```
 
-*在这里，需要设置`FATE_DIR`为FATE的目录。*
+## 环境变量配置
+
+| name | description | default |
+| --- | --- | --- |
+| `FATE_DIR` | FATE代码路径 | `/data/projects/fate` |
+| `TAG` | 构建镜像的TAG | latest |
+| `PREFIX` | 构建镜像的仓库 | federatedai |
+| `Docker_Options` | 构建镜像的docker运行参数 | 默认空，可以使用 `--no-cache`去除构建缓存 |
+| `Build_Basic` | 构建基本的镜像 | 1 |
+| `Build_OP` | 构建拓展的镜像（包含client和fate-test） | 1 |
+| `Build_FUM` | 构建FUM镜像 | 0 |
+| `Build_NN` | 构建包含NN算法的镜像 | 1 |
+| `Build_Spark` | 构建Spark计算引擎的镜像 | 1 |
+| `Build_IPCL` | 构建支持IPCL的镜像 | 0 |
 
 所有用于构建镜像的“ Dockerfile”文件都存储在“docker/“子目录下。在脚本运行完之后，用户可以通过以下命令来检查构建好的镜像：
 

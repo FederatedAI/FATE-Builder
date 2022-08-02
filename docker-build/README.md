@@ -79,7 +79,20 @@ After configuring `.env`, use the following command to build all images:
 FATE_DIR=/root/FATE bash build.sh all
 ```
 
-*Here, you need to set `FATE_DIR` to the FATE directory.*
+## Environments
+
+| name | description | default |
+| --- | --- | --- |
+| `FATE_DIR` | the directory of FATE | `/data/projects/fate` |
+| `TAG` |  build images tag | latest |
+| `PREFIX` | build images prefix | federatedai |
+| `Docker_Options` | build images docker options | The default is empty, you can use `--no-cache` to remove the build cache |
+| `Build_Basic` | build basic images | 1 |
+| `Build_OP` | build optional images (including client and fate-test) | 1 |
+| `Build_FUM` | build FUM images | 0 |
+| `Build_NN` | Build images containing the NN algorithm | 1 |
+| `Build_Spark` | Build images of the Spark computing engine | 1 |
+| `Build_IPCL` | Build images that supports IPCL | 0 |
 
 The command creates the base images and then the component images. After the command finishes, all images of FATE should be created. Use `docker images` to check the newly generated images:
 

@@ -1,6 +1,7 @@
 ARG PREFIX=prefix
 ARG BASE_TAG=tag
-FROM ${PREFIX}/python:${BASE_TAG}
+ARG BASE_IMAGE=image
+FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG}
 
 RUN rpm --rebuilddb && \
     rpm --import /etc/pki/rpm-gpg/RPM* && \

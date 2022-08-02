@@ -1,7 +1,7 @@
 ARG PREFIX=prefix
 ARG BASE_TAG=tag
-
-FROM ${PREFIX}/base-image:${BASE_TAG} as builder
+ARG BASE_IMAGE=image
+FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG} as builder
 WORKDIR /data/projects/fate/
 COPY eggroll.tar.gz .
 COPY fate.tar.gz .
@@ -12,7 +12,7 @@ RUN tar -xzf eggroll.tar.gz; \
 
 RUN ls -l
 
-FROM ${PREFIX}/base-image:${BASE_TAG}
+FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG}
 
 RUN set -eux; \
     rpm --rebuilddb; \
