@@ -188,7 +188,7 @@ buildSparkBasicIPCL(){
 
 buildFateUpgradeManager(){
         echo "START BUILDING fate-upgrade-manager"
-        cp ${WORKING_DIR}/modules/fate-upgrade-manager/upgrade-mysql.py ${PACKAGE_DIR_CACHE}
+        cp ${WORKING_DIR}/modules/fate-upgrade-manager/*.py ${PACKAGE_DIR_CACHE}
         docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fate-upgrade-manager:${TAG} -f ${WORKING_DIR}/modules/fate-upgrade-manager/Dockerfile ${PACKAGE_DIR_CACHE}
         echo "FINISH BUILDING fate-upgrade-manager"
 }
@@ -199,7 +199,7 @@ buildOptionalModule(){
 
         echo "### START BUILDING client ###"
         docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/client:${TAG} \
-                -f ${WORKING_DIR}/modules/client/Dockerfile ${PACKAGE_DIR_CACHE}
+                -f ${WORKING_DIR}/modules/client/Dockerfile ${WORKING_DIR}/modules/${module}/
         echo "### FINISH BUILDING client ###"
         echo ""
 
