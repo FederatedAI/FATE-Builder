@@ -103,7 +103,7 @@ packaging_fateboard() {
     fateboard_version=$(grep -E -m 1 -o "<version>(.*)</version>" ./pom.xml | tr -d '[\\-a-z<>//]' | awk -F "version" '{print $2}')
     echo "[INFO] fateboard version "${fateboard_version}
     
-    docker run --rm -u $(id -u):$(id -g) -v ${source_dir}/fateboard/resources-front-end:/data/projects/fate/fateboard/resources-front-end node:16 /bin/bash -c "cd /data/projects/fate/fateboard/resources-front-end && npm install && npm rebuild node-sass && npm run build"
+    docker run --rm -u $(id -u):$(id -g) -v ${source_dir}/fateboard/resources-front-end:/data/projects/fate/fateboard/resources-front-end node:16 /bin/bash -c "cd /data/projects/fate/fateboard/resources-front-end && npm config set registry https://registry.npm.taobao.org && npm install && npm rebuild node-sass && npm run build"
     
     docker run --rm -u $(id -u):$(id -g) -v ${source_dir}/fateboard:/data/projects/fate/fateboard --entrypoint="" maven:3.6-jdk-8 /bin/bash -c "cd /data/projects/fate/fateboard && mvn clean package -DskipTests"
     mkdir -p ${package_dir}/fateboard/conf
