@@ -1,6 +1,9 @@
 ARG PREFIX=prefix
 ARG BASE_TAG=tag
-FROM ${PREFIX}/python:${BASE_TAG} as data
+ARG BASE_IMAGE=image
+FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG} as data
+
+# TODO pip pkg install
 
 FROM python:3.8
 

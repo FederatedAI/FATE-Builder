@@ -1,7 +1,8 @@
 # runtime envrionment
 ARG PREFIX=prefix
 ARG BASE_TAG=tag
-FROM ${PREFIX}/base-image:${BASE_TAG} as builder
+ARG BASE_IMAGE=image
+FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG} as builder
 
 WORKDIR /data/projects/fate/
 
@@ -18,7 +19,7 @@ RUN tar -xzf fate.tar.gz; \
     tar -xzf examples.tar.gz; \
     tar -xzf conf.tar.gz;
 
-FROM ${PREFIX}/base-image:${BASE_TAG}
+FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG} 
 
 WORKDIR /data/projects/fate
 
