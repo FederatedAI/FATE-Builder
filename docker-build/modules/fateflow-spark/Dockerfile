@@ -7,15 +7,15 @@ RUN rpm --rebuilddb && \
     rpm --import /etc/pki/rpm-gpg/RPM* && \
     yum install -y  which java-1.8.0-openjdk wget && \
     yum clean all && \
-    wget https://archive.apache.org/dist/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz && \
-    tar -xf ./hadoop-2.7.4.tar.gz -C /data/projects/ && rm ./hadoop-2.7.4.tar.gz
+    wget https://archive.apache.org/dist/hadoop/common/hadoop-3.2.1/hadoop-3.2.1.tar.gz && \
+    tar -xf ./hadoop-3.2.1.tar.gz -C /data/projects/ && rm ./hadoop-3.2.1.tar.gz
 
-RUN wget https://archive.apache.org/dist/spark/spark-2.4.1/spark-2.4.1-bin-hadoop2.7.tgz && \
-    tar -xf ./spark-2.4.1-bin-hadoop2.7.tgz -C /data/projects/ && rm ./spark-2.4.1-bin-hadoop2.7.tgz
+RUN wget https://archive.apache.org/dist/spark/spark-3.1.2/spark-3.1.2-bin-hadoop3.2.tgz && \
+    tar -xf ./spark-3.1.2-bin-hadoop3.2.tgz -C /data/projects/ && rm ./spark-3.1.2-bin-hadoop3.2.tgz
 
 ENV JAVA_HOME=/usr/lib/jvm/jre-1.8.0-openjdk
-ENV SPARK_HOME=/data/projects/spark-2.4.1-bin-hadoop2.7/
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/projects/hadoop-2.7.4/lib/native
-ENV PATH=$PATH:/data/projects/spark-2.4.1-bin-hadoop2.7/bin:/data/projects/hadoop-2.7.4/bin
+ENV SPARK_HOME=/data/projects/spark-3.2.1-bin-hadoop3.2/
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/projects/hadoop-3.2.1/lib/native
+ENV PATH=$PATH:/data/projects/spark-3.2.1-bin-hadoop3.2/bin:/data/projects/hadoop-3.2.1/bin
 
 RUN pip install pyspark
