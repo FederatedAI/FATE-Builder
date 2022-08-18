@@ -12,7 +12,7 @@
                 "executor-memory": "1G",
                 "executor-cores": 1
             }
-        },
+        }
     },
     "role": {
         "host": [
