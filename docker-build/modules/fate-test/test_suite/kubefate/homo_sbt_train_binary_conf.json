@@ -5,11 +5,13 @@
         "party_id": 9999
     },
     "job_parameters": {
-        "spark_run": {
-            "num-executors": 1,
-            "total-executor-cores": 1,
-            "executor-memory": "1G",
-            "executor-cores": 1
+        "common": {
+            "spark_run": {
+                "num-executors": 1,
+                "total-executor-cores": 1,
+                "executor-memory": "1G",
+                "executor-cores": 1
+            }
         }
     },
     "role": {
