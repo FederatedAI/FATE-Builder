@@ -1,6 +1,6 @@
 ARG SOURCE_PREFIX=federatedai
 ARG SOURCE_TAG=latest
-FROM ${SOURCE_PREFIX}/python:${SOURCE_TAG}
+FROM ${SOURCE_PREFIX}/fateflow:${SOURCE_TAG}
 
 WORKDIR /data/projects/fate/
 

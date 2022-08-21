@@ -1,13 +1,16 @@
 ARG PREFIX=prefix
 ARG BASE_TAG=tag
-FROM ${PREFIX}/python:${BASE_TAG} as data
+ARG BASE_IMAGE=image
+FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG} as data
 
-FROM python:3.6
+# TODO pip pkg install
+
+FROM python:3.8
 
 WORKDIR /data/projects/fate/
 
 COPY pipeline /data/projects/fate/pipeline
-RUN pip install notebook fate-client pandas sklearn
+RUN pip install notebook fate-client pandas sklearn markupsafe==2.0.1
 RUN mkdir /data/projects/fate/logs
 COPY --from=data /data/projects/fate/examples /data/projects/fate/examples
 COPY --from=data /data/projects/fate/fateflow/examples /data/projects/fate/fateflow/examples
