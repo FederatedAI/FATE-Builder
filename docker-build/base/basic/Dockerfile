@@ -21,10 +21,9 @@ RUN curl -o Python-3.8.13.tar.xz https://www.python.org/ftp/python/3.8.13/Python
     cd Python-3.8.13 && \
     ./configure --prefix=/opt/python3 && \
     make altinstall && \
-    ln -s /opt/python3/bin/python3.8 /usr/bin/python3.8 && \
-    ln -s /usr/bin/python3.8 /usr/bin/python3 && \
-    rm -f /usr/bin/python && \
-    ln -s /usr/bin/python3 /usr/bin/python && \
+    ln -s /opt/python3/bin/python3.8 /usr/local/bin/python3.8 && \
+    ln -s /usr/local/bin/python3.8 /usr/local/bin/python3 && \
+    ln -s /usr/local/bin/python3 /usr/local/bin/python && \
     ln -s /opt/python3/bin/pip3.8 /usr/bin/pip3.8 && \
     ln -s /usr/bin/pip3.8 /usr/bin/pip3 && \
     ln -s /usr/bin/pip3 /usr/bin/pip && \
