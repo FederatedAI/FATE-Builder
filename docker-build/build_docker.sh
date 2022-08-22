@@ -15,14 +15,14 @@
 #  limitations under the License.
 #
 
-set -e
+set -euxo pipefail
 source_dir=$(
     cd $(dirname $0)
     cd ../
     cd ../
     pwd
 )
-support_modules=(bin conf examples build deploy proxy fate fateflow fateboard eggroll)
+support_modules=(bin conf examples build deploy proxy fate fateflow fateboard eggroll ipcl_pkg)
 environment_modules=(python36 jdk pypi)
 packaging_modules=()
 echo ${source_dir}
@@ -129,6 +129,20 @@ packaging_eggroll() {
     tar xzf eggroll.tar.gz
     rm -rf eggroll.tar.gz
     echo "[INFO] package eggroll done"
+}
+
+packaging_ipcl_pkg(){
+    [ "$Build_IPCL" -eq 0 ] && return 0
+    echo "[INFO] package ipcl_pkg start"
+    if [[ ! -d ${IPCL_PKG_DIR} ]] 
+    then
+        git clone --single-branch -b ${IPCL_VERSION}  https://github.com/intel/pailliercryptolib_python pailliercryptolib_python
+        IPCL_PKG_DIR=$(pwd)/pailliercryptolib_python
+    fi
+    mkdir -p ${package_dir}/ipcl_pkg
+    cp -r ${IPCL_PKG_DIR}/* ${package_dir}/ipcl_pkg/
+
+    echo "[INFO] package ipcl_pkg done"
 }
 
 pull_fateflow() {
