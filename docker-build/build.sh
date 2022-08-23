@@ -229,24 +229,53 @@ buildModule(){
 }
 
 pushImage() {
-        ## push image
-        for module in "fateflow" "fateboard" "eggroll" "client" "fateflow-spark" "spark-master" "spark-worker" "nginx" "fateflow-nn" "fate-test"; do
+        ## push basic image
+        for module in "fateflow" "fateboard" "eggroll" ; do
                 echo "### START PUSH ${module} ###"
                 docker push ${PREFIX}/${module}:${TAG}
                 echo "### FINISH PUSH ${module} ###"
                 echo ""
         done
-}
 
-images_push() {
-    echo "Pushing images"
-    for image in $(ls -d docker/modules/*/); do
-        image_name=$(basename $image)
-        echo "Pushing federatedai/$image_name"
-        docker push federatedai/$model_name
-        echo "Pushed federatedai/$image_name"
-    done
-    echo "Pushed images"
+        ## push spark image
+        for module in "fateflow-spark" "spark-master" "spark-worker" "nginx" ; do
+                echo "### START PUSH ${module} ###"
+                docker push ${PREFIX}/${module}:${TAG}
+                echo "### FINISH PUSH ${module} ###"
+                echo ""
+        done
+
+        ## push nn image
+        for module in "fateflow-nn" "fateflow-spark-nn" ; do
+                echo "### START PUSH ${module} ###"
+                docker push ${PREFIX}/${module}:${TAG}
+                echo "### FINISH PUSH ${module} ###"
+                echo ""
+        done
+
+        ## push OP image
+        for module in "client" "fate-test" ; do
+                echo "### START PUSH ${module} ###"
+                docker push ${PREFIX}/${module}:${TAG}
+                echo "### FINISH PUSH ${module} ###"
+                echo ""
+        done
+
+        ## push FUM image
+        for module in "fate-upgrade-manager" ; do
+                echo "### START PUSH ${module} ###"
+                docker push ${PREFIX}/${module}:${TAG}
+                echo "### FINISH PUSH ${module} ###"
+                echo ""
+        done
+
+        ## push IPCL image
+        for module in "fateflow-ipcl" "eggroll-ipcl" "spark-worker-ipcl" ; do
+                echo "### START PUSH ${module} ###"
+                docker push ${PREFIX}/${module}:${TAG}
+                echo "### FINISH PUSH ${module} ###"
+                echo ""
+        done
 }
 
 # start 
