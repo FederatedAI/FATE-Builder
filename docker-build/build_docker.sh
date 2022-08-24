@@ -15,14 +15,15 @@
 #  limitations under the License.
 #
 
-set -euxo pipefail
+set -euxo
 source_dir=$(
     cd $(dirname $0)
     cd ../
     cd ../
     pwd
 )
-support_modules=(bin conf examples build deploy proxy fate fateflow fateboard eggroll ipcl_pkg)
+support_modules=(bin conf examples build deploy proxy fate fateflow fateboard eggroll)
+[ "$Build_IPCL" -gt 0 ] && support_modules[${#support_modules[@]}]=ipcl_pkg
 environment_modules=(python36 jdk pypi)
 packaging_modules=()
 echo ${source_dir}
