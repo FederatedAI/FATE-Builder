@@ -15,12 +15,12 @@ shopt -s expand_aliases extglob
 : "${BUIL_BOA:=1}"
 : "${BUIL_FAT:=1}"
 : "${SKIP_PKG:=0}"
-: "${PATH_CON:=cos://fate/Miniconda3-4.5.4-Linux-x86_64.sh}"
-: "${PATH_JDK:=cos://fate/jdk-8u192.tar.gz}"
-: "${PATH_MYS:=cos://fate/mysql-8.0.28.tar.gz}"
-: "${PATH_RMQ:=cos://fate/rabbitmq-server-generic-unix-3.9.14.tar.xz}"
-: "${PATH_SVR:=cos://fate/supervisor-4.2.4-py2.py3-none-any.whl}"
-: "${PATH_PYM:=cos://fate/PyMySQL-1.0.2-py3-none-any.whl}"
+: "${PATH_CON:=cos://fate/resources/Miniconda3-py38_4.12.0-Linux-x86_64.sh}"
+: "${PATH_JDK:=cos://fate/resources/jdk-8u192.tar.gz}"
+: "${PATH_MYS:=cos://fate/resources/mysql-8.0.28.tar.gz}"
+: "${PATH_RMQ:=cos://fate/resources/rabbitmq-server-generic-unix-3.9.14.tar.xz}"
+: "${PATH_SVR:=cos://fate/resources/supervisor-4.2.4-py2.py3-none-any.whl}"
+: "${PATH_PYM:=cos://fate/resources/PyMySQL-1.0.2-py3-none-any.whl}"
 : "${SYNC_RES:=1}"
 : "${RELE_VER:=release}"
 : "${PACK_ARC:=0}"
@@ -166,7 +166,7 @@ function build_python_packages
         quay.io/pypa/manylinux2014_x86_64:latest \
         /bin/bash -c \
         'yum install -q -y gmp-devel mpfr-devel libmpc-devel && \
-        /opt/python/cp36-cp36m/bin/pip wheel -q -r /requirements.txt -w /wheelhouse || \
+        /opt/python/cp38-cp38/bin/pip wheel -q -r /requirements.txt -w /wheelhouse || \
         exit 1
 
         for whl in /wheelhouse/*.whl
@@ -330,8 +330,8 @@ function package_cluster_install
 {
     local name='fate-cluster-install'
     local source="$dir/templates/$name"
-    local target="$dir/packages/$name-$FATE_VER"
-    local filepath="${target%/*}/${name//-/_}_${FATE_VER}_${RELE_VER}-c7-u18.tar.gz"
+    local target="$dir/packages/$name-$FATE_VER-${RELE_VER}"
+    local filepath="${target%/*}/${name//-/_}_${FATE_VER}_${RELE_VER}.tar.gz"
 
     grm -fr "$target"
     gcp -af "$source" "$target"
