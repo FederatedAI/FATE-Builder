@@ -43,7 +43,7 @@ package() {
         cd $FATE_DIR
         # package all
 
-        IPCL_VERSION=$IPCL_VERSION bash $FATE_DIR/build/package-build/build_docker.sh ${version_tag} all
+        Build_IPCL=$Build_IPCL IPCL_VERSION=$IPCL_VERSION bash $FATE_DIR/build/package-build/build_docker.sh ${version_tag} all
 
         rm -rf $FATE_DIR/build/package-build/build_docker.sh
 
