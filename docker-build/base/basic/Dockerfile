@@ -3,9 +3,8 @@ FROM centos:centos7
 ARG version
 
 USER root
-
+ENV VIRTUAL_ENV ""
 WORKDIR /data/projects/python/
-
 COPY requirements.txt /data/projects/python/
 
 RUN set -eux && \
