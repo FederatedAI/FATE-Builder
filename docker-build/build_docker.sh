@@ -133,7 +133,6 @@ packaging_eggroll() {
 }
 
 packaging_ipcl_pkg(){
-    [ "$Build_IPCL" -eq 0 ] && return 0
     echo "[INFO] package ipcl_pkg start"
     if [[ ! -d ${IPCL_PKG_DIR} ]] 
     then

@@ -222,7 +222,7 @@ buildModule(){
         [ "$Build_OP" -gt 0 ] && buildOptionalModule
         [ "$Build_FUM" -gt 0 ] && buildFateUpgradeManager
         [ "$Build_NN" -gt 0 ] && buildEggrollNNCPU
-        [ "$Build_NN" -gt 0 ] && [ "$Build_IPCL" -gt 0 ] && buildSparkNNCPU
+        [ "$Build_NN" -gt 0 ] && [ "$Build_Spark" -gt 0 ] && buildSparkNNCPU
         [ "$Build_IPCL" -gt 0 ] && buildEggrollBasicIPCL
         [ "$Build_Spark" -gt 0 ] && [ "$Build_IPCL" -gt 0 ] && buildSparkBasicIPCL
 
@@ -230,52 +230,90 @@ buildModule(){
 
 pushImage() {
         ## push basic image
-        for module in "fateflow" "fateboard" "eggroll" ; do
-                echo "### START PUSH ${module} ###"
-                docker push ${PREFIX}/${module}:${TAG}
-                echo "### FINISH PUSH ${module} ###"
-                echo ""
-        done
+        if [ "$Build_Basic" -gt 0 ]
+        then
+                for module in "fateflow" "fateboard" "eggroll" ; do
+                        echo "### START PUSH ${module} ###"
+                        docker push ${PREFIX}/${module}:${TAG}
+                        echo "### FINISH PUSH ${module} ###"
+                        echo ""
+                done
+        fi
 
         ## push spark image
-        for module in "fateflow-spark" "spark-master" "spark-worker" "nginx" ; do
-                echo "### START PUSH ${module} ###"
-                docker push ${PREFIX}/${module}:${TAG}
-                echo "### FINISH PUSH ${module} ###"
-                echo ""
-        done
+        if [ "$Build_Spark" -gt 0 ]
+        then
+                for module in "fateflow-spark" "spark-master" "spark-worker" "nginx" ; do
+                        echo "### START PUSH ${module} ###"
+                        docker push ${PREFIX}/${module}:${TAG}
+                        echo "### FINISH PUSH ${module} ###"
+                        echo ""
+                done
+        fi
 
         ## push nn image
-        for module in "fateflow-nn" "fateflow-spark-nn" ; do
-                echo "### START PUSH ${module} ###"
-                docker push ${PREFIX}/${module}:${TAG}
-                echo "### FINISH PUSH ${module} ###"
-                echo ""
-        done
+        if [ "$Build_NN" -gt 0 ]
+        then
+                for module in "fateflow-nn" ; do
+                        echo "### START PUSH ${module} ###"
+                        docker push ${PREFIX}/${module}:${TAG}
+                        echo "### FINISH PUSH ${module} ###"
+                        echo ""
+                done
+        fi
+
+        if [ "$Build_NN" -gt 0 ] && [ "$Build_Spark" -gt 0 ]
+        then
+                for module in "fateflow-spark-nn" ; do
+                        echo "### START PUSH ${module} ###"
+                        docker push ${PREFIX}/${module}:${TAG}
+                        echo "### FINISH PUSH ${module} ###"
+                        echo ""
+                done
+        fi
 
         ## push OP image
-        for module in "client" "fate-test" ; do
-                echo "### START PUSH ${module} ###"
-                docker push ${PREFIX}/${module}:${TAG}
-                echo "### FINISH PUSH ${module} ###"
-                echo ""
-        done
+        if [ "$Build_OP" -gt 0 ]
+        then
+                for module in "client" "fate-test" ; do
+                        echo "### START PUSH ${module} ###"
+                        docker push ${PREFIX}/${module}:${TAG}
+                        echo "### FINISH PUSH ${module} ###"
+                        echo ""
+                done
+        fi
 
         ## push FUM image
-        for module in "fate-upgrade-manager" ; do
-                echo "### START PUSH ${module} ###"
-                docker push ${PREFIX}/${module}:${TAG}
-                echo "### FINISH PUSH ${module} ###"
-                echo ""
-        done
+        if [ "$Build_FUM" -gt 0 ]
+        then
+                for module in "fate-upgrade-manager" ; do
+                        echo "### START PUSH ${module} ###"
+                        docker push ${PREFIX}/${module}:${TAG}
+                        echo "### FINISH PUSH ${module} ###"
+                        echo ""
+                done
+        fi
 
         ## push IPCL image
-        for module in "fateflow-ipcl" "eggroll-ipcl" "spark-worker-ipcl" ; do
-                echo "### START PUSH ${module} ###"
-                docker push ${PREFIX}/${module}:${TAG}
-                echo "### FINISH PUSH ${module} ###"
-                echo ""
-        done
+        if [ "$Build_IPCL" -gt 0 ]
+        then
+                for module in "fateflow-ipcl" "eggroll-ipcl" ; do
+                        echo "### START PUSH ${module} ###"
+                        docker push ${PREFIX}/${module}:${TAG}
+                        echo "### FINISH PUSH ${module} ###"
+                        echo ""
+                done
+        fi
+
+        if [ "$Build_IPCL" -gt 0 ] && [ "$Build_Spark" -gt 0 ]
+        then
+                for module in "spark-worker-ipcl" "fateflow-spark-ipcl" ; do
+                        echo "### START PUSH ${module} ###"
+                        docker push ${PREFIX}/${module}:${TAG}
+                        echo "### FINISH PUSH ${module} ###"
+                        echo ""
+                done
+        fi
 }
 
 # start 
