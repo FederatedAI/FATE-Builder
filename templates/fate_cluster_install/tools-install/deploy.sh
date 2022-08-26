@@ -10,11 +10,6 @@ then
   mkdir -p  "${pbase}/${pname}/bin"
   tar xzf   "${workdir}/files/debug.tar.gz" -C "${pbase}/${pname}/bin"
 fi
-if [  ! -d "${pbase}/${pname}/build" ]
-then
-  mkdir -p  "${pbase}/${pname}"
-  tar xzf   "${workdir}/files/build.tar.gz" -C "${pbase}/${pname}"
-fi
 if [  ! -d "${pbase}/${pname}/deploy" ]
 then
   mkdir -p  "${pbase}/${pname}"

@@ -188,8 +188,7 @@ function build_fate
     grm -rf "$dir/build/fate" "$dir/build/fateflow"
     gmkdir -p "$dir/build/fate/conf" "$dir/build/fate/proxy" "$dir/build/fateflow"
 
-    gcp -af "$FATE_DIR/"{RELEASE.md,fate.env,bin,build,deploy,examples,python} \
-        "$FATE_DIR/build/standalone-install-build/init.sh" "$dir/build/fate"
+    gcp -af "$FATE_DIR/"{RELEASE.md,fate.env,bin,deploy,examples,python} "$dir/build/fate"
     gcp -af "$FATE_DIR/c/proxy" "$dir/build/fate/proxy/nginx"
     gcp -af "$FATE_DIR/conf/"!(local.*).yaml "$dir/build/fate/conf"
     gcp -af "$FATE_DIR/fateflow/"{RELEASE.md,bin,conf,examples,python} "$dir/build/fateflow"
@@ -241,8 +240,8 @@ function push_archive
 function package_fate_install
 {
     local source="$dir/build/fate"
-    local target="$dir/packages/FATE_install_$FATE_VER"
-    local filepath="${target}_${RELE_VER}.tar.gz"
+    local target="$dir/packages/FATE_install_${FATE_VER}_${RELE_VER}"
+    local filepath="$target.tar.gz"
 
     grm -fr "$target"
     gmkdir -p "$target"
@@ -259,7 +258,7 @@ function package_fate_install
     gmd5sum "$target/"*.tar.gz | gawk '{ sub(/\/.+\//, ""); sub(/\.tar\.gz/, ""); print $2 ":" $1 }' \
         >"$target/packages_md5.txt"
 
-    gfind "$source" -mindepth 1 -maxdepth 1 -type f -not -iname 'init.sh' -print0 | \
+    gfind "$source" -mindepth 1 -maxdepth 1 -type f -print0 | \
         parallel -0Xj1 gcp -af '{}' "$target"
     gcp -af "$source/python/requirements.txt" "$target"
 
@@ -269,7 +268,7 @@ function package_fate_install
 
 function package_python_packages
 {
-    local name="pip-packages-fate-$FATE_VER"
+    local name="pip_packages_fate_${FATE_VER}"
     local filepath="$dir/packages/$name.tar.gz"
 
     gtar -cpz -f "$filepath" -C "$dir/build" --transform "s/^pypkg/$name/" 'pypkg'
@@ -294,8 +293,8 @@ function package_standalone
 
 function package_standalone_install
 {
-    local target="$dir/packages/standalone_fate_install_$FATE_VER"
-    local filepath="${target}_${RELE_VER}.tar.gz"
+    local target="$dir/packages/standalone_fate_install_${FATE_VER}_${RELE_VER}"
+    local filepath="$target.tar.gz"
 
     target="$target" package_standalone
 
@@ -305,8 +304,8 @@ function package_standalone_install
 
 function package_standalone_docker
 {
-    local target="$dir/packages/standalone_fate_docker_image_$FATE_VER"
-    local filepath="${target}_${RELE_VER}.tar.gz"
+    local target="$dir/packages/standalone_fate_docker_image_${FATE_VER}_${RELE_VER}"
+    local filepath="${target}.tar.gz"
 
     local image_hub='federatedai/standalone_fate'
     local image_tcr='ccr.ccs.tencentyun.com/federatedai/standalone_fate'
@@ -328,10 +327,10 @@ function package_standalone_docker
 
 function package_cluster_install
 {
-    local name='fate-cluster-install'
+    local name='fate_cluster_install'
     local source="$dir/templates/$name"
-    local target="$dir/packages/$name-$FATE_VER-${RELE_VER}"
-    local filepath="${target%/*}/${name//-/_}_${FATE_VER}_${RELE_VER}.tar.gz"
+    local target="$dir/packages/${name}_${FATE_VER}_${RELE_VER}"
+    local filepath="$target.tar.gz"
 
     grm -fr "$target"
     gcp -af "$source" "$target"
@@ -363,8 +362,8 @@ function package_ansible_offline
 {
     local name='AnsibleFATE'
     local source="$dir/templates/$name"
-    local target="$dir/packages/$name-$FATE_VER-$RELE_VER-offline"
-    local filepath="${target%/*}/${name}_${FATE_VER}_${RELE_VER}-offline.tar.gz"
+    local target="$dir/packages/${name}_${FATE_VER}_${RELE_VER}_offline"
+    local filepath="$target.tar.gz"
 
     grm -fr "$target"
     gcp -af "$source" "$target"
@@ -388,7 +387,6 @@ function package_ansible_offline
     gln -frs "$target/roles/python/files/${resources[conda]##*/}" "$target/roles/supervisor/files"
     gcp -af "${resources[supervisor]}" "${resources[pymysql]}" "$target/roles/supervisor/files"
 
-    gtar -cpz -f "$target/roles/check/files/build.tar.gz" -C "$dir/build/fate" 'build'
     gtar -cpz -f "$target/roles/check/files/deploy.tar.gz" -C "$dir/build/fate" 'deploy'
 
     gmkdir -p "$target/roles/eggroll/files"
@@ -410,8 +408,8 @@ function package_ansible_online
 {
     local name='AnsibleFATE'
     local source="$dir/templates/$name"
-    local target="$dir/packages/$name-$FATE_VER-$RELE_VER-online"
-    local filepath="${target%/*}/${name}_${FATE_VER}_${RELE_VER}-online.tar.gz"
+    local target="$dir/packages/${name}_${FATE_VER}_${RELE_VER}_online"
+    local filepath="$target.tar.gz"
 
     grm -fr "$target"
     gcp -af "$source" "$target"
