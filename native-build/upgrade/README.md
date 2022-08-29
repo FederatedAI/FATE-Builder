@@ -14,7 +14,7 @@
 bash upgrade.sh
 ```
 
-默认脚本会自动下载 release 包，如无需下载，请设置 `DOWNLOAD=0`，手工下载 `"https://webank-ai-1251170195.cos.ap-guangzhou.myqcloud.com/fate_cluster_install_${DEST_VER}_release-c7-u18.tar.gz"` 并放到 "archives/$DEST_VER.tar.gz"
+默认脚本会自动下载 release 包，如无需下载，请设置 `DOWNLOAD=0`，手工下载 `"https://webank-ai-1251170195.cos.ap-guangzhou.myqcloud.com/fate/${version}/release/fate_cluster_install_${DEST_VER}_release.tar.gz"` 并放到 "archives/$DEST_VER.tar.gz"
 
 ## 配置修改
 

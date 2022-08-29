@@ -240,7 +240,7 @@ function push_archive
 function package_fate_install
 {
     local source="$dir/build/fate"
-    local target="$dir/packages/FATE_install_${FATE_VER}_${RELE_VER}"
+    local target="$dir/packages/fate_install_${FATE_VER}_${RELE_VER}"
     local filepath="$target.tar.gz"
 
     grm -fr "$target"
@@ -281,22 +281,24 @@ function package_standalone
     gmkdir -p "$target/fate"
 
     gcp -af "$dir/build/fate/"!(python*|proxy*) "$dir/build/"{fateboard,fateflow} "$target"
+    gcp -af "$source/"*.sh "$target/bin"
     gcp -af  "$dir/build/fate/python" "$target/fate"
     gln -frs "$target/fate/python/requirements.txt" "$target/requirements.txt"
 
-    gmkdir -p "$target/env/"{jdk,python36}
+    gmkdir -p "$target/env/"{jdk,python}
     gcp -af "${resources[jdk]}" "$target/env/jdk"
-    gcp -af "${resources[conda]}" "$target/env/python36"
+    gcp -af "${resources[conda]}" "$target/env/python"
 
     gcp -af "$dir/build/pypkg" "$target/env/pypi"
 }
 
 function package_standalone_install
 {
+    local source="$dir/templates/standalone_fate"
     local target="$dir/packages/standalone_fate_install_${FATE_VER}_${RELE_VER}"
     local filepath="$target.tar.gz"
 
-    target="$target" package_standalone
+    source="$source" target="$target" package_standalone
 
     gtar -cpz -f "$filepath" -C "${target%/*}" "${target##*/}"
     filepath="$filepath" push_archive
@@ -304,6 +306,7 @@ function package_standalone_install
 
 function package_standalone_docker
 {
+    local source="$dir/templates/standalone_fate"
     local target="$dir/packages/standalone_fate_docker_image_${FATE_VER}_${RELE_VER}"
     local filepath="${target}.tar.gz"
 
@@ -313,10 +316,10 @@ function package_standalone_docker
     local image_tag="$FATE_VER"
     [ "$RELE_VER" == 'release' ] || image_tag+="-$RELE_VER"
 
-    target="$target" package_standalone
+    source="$source" target="$target" package_standalone
 
     docker buildx build --compress --progress=plain --pull --rm \
-        --file "$dir/Dockerfile.Centos" --tag "$image_hub:$image_tag" "$target"
+        --file "$source/Dockerfile" --tag "$image_hub:$image_tag" "$target"
 
     docker save "$image_hub:$image_tag" | gzip > "$filepath"
     filepath="$filepath" push_archive

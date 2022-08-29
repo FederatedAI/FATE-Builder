@@ -8,20 +8,20 @@ ARG LC_ALL LANG WORKDIR
 WORKDIR $WORKDIR
 COPY . .
 
-RUN is_root=1 ./init.sh init && rm -fr env/jdk/*.tar.gz env/pypi env/python36/*.sh
+RUN is_root=1 ./bin/init.sh init && rm -fr env/jdk/*.tar.gz env/pypi env/python/*.sh
 
 From centos:7
 
 ARG LC_ALL LANG WORKDIR
 ENV LC_ALL=$LC_ALL LANG=$LANG WORKDIR=$WORKDIR
-ENV PATH="$WORKDIR/env/python36/venv/bin:$PATH"
+ENV PATH="$WORKDIR/env/python38/venv/bin:$PATH"
 
-EXPOSE 8080/tcp 9360/tcp 9380/tcp
+EXPOSE 8080/tcp 9380/tcp 9380/tcp
 
 WORKDIR $WORKDIR
 COPY --from=builder $WORKDIR .
 
 RUN is_root=1 ./bin/install_os_dependencies.sh && yum clean all
 
-ENTRYPOINT ["./build/standalone-docker-build/docker-entrypoint.sh"]
+ENTRYPOINT ["./bin/docker-entrypoint.sh"]
 CMD ["/bin/bash"]
