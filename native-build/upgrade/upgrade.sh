@@ -27,7 +27,7 @@ for version in "${supported_versions[@]}"
 
 [[ "$(ps aux | grep -v grep | grep fate_flow_server)" || "$(ps aux | grep -v grep | grep fateboard)" ]] && exit 1
 
-release_url="https://webank-ai-1251170195.cos.ap-guangzhou.myqcloud.com/fate_cluster_install_${DEST_VER}_release-c7-u18.tar.gz"
+release_url="https://webank-ai-1251170195.cos.ap-guangzhou.myqcloud.com/fate/${DEST_VER}/release/fate_cluster_install_${DEST_VER}_release.tar.gz"
 release_dir="$dir/archives/$DEST_VER"
 
 rm -fr "$release_dir"

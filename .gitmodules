@@ -1,3 +1,4 @@
-[submodule "templates/AnsibleFATE"]
-	path = templates/AnsibleFATE
+[submodule "native-build/templates/AnsibleFATE"]
+	path = native-build/templates/AnsibleFATE
 	url = git@github.com:FederatedAI/AnsibleFATE.git
+	branch = main
