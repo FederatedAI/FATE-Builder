@@ -18,4 +18,4 @@ ENV SPARK_HOME=/data/projects/spark-3.2.1-bin-hadoop3.2/
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/projects/hadoop-3.2.1/lib/native
 ENV PATH=$PATH:/data/projects/spark-3.2.1-bin-hadoop3.2/bin:/data/projects/hadoop-3.2.1/bin
 
-RUN pip install pyspark
+RUN pip install pyspark==3.1.3
