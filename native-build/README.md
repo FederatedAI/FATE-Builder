@@ -59,8 +59,8 @@
 | `PACK_STA` | package the archive `standalone_fate_install_${FATE_VER}_${RELE_VER}.tar.gz` | `1` |
 | `PACK_DOC` | package the archive `standalone_fate_docker_image_${FATE_VER}_${RELE_VER}.tar` | `1` |
 | `PACK_CLU` | package the archive `fate_cluster_install_${FATE_VER}_${RELE_VER}.tar.gz` | `1` |
-| `PACK_OFF` | package the archive `AnsibleFATE_${FATE_VER}_${RELE_VER}-offline.tar.gz` | `1` |
-| `PACK_ONL` | package the archive `AnsibleFATE_${FATE_VER}_${RELE_VER}-online.tar.gz` | `1` |
+| `PACK_OFF` | package the archive `AnsibleFATE_${FATE_VER}_${RELE_VER}_offline.tar.gz` | `1` |
+| `PACK_ONL` | package the archive `AnsibleFATE_${FATE_VER}_${RELE_VER}_online.tar.gz` | `1` |
 | `PUSH_ARC` | push the archives to COS (requires `coscli`) | `0` |
 
 ## Usage

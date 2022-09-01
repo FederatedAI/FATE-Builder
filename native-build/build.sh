@@ -146,6 +146,7 @@ function build_fateboard
     gcp -af "$source/src/main/resources/application.properties" "$target/conf"
     gcp -af "$source/target/fateboard-${versions[fateboard]}.jar" \
             "$source/bin/service.sh" \
+            "$source/RELEASE.md" \
             "$target"
 
     gln -frs "$target/fateboard-${versions[fateboard]}.jar" "$target/fateboard.jar"
@@ -277,6 +278,8 @@ function package_python_packages
 
 function package_standalone
 {
+    local source="$dir/templates/$name"
+
     grm -fr "$target"
     gmkdir -p "$target/fate"
 
@@ -294,11 +297,11 @@ function package_standalone
 
 function package_standalone_install
 {
-    local source="$dir/templates/standalone_fate"
-    local target="$dir/packages/standalone_fate_install_${FATE_VER}_${RELE_VER}"
+    local name='standalone_fate'
+    local target="$dir/packages/${name}_install_${FATE_VER}_${RELE_VER}"
     local filepath="$target.tar.gz"
 
-    source="$source" target="$target" package_standalone
+    name="$name" target="$target" package_standalone
 
     gtar -cpz -f "$filepath" -C "${target%/*}" "${target##*/}"
     filepath="$filepath" push_archive
@@ -306,17 +309,17 @@ function package_standalone_install
 
 function package_standalone_docker
 {
-    local source="$dir/templates/standalone_fate"
-    local target="$dir/packages/standalone_fate_docker_image_${FATE_VER}_${RELE_VER}"
+    local name='standalone_fate'
+    local target="$dir/packages/${name}_docker_image_${FATE_VER}_${RELE_VER}"
     local filepath="${target}.tar.gz"
 
-    local image_hub='federatedai/standalone_fate'
-    local image_tcr='ccr.ccs.tencentyun.com/federatedai/standalone_fate'
+    local image_hub="federatedai/$name"
+    local image_tcr="ccr.ccs.tencentyun.com/federatedai/$name"
 
     local image_tag="$FATE_VER"
     [ "$RELE_VER" == 'release' ] || image_tag+="-$RELE_VER"
 
-    source="$source" target="$target" package_standalone
+    name="$name" target="$target" package_standalone
 
     docker buildx build --compress --progress=plain --pull --rm \
         --file "$source/Dockerfile" --tag "$image_hub:$image_tag" "$target"
@@ -361,11 +364,9 @@ function package_cluster_install
     filepath="$filepath" push_archive
 }
 
-function package_ansible_offline
+function package_ansible
 {
-    local name='AnsibleFATE'
     local source="$dir/templates/$name"
-    local target="$dir/packages/${name}_${FATE_VER}_${RELE_VER}_offline"
     local filepath="$target.tar.gz"
 
     grm -fr "$target"
@@ -374,21 +375,29 @@ function package_ansible_offline
     gsed -i "s/#VERSION#/${versions[fate]}/" "$target/deploy/files/fate_init"
 
     gmkdir -p "$target/roles/python/files"
-    gcp -af "${resources[conda]}" "$dir/build/fate/python/requirements.txt" "$target/roles/python/files"
-    gtar -cpz -f "$target/roles/python/files/pypi.tar.gz" -C "$dir/build" --transform "s/^pypkg/pypi/" 'pypkg'
+    gcp -af "$dir/build/fate/python/requirements.txt" "$target/roles/python/files"
+    [ "$include_large_files" -gt 0 ] &&
+    {
+        gcp -af "${resources[conda]}" "$target/roles/python/files"
+        gtar -cpz -f "$target/roles/python/files/pypi.tar.gz" -C "$dir/build" --transform "s/^pypkg/pypi/" 'pypkg'
+    }
 
     gmkdir -p "$target/roles/java/files"
-    gcp -af "${resources[jdk]}" "$target/roles/java/files"
+    [ "$include_large_files" -gt 0 ] && \
+        gcp -af "${resources[jdk]}" "$target/roles/java/files"
 
     gmkdir -p "$target/roles/mysql/files"
-    gcp -af "${resources[mysql]}" "$target/roles/mysql/files"
+    [ "$include_large_files" -gt 0 ] && \
+        gcp -af "${resources[mysql]}" "$target/roles/mysql/files"
 
     gmkdir -p "$target/roles/rabbitmq/files"
-    gcp -af "${resources[rabbitmq]}" "$target/roles/rabbitmq/files"
+    [ "$include_large_files" -gt 0 ] && \
+        gcp -af "${resources[rabbitmq]}" "$target/roles/rabbitmq/files"
 
     gmkdir -p "$target/roles/supervisor/files"
     gln -frs "$target/roles/python/files/${resources[conda]##*/}" "$target/roles/supervisor/files"
-    gcp -af "${resources[supervisor]}" "${resources[pymysql]}" "$target/roles/supervisor/files"
+    [ "$include_large_files" -gt 0 ] && \
+        gcp -af "${resources[supervisor]}" "${resources[pymysql]}" "$target/roles/supervisor/files"
 
     gtar -cpz -f "$target/roles/check/files/deploy.tar.gz" -C "$dir/build/fate" 'deploy'
 
@@ -407,25 +416,20 @@ function package_ansible_offline
     filepath="$filepath" push_archive
 }
 
+function package_ansible_offline
+{
+    local name='AnsibleFATE'
+    local target="$dir/packages/${name}_${FATE_VER}_${RELE_VER}_offline"
+
+    name="$name" target="$target" include_large_files=1 package_ansible
+}
+
 function package_ansible_online
 {
     local name='AnsibleFATE'
-    local source="$dir/templates/$name"
     local target="$dir/packages/${name}_${FATE_VER}_${RELE_VER}_online"
-    local filepath="$target.tar.gz"
 
-    grm -fr "$target"
-    gcp -af "$source" "$target"
-
-    gsed -i "s/#VERSION#/${versions[fate]}/" "$target/deploy/files/fate_init"
-
-    for module in 'python' 'java' 'mysql' 'rabbitmq' 'supervisor' 'eggroll' 'fateflow' 'fateboard'
-    {
-        gmkdir -p "$target/roles/$module/files"
-    }
-
-    gtar -cpz -f "$filepath" -C "${target%/*}" "${target##*/}"
-    filepath="$filepath" push_archive
+    name="$name" target="$target" include_large_files=0 package_ansible
 }
 
 [ "$PULL_GIT" -gt 0 ] && git_pull
