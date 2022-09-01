@@ -396,8 +396,7 @@ function package_ansible
 
     gmkdir -p "$target/roles/supervisor/files"
     gln -frs "$target/roles/python/files/${resources[conda]##*/}" "$target/roles/supervisor/files"
-    [ "$include_large_files" -gt 0 ] && \
-        gcp -af "${resources[supervisor]}" "${resources[pymysql]}" "$target/roles/supervisor/files"
+    gcp -af "${resources[supervisor]}" "${resources[pymysql]}" "$target/roles/supervisor/files"
 
     gtar -cpz -f "$target/roles/check/files/deploy.tar.gz" -C "$dir/build/fate" 'deploy'
 
