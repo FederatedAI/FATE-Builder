@@ -1,5 +1,5 @@
 DOWNLOAD=1
-DEST_VER='1.8.0'
+DEST_VER='1.9.0'
 FATE_DIR='/data/projects/fate'
 MYSQL_DIR='/data/projects/fate/common/mysql/mysql-8.0.13'
 MYSQL_HOST='127.0.0.1'
