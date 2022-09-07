@@ -9,3 +9,4 @@ MYSQL_PASSWD='fatE168dev'
 FLOW_DB='fate_flow'
 LOG_DIR='/data/logs/fate'
 VENV_DIR='/data/projects/fate/common/python/venv'
+UPGRADE_PYTHON=0
