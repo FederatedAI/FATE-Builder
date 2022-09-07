@@ -4,9 +4,9 @@
 
 1. 请根据实际情况修改 `config` 文件
 
-2. 升级前需手动停止 fateflow 和 fateboard，升级后亦需手动启动
+2. 只支持使用 AnsibleFATE 部署的 FATE
 
-3. 如已使用 AnsibleFATE 部署，参见 [#supervisor](#supervisor)
+3. FATE 1.8.3 和 1.9.0 升级了 Python 版本，请设置 `UPGRADE_PYTHON=1`
 
 ## 升级
 
@@ -24,9 +24,9 @@ bash upgrade.sh
 
 新版本配置文件：`$FATE_DIR/conf/service_conf.yaml`
 
-fate 1.7.0+ 会同时载入两个配置文件，local 的优先级更高，建议删除 local 里没用的配置项
+FATE 1.7.0+ 会同时载入两个配置文件，local 的优先级更高，建议删除 local 里没用的配置项
 
-fate 1.7.0 移除了 `work_mode` 并增加了 `default_engines`
+FATE 1.7.0 移除了 `work_mode` 并增加了 `default_engines`
 
 ```
 default_engines:
@@ -42,46 +42,6 @@ default_engines:
 新版本配置文件：`$FATE_DIR/fateboard/conf/application.properties`
 
 fateboard 没有 config override，需手动更新
-
-### fate test
-
-请参考[文档](https://github.com/FederatedAI/FATE/blob/master/doc/tutorial/fate_test_tutorial.md)重新配置 `pipeline`, `flow`, `fate_test`
-
-## supervisor
-
-### 停止服务
-
-```
-cd /data/projects/common/supervisord
-bash service.sh stop fate-fateboard
-bash service.sh stop fate-fateflow
-```
-
-### 更新后需修改配置
-
-`/data/projects/common/supervisord/supervisord.d/fate-fateflow.conf`
-
-修改下面两行
-
-```
-command=/bin/bash /data/projects/fate/fateflow/bin/service.sh starting
-directory=/data/projects/fate/fateflow
-```
-
-### 启动 fateflow
-
-```bash
-cd /data/projects/common/supervisord
-bash service.sh update fate-fateflow
-bash service.sh status fate-fateflow
-```
-
-### 启动 fateboard
-
-```
-cd /data/projects/common/supervisord
-bash service.sh start fate-fateboard
-```
 
 ## 回滚
 

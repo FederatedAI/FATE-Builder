@@ -235,7 +235,7 @@ function push_archive
     [ "$PUSH_ARC" -gt 0 ] || return 0
 
     coscli sync "$filepath" "cos://fate/fate/$FATE_VER/$RELE_VER/${filepath##*/}"
-    coscli sync "cos://fate/fate/$FATE_VER/$RELE_VER/${filepath##*/}" "cos://fate/${filepath##*/}"
+    # coscli sync "cos://fate/fate/$FATE_VER/$RELE_VER/${filepath##*/}" "cos://fate/${filepath##*/}"
 }
 
 function package_fate_install
@@ -284,9 +284,11 @@ function package_standalone
     gmkdir -p "$target/fate"
 
     gcp -af "$dir/build/fate/"!(python*|proxy*) "$dir/build/"{fateboard,fateflow} "$target"
-    gcp -af "$source/"*.sh "$target/bin"
     gcp -af  "$dir/build/fate/python" "$target/fate"
     gln -frs "$target/fate/python/requirements.txt" "$target/requirements.txt"
+
+    gcp -af "$source/"*.sh "$target/bin"
+    gcp -af "$source/"!(*.sh) "$target"
 
     gmkdir -p "$target/env/"{jdk,python}
     gcp -af "${resources[jdk]}" "$target/env/jdk"
@@ -322,7 +324,7 @@ function package_standalone_docker
     name="$name" target="$target" package_standalone
 
     docker buildx build --compress --progress=plain --pull --rm \
-        --file "$source/Dockerfile" --tag "$image_hub:$image_tag" "$target"
+        --file "$target/Dockerfile" --tag "$image_hub:$image_tag" "$target"
 
     docker save "$image_hub:$image_tag" | gzip > "$filepath"
     filepath="$filepath" push_archive

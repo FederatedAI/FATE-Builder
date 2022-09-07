@@ -47,7 +47,7 @@ mysql_options="--protocol=TCP --host=$MYSQL_HOST --port=$MYSQL_PORT --user=$MYSQ
 find "$FATE_DIR" -name 'jobs' -exec mv '{}' "$backup_dir" ';' -quit
 find "$FATE_DIR" -name 'model_local_cache' -exec mv '{}' "$backup_dir" ';' -quit
 
-for name in 'RELEASE.md' 'conf' 'examples' 'fate.env' 'fateboard' 'fateflow' 'python'
+for name in 'RELEASE.md' 'conf' 'examples' 'fate.env' 'fateboard' 'fateflow' 'eggroll' 'python'
 {
     [ -e "$FATE_DIR/$name" ] && mv "$FATE_DIR/$name" "$backup_dir"
 }
@@ -59,10 +59,15 @@ ln -frs "$FATE_DIR/fate/"{RELEASE.md,fate.env,examples} "$FATE_DIR"
 
 cp -af "$backup_dir/"{jobs,model_local_cache} "$FATE_DIR/fateflow"
 
-for name in 'fateboard' 'fateflow'
+pid=$(/data/projects/common/supervisorctl pid)
+kill -s SIGTERM "$pid"
+
+for name in 'fateboard' 'fateflow' 'eggroll'
 {
     mkdir -p "$LOG_DIR/$name"
     ln -fsT "$LOG_DIR/$name" "$FATE_DIR/$name/logs"
+
+    sed -Ei 's#^command=.+start$#\0ing#' "/data/projects/common/supervisord/supervisord.d/fate-$name.conf"
 }
 
 sed -Ei "s#PYTHONPATH=.+#PYTHONPATH=$FATE_DIR/fate/python:$FATE_DIR/fateflow/python:$FATE_DIR/eggroll/python#" "$FATE_DIR/bin/init_env.sh"
@@ -104,3 +109,8 @@ cd "$FATE_DIR/fate/python/fate_client"
 "$VENV_DIR/bin/pip" uninstall -y fate_test
 cd "$FATE_DIR/fate/python/fate_test"
 "$VENV_DIR/bin/python" setup.py install
+
+for name in 'fateboard' 'fateflow' 'eggroll'
+{
+    bash /data/projects/common/supervisord/service.sh update "fate-$name"
+}
