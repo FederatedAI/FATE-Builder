@@ -10,11 +10,11 @@
 
 ## 升级
 
-```
+请从 [wiki](https://github.com/FederatedAI/FATE/wiki/Download) 下载对应版本的 AnsibleFATE 离线包并放到 `archives/` 目录下
+
+```bash
 bash upgrade.sh
 ```
-
-默认脚本会自动下载 release 包，如无需下载，请设置 `DOWNLOAD=0`，手工下载 `"https://webank-ai-1251170195.cos.ap-guangzhou.myqcloud.com/fate/${version}/release/fate_cluster_install_${DEST_VER}_release.tar.gz"` 并放到 "archives/$DEST_VER.tar.gz"
 
 ## 配置修改
 
@@ -28,7 +28,7 @@ FATE 1.7.0+ 会同时载入两个配置文件，local 的优先级更高，建�
 
 FATE 1.7.0 移除了 `work_mode` 并增加了 `default_engines`
 
-```
+```yaml
 default_engines:
   computing: eggroll
   federation: eggroll
