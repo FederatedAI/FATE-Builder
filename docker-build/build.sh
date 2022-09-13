@@ -270,7 +270,7 @@ pushImage() {
         ## push nn image
         if [ "$Build_NN" -gt 0 ]
         then
-                for module in "fateflow-nn" ; do
+                for module in "fateflow-nn" "eggroll-nn" ; do
                         echo "### START PUSH ${module} ###"
                         docker push ${PREFIX}/${module}:${TAG}
                         echo "### FINISH PUSH ${module} ###"
@@ -280,7 +280,7 @@ pushImage() {
 
         if [ "$Build_NN" -gt 0 ] && [ "$Build_Spark" -gt 0 ]
         then
-                for module in "fateflow-spark-nn" ; do
+                for module in "fateflow-spark-nn" "spark-worker-nn" ; do
                         echo "### START PUSH ${module} ###"
                         docker push ${PREFIX}/${module}:${TAG}
                         echo "### FINISH PUSH ${module} ###"
