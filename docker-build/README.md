@@ -17,6 +17,7 @@ To build the Docker images of FATE components, the host must meet the following 
 1. A Linux host
 2. Docker 18+
 3. The host can access the Internet.
+4. Root user authority
 
 ## Building images of FATE
 

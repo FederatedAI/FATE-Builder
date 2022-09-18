@@ -138,16 +138,32 @@ buildSparkBasicCPU(){
 
 buildEggrollNNCPU(){
         echo "### START BUILDING fateflow-nn ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-nn:${TAG} -f ${WORKING_DIR}/modules/fateflow-nn/Dockerfile ${PACKAGE_DIR_CACHE}
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-nn:${TAG} \
+                -f ${WORKING_DIR}/modules/nn/Dockerfile ${PACKAGE_DIR_CACHE}
         echo "### FINISH BUILDING fateflow-nn ###"
         echo ""
+
+        echo "### START BUILDING eggroll-nn ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=eggroll --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/eggroll-nn:${TAG} \
+                -f ${WORKING_DIR}/modules/nn/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING eggroll-nn ###"
+        echo ""
+
 }
 
 buildSparkNNCPU(){
         echo "### START BUILDING fateflow-spark-nn ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-spark --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-spark-nn:${TAG} -f ${WORKING_DIR}/modules/fateflow-nn/Dockerfile ${PACKAGE_DIR_CACHE}
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-spark --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-spark-nn:${TAG} \
+                -f ${WORKING_DIR}/modules/nn/Dockerfile ${PACKAGE_DIR_CACHE}
         echo "### FINISH BUILDING fateflow-spark-nn ###"
         echo ""
+
+        echo "### START BUILDING spark-worker-nn ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=spark-worker --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/spark-worker-nn:${TAG} \
+                -f ${WORKING_DIR}/modules/nn/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING spark-worker-nn ###"
+        echo ""
+
 }
 
 buildEggrollBasicIPCL(){
@@ -254,7 +270,7 @@ pushImage() {
         ## push nn image
         if [ "$Build_NN" -gt 0 ]
         then
-                for module in "fateflow-nn" ; do
+                for module in "fateflow-nn" "eggroll-nn" ; do
                         echo "### START PUSH ${module} ###"
                         docker push ${PREFIX}/${module}:${TAG}
                         echo "### FINISH PUSH ${module} ###"
@@ -264,7 +280,7 @@ pushImage() {
 
         if [ "$Build_NN" -gt 0 ] && [ "$Build_Spark" -gt 0 ]
         then
-                for module in "fateflow-spark-nn" ; do
+                for module in "fateflow-spark-nn" "spark-worker-nn" ; do
                         echo "### START PUSH ${module} ###"
                         docker push ${PREFIX}/${module}:${TAG}
                         echo "### FINISH PUSH ${module} ###"
