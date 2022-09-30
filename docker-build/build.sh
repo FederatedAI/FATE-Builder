@@ -221,12 +221,23 @@ buildOptionalModule(){
         echo "### FINISH BUILDING client ###"
         echo ""
 
-        for module in "fate-test"; do
-                echo "### START BUILDING ${module} ###"
-                docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/${module}:${TAG} -f ${WORKING_DIR}/modules/${module}/Dockerfile ${WORKING_DIR}/modules/${module}/
-                echo "### FINISH BUILDING ${module} ###"
-                echo ""
-        done
+        echo "### START BUILDING fate-test ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fate-test:${TAG} -f ${WORKING_DIR}/modules/fate-test/Dockerfile ${WORKING_DIR}/modules/fate-test/
+        echo "### FINISH BUILDING fate-test ###"
+        echo ""
+
+        echo "END BUILDING Optional Module IMAGE"
+}
+
+buildOptionalIPCLModule(){
+
+        echo "START BUILDING Optional Module IMAGE"
+        
+        echo "### START BUILDING fate-test-ipcl ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-ipcl --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fate-test-ipcl:${TAG} -f ${WORKING_DIR}/modules/fate-test/Dockerfile ${WORKING_DIR}/modules/fate-test/
+        echo "### FINISH BUILDING fate-test-ipcl ###"
+        echo ""
+
         echo "END BUILDING Optional Module IMAGE"
 }
 
@@ -241,6 +252,7 @@ buildModule(){
         [ "$Build_NN" -gt 0 ] && [ "$Build_Spark" -gt 0 ] && buildSparkNNCPU
         [ "$Build_IPCL" -gt 0 ] && buildEggrollBasicIPCL
         [ "$Build_Spark" -gt 0 ] && [ "$Build_IPCL" -gt 0 ] && buildSparkBasicIPCL
+        [ "$Build_OP" -gt 0 ] && [ "$Build_IPCL" -gt 0 ] && buildOptionalIPCLModule
 
 }
 
