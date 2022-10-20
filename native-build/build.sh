@@ -16,7 +16,7 @@ shopt -s expand_aliases extglob
 : "${BUIL_FAT:=1}"
 : "${SKIP_PKG:=0}"
 : "${PATH_CON:=cos://fate/resources/Miniconda3-py38_4.12.0-Linux-x86_64.sh}"
-: "${PATH_JDK:=cos://fate/resources/jdk-8u192.tar.gz}"
+: "${PATH_JDK:=cos://fate/resources/jdk-8u345.tar.xz}"
 : "${PATH_MYS:=cos://fate/resources/mysql-8.0.28.tar.gz}"
 : "${PATH_RMQ:=cos://fate/resources/rabbitmq-server-generic-unix-3.9.14.tar.xz}"
 : "${PATH_SVR:=cos://fate/resources/supervisor-4.2.4-py2.py3-none-any.whl}"

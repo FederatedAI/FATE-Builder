@@ -8,7 +8,7 @@ ARG LC_ALL LANG WORKDIR
 WORKDIR $WORKDIR
 COPY . .
 
-RUN is_root=1 ./bin/init.sh init && rm -fr env/jdk/*.tar.gz env/pypi env/python/*.sh
+RUN is_root=1 ./bin/init.sh init && rm -fr env/jdk env/pypi env/python/*.sh
 
 From centos:7
 

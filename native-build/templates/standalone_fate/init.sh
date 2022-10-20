@@ -29,7 +29,7 @@ python_resouce=${project_base}/env/python
 pypi_resource=${project_base}/env/pypi
 jdk_resource=${project_base}/env/jdk
 
-jdk_dir=${jdk_resource}/jdk-8u192
+jdk_dir=${jdk_resource}/jdk-8u345
 miniconda_dir=${python_resouce}/miniconda
 venv_dir=${python_resouce}/venv
 
@@ -62,7 +62,7 @@ init() {
     echo "[INFO] delete jdk: ${jdk_dir}"
   fi
   cd ${jdk_resource}
-  tar xzf *.tar.gz
+  tar xzf jdk-*.tar.xz
   echo "[INFO] install jdk done"
 
   cd ${project_base}
