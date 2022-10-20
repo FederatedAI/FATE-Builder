@@ -50,7 +50,7 @@
 | `BUIL_FAT` | build and package FATE and FATE-Flow | `1` |
 | `SKIP_PKG` | skip packing the archives <br/> turn on this flag will ignore `PATH_CON`, `PATH_JDK`, `PATH_MYS`, `FATE_VER`, `RELE_VER`, `PACK_ARC`, `PACK_STA`, `PACK_DOC`, `PACK_CLU`, `PACK_OFF`, `PACK_ONL` and `PUSH_ARC` | `0` |
 | `PATH_CON` | the download path of Miniconda on COS (requires `coscli`) | `cos://fate/Miniconda3-py38_4.12.0-Linux-x86_64.sh` |
-| `PATH_JDK` | the download path of JDK on COS (requires `coscli`) | `cos://fate/jdk-8u192-linux-x64.tar.gz` |
+| `PATH_JDK` | the download path of JDK on COS (requires `coscli`) | `cos://fate/jdk-8u345-linux-x64.tar.xz` |
 | `PATH_MYS` | the download path of MySQL on COS (requires `coscli`) | `cos://fate/mysql-8.0.28.tar.gz` |
 | `FATE_VER` | the version number of FATE (used on the archive filename) | automatically get it from `$FATE_DIR/fate.env` |
 | `RELE_VER` | the release version (used on the archive filename) | `release` |
