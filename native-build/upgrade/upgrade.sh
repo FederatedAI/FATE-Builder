@@ -5,10 +5,13 @@ set -euxo pipefail
 dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 source "$dir/config"
 
-# supported_versions=( '1.6.0' '1.6.1' '1.7.0' '1.7.1' '1.7.1.1' '1.7.2' '1.8.0' '1.9.0' )
-# supported_versions=( '1.7.1.1' '1.7.3' )
-supported_versions=( '1.8.0' '1.8.1' '1.8.2' '1.8.3' )
+supported_versions=( '1.7.0' '1.7.1' '1.7.1.1' '1.7.2' '1.8.0' '1.9.0' '1.9.1' )
 current_version="$(grep -ioP '(?<=FATE=).+' "$FATE_DIR/fate.env")"
+
+release_dir="$dir/archives/$DEST_VER"
+backup_dir="$dir/backups/$(date '+%Y%m%d_%H%M%S')_$current_version"
+mysql_options="--protocol=TCP --host=$MYSQL_HOST --port=$MYSQL_PORT --user=$MYSQL_USER --password=$MYSQL_PASSWD"
+
 declare -a upgrade_list
 
 for version in "${supported_versions[@]}"
@@ -25,24 +28,34 @@ for version in "${supported_versions[@]}"
 
 [[ ${#upgrade_list[@]} -lt 2 || ${upgrade_list[-1]} != "$DEST_VER" ]] && exit 1
 
-release_dir="$dir/archives/$DEST_VER"
-
 rm -fr "$release_dir"
 mkdir -p "$release_dir"
 
 tar -pxz -f "$dir/archives/AnsibleFATE_${DEST_VER}_release"[-_]offline.tar.gz -C "$release_dir" --strip-components=1
 
-pid="$("$CONDA_DIR/bin/supervisorctl" -c "$SUPERVISOR_DIR/supervisord.conf" pid || :)"
-[ -n "$pid" ] && kill -s SIGTERM "$pid"
-sleep 30
-
-backup_dir="$dir/backups/$(date '+%Y%m%d_%H%M%S')_$current_version"
-
 [ -e "$backup_dir" ] && exit 1
 mkdir -p "$backup_dir"
 
-# mysql_options="--protocol=TCP --host=$MYSQL_HOST --port=$MYSQL_PORT --user=$MYSQL_USER --password=$MYSQL_PASSWD"
-# "$MYSQL_DIR/bin/mysqldump" $mysql_options --databases "$FLOW_DB" --add-drop-database --result-file="$backup_dir/$FLOW_DB.sql"
+[ "$UPDATE_DATABASE" -gt 0 ] &&
+{
+    tar -pxz -f "$release_dir/roles/fateflow/files/fate.tar.gz" -C "$dir" --strip-components=3 'fate/deploy/upgrade/sql'
+    for file in "$dir/sql/"*.sql; { mv "$file" "${file%/*}/${file##*-}"; }
+
+    "$CONDA_DIR/bin/supervisorctl" -c "$SUPERVISOR_DIR/supervisord.conf" stop fate-fateflow
+
+    "$MYSQL_DIR/bin/mysqldump" $mysql_options --databases "$FLOW_DB" --add-drop-database --result-file="$backup_dir/$FLOW_DB.sql"
+
+    for version in "${upgrade_list[@]:1}"
+    {
+        [ -f "$dir/sql/$version.sql" ] && "$MYSQL_DIR/bin/mysql" $mysql_options --execute="source $dir/sql/$version.sql" "$FLOW_DB"
+    }
+}
+
+pid="$("$CONDA_DIR/bin/supervisorctl" -c "$SUPERVISOR_DIR/supervisord.conf" pid || :)"
+[ -n "$pid" ] && kill -s SIGTERM "$pid"
+
+sleep 60
+ps -p "$pid" >/dev/null || exit 1
 
 find "$FATE_DIR" -name 'jobs' -exec mv '{}' "$backup_dir" ';' -quit
 find "$FATE_DIR" -name 'model_local_cache' -exec mv '{}' "$backup_dir" ';' -quit
@@ -80,7 +93,8 @@ cp -af "$backup_dir/"{jobs,model_local_cache} "$FATE_DIR/fateflow" || mkdir -p "
 for name in 'fateboard' 'fateflow' 'eggroll'
 {
     mkdir -p "$LOG_DIR/$name"
-    ln -fsT "$LOG_DIR/$name" "$FATE_DIR/$name/logs"
+    rm -fr "$FATE_DIR/$name/logs"
+    ln -fs "$LOG_DIR/$name" "$FATE_DIR/$name/logs"
 }
 
 for name in 'clustermanager' 'nodemanager' 'rollsite' 'fateboard' 'fateflow'
@@ -101,7 +115,10 @@ for name in 'eggroll.properties' 'route_table.json'
 }
 
 mkdir -p "$FATE_DIR/conf"
-cp -af "$backup_dir/conf/service_conf.yaml" "$FATE_DIR/conf/local.service_conf.yaml" || :
+
+cp -af "$backup_dir/conf/local.service_conf.yaml" "$FATE_DIR/conf" || \
+    cp -af "$backup_dir/conf/service_conf.yaml" "$FATE_DIR/conf/local.service_conf.yaml" || :
+
 cp -af "$FATE_DIR/fate/conf/service_conf.yaml" "$FATE_DIR/fate/python/federatedml/transfer_conf.yaml" "$FATE_DIR/conf"
 
 [ -f "$backup_dir/fateboard/conf/application.properties" ] &&
@@ -126,11 +143,6 @@ cp -af "$FATE_DIR/fate/conf/service_conf.yaml" "$FATE_DIR/fate/python/federatedm
         [ -n "$val" ] && sed -Ei "s#$key=.+#$key=$val#" "$FATE_DIR/fateboard/conf/application.properties"
     }
 }
-
-# for version in "${upgrade_list[@]:1}"
-# {
-#     [ -f "$dir/sql/$version.sql" ] && "$MYSQL_DIR/bin/mysql" $mysql_options --execute="source $dir/sql/$version.sql" "$FLOW_DB"
-# }
 
 "$VENV_DIR/bin/pip" install -U -r "$release_dir/roles/python/files/requirements.txt" -f "$release_dir/roles/python/files/pypi" --no-index
 

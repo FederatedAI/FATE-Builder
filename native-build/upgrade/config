@@ -1,5 +1,5 @@
-# DEST_VER='1.9.0'
-DEST_VER='1.8.3'
+DEST_VER='1.9.1'
+UPDATE_DATABASE=1
 UPGRADE_PYTHON=1
 LOG_DIR='/data/logs/fate'
 COMMON_DIR='/data/projects/common'
