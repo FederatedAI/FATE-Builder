@@ -1,6 +1,6 @@
-/build/
-/packages/
-/resources/
-/.env
-/cos.yaml
+/native-build/build/
+/native-build/packages/
+/native-build/resources/
+/native-build/.env
+/native-build/cos.yaml
 *.log
