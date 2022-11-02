@@ -38,8 +38,14 @@ mkdir -p "$backup_dir"
 
 [ "$UPDATE_DATABASE" -gt 0 ] &&
 {
+    rm -fr "$dir/sql"
+
     tar -pxz -f "$release_dir/roles/fateflow/files/fate.tar.gz" -C "$dir" --strip-components=3 'fate/deploy/upgrade/sql'
-    for file in "$dir/sql/"*.sql; { mv "$file" "${file%/*}/${file##*-}"; }
+
+    for file in "$dir/sql/"*.sql
+    {
+        mv "$file" "${file%/*}/${file##*-}"
+    }
 
     "$CONDA_DIR/bin/supervisorctl" -c "$SUPERVISOR_DIR/supervisord.conf" stop fate-fateflow
 
@@ -55,7 +61,7 @@ pid="$("$CONDA_DIR/bin/supervisorctl" -c "$SUPERVISOR_DIR/supervisord.conf" pid 
 [ -n "$pid" ] && kill -s SIGTERM "$pid"
 
 sleep 60
-ps -p "$pid" >/dev/null || exit 1
+ps -p "$pid" >/dev/null && exit 1
 
 find "$FATE_DIR" -name 'jobs' -exec mv '{}' "$backup_dir" ';' -quit
 find "$FATE_DIR" -name 'model_local_cache' -exec mv '{}' "$backup_dir" ';' -quit
