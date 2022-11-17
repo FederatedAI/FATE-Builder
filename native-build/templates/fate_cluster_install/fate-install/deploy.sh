@@ -146,11 +146,15 @@ done
 echo "deploy $role ok"
 
 #init flow
-cd ${pbase}/${pname}/${pname}/python/fate_client
+cd ${pbase}/${pname}/fate/python/fate_client
 python setup.py install
 
-cd ${pbase}/${pname}/${pname}/python/fate_test
+cd ${pbase}/${pname}/fate/python/fate_test
 python setup.py install
+
+cd ${pbase}/${pname}
 
 flow init -c ${pbase}/${pname}/conf/service_conf.yaml
 flow init --ip ${fate_flow_ip} --port ${fate_flow_httpPort}
+
+fate_test data upload -t min_test -y
