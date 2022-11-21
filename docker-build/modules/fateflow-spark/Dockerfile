@@ -15,6 +15,7 @@ RUN wget https://archive.apache.org/dist/spark/spark-3.1.3/spark-3.1.3-bin-hadoo
 
 ENV JAVA_HOME=/usr/lib/jvm/jre-1.8.0-openjdk
 ENV SPARK_HOME=/data/projects/spark-3.1.3-bin-hadoop3.2/
+ENV HADOOP_HOME=/data/projects/hadoop-3.2.1
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/projects/hadoop-3.2.1/lib/native
 ENV PATH=$PATH:/data/projects/spark-3.1.3-bin-hadoop3.2/bin:/data/projects/hadoop-3.2.1/bin
 
