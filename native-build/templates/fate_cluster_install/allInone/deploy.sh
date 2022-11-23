@@ -4,7 +4,7 @@ workdir=$(cd $(dirname $0); pwd)
 
 . ${workdir}/conf/setup.conf
 
-mkdir -p "${workdir}/logs"
+mkdir -p "${workdir}/"{logs,temp}
 
 function_init() {
   mkdir -p ${workdir}/../init/conf

@@ -62,7 +62,7 @@ init() {
     echo "[INFO] delete jdk: ${jdk_dir}"
   fi
   cd ${jdk_resource}
-  tar xzf jdk-*.tar.xz
+  tar xJf jdk-*.tar.xz
   echo "[INFO] install jdk done"
 
   cd ${project_base}

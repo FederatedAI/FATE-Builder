@@ -112,7 +112,7 @@ function check_branch
 function build_eggroll
 {
     local source="$FATE_DIR/eggroll"
-    local target="$dir/build/eggroll"
+    local target="$dir/build/$FATE_VER/eggroll"
 
     [ "$COPY_ONL" -gt 0 ] || mvn -DskipTests -f "$source/jvm/pom.xml" -q clean package
 
@@ -133,7 +133,7 @@ function build_eggroll
 function build_fateboard
 {
     local source="$FATE_DIR/fateboard"
-    local target="$dir/build/fateboard"
+    local target="$dir/build/$FATE_VER/fateboard"
 
     [ "$COPY_ONL" -gt 0 ] ||
     {
@@ -155,7 +155,7 @@ function build_fateboard
 function build_python_packages
 {
     local source="$FATE_DIR/python/requirements.txt"
-    local target="$dir/build/pypkg"
+    local target="$dir/build/$FATE_VER/pypkg"
 
     grm -rf "$target"
     gmkdir -p "$target"
@@ -186,24 +186,26 @@ function build_python_packages
 
 function build_fate
 {
-    grm -rf "$dir/build/fate" "$dir/build/fateflow"
-    gmkdir -p "$dir/build/fate/conf" "$dir/build/fate/proxy" "$dir/build/fateflow"
+    grm -rf "$dir/build/$FATE_VER/fate" "$dir/build/$FATE_VER/fateflow"
+    gmkdir -p "$dir/build/$FATE_VER/fate" "$dir/build/$FATE_VER/fateflow"
 
-    gcp -af "$FATE_DIR/"{RELEASE.md,fate.env,bin,deploy,examples,python} "$dir/build/fate"
-    gcp -af "$FATE_DIR/c/proxy" "$dir/build/fate/proxy/nginx"
-    gcp -af "$FATE_DIR/conf/"!(local.*).yaml "$dir/build/fate/conf"
-    gcp -af "$FATE_DIR/fateflow/"{RELEASE.md,bin,conf,examples,python} "$dir/build/fateflow"
+    gcp -af "$FATE_DIR/"{RELEASE.md,fate.env,bin,deploy,examples,python} "$dir/build/$FATE_VER/fate"
+    gcp -af "$FATE_DIR/fateflow/"{RELEASE.md,bin,conf,examples,python} "$dir/build/$FATE_VER/fateflow"
+
+    gmkdir -p "$dir/build/$FATE_VER/fate/conf" "$dir/build/$FATE_VER/fate/proxy"
+    gcp -af "$FATE_DIR/conf/"!(local.*).yaml "$dir/build/$FATE_VER/fate/conf"
+    gcp -af "$FATE_DIR/c/proxy" "$dir/build/$FATE_VER/fate/proxy/nginx"
 }
 
 function build_cleanup
 {
-    gfind "$dir/build" -type d -print0 | parallel -0Xj1 gchmod 755
-    gfind "$dir/build" -type f -print0 | parallel -0Xj1 gchmod 644
+    gfind "$dir/build/$FATE_VER" -type d -print0 | parallel -0Xj1 gchmod 755
+    gfind "$dir/build/$FATE_VER" -type f -print0 | parallel -0Xj1 gchmod 644
 
-    gfind "$dir/build" -iname '*.sh' -print0 | parallel -0Xj1 gchmod a+x
+    gfind "$dir/build/$FATE_VER" -iname '*.sh' -print0 | parallel -0Xj1 gchmod a+x
 
-    gfind "$dir/build" -iname '__pycache__' -prune -print0 | parallel -0Xj1 grm -fr
-    gfind "$dir/build" -iname '*.pyc' -print0 | parallel -0Xj1 grm -f
+    gfind "$dir/build/$FATE_VER" -iname '__pycache__' -prune -print0 | parallel -0Xj1 grm -fr
+    gfind "$dir/build/$FATE_VER" -iname '*.pyc' -print0 | parallel -0Xj1 grm -f
 }
 
 function get_resources
@@ -240,8 +242,8 @@ function push_archive
 
 function package_fate_install
 {
-    local source="$dir/build/fate"
-    local target="$dir/packages/fate_install_${FATE_VER}_${RELE_VER}"
+    local source="$dir/build/$FATE_VER/fate"
+    local target="$dir/packages/$FATE_VER/fate_install_${FATE_VER}_${RELE_VER}"
     local filepath="$target.tar.gz"
 
     grm -fr "$target"
@@ -249,7 +251,7 @@ function package_fate_install
 
     for module in 'eggroll' 'fateboard' 'fateflow'
     {
-        gtar -cpz -f "$target/$module.tar.gz" -C "$dir/build" "$module"
+        gtar -cpz -f "$target/$module.tar.gz" -C "$dir/build/$FATE_VER" "$module"
     }
 
     gfind "$source" -mindepth 1 -maxdepth 1 -type d -not -iname 'python' -print0 | \
@@ -270,9 +272,9 @@ function package_fate_install
 function package_python_packages
 {
     local name="pip_packages_fate_${FATE_VER}"
-    local filepath="$dir/packages/$name.tar.gz"
+    local filepath="$dir/packages/$FATE_VER/$name.tar.gz"
 
-    gtar -cpz -f "$filepath" -C "$dir/build" --transform "s/^pypkg/$name/" 'pypkg'
+    gtar -cpz -f "$filepath" -C "$dir/build/$FATE_VER" --transform "s/^pypkg/$name/" 'pypkg'
     filepath="$filepath" push_archive
 }
 
@@ -283,8 +285,8 @@ function package_standalone
     grm -fr "$target"
     gmkdir -p "$target/fate"
 
-    gcp -af "$dir/build/fate/"!(python*|proxy*) "$dir/build/"{fateboard,fateflow} "$target"
-    gcp -af  "$dir/build/fate/python" "$target/fate"
+    gcp -af "$dir/build/$FATE_VER/fate/"!(python*|proxy*) "$dir/build/$FATE_VER/"{fateboard,fateflow} "$target"
+    gcp -af  "$dir/build/$FATE_VER/fate/python" "$target/fate"
     gln -frs "$target/fate/python/requirements.txt" "$target/requirements.txt"
 
     gcp -af "$source/"*.sh "$target/bin"
@@ -294,13 +296,13 @@ function package_standalone
     gcp -af "${resources[jdk]}" "$target/env/jdk"
     gcp -af "${resources[conda]}" "$target/env/python"
 
-    gcp -af "$dir/build/pypkg" "$target/env/pypi"
+    gcp -af "$dir/build/$FATE_VER/pypkg" "$target/env/pypi"
 }
 
 function package_standalone_install
 {
     local name='standalone_fate'
-    local target="$dir/packages/${name}_install_${FATE_VER}_${RELE_VER}"
+    local target="$dir/packages/$FATE_VER/${name}_install_${FATE_VER}_${RELE_VER}"
     local filepath="$target.tar.gz"
 
     name="$name" target="$target" package_standalone
@@ -312,7 +314,7 @@ function package_standalone_install
 function package_standalone_docker
 {
     local name='standalone_fate'
-    local target="$dir/packages/${name}_docker_image_${FATE_VER}_${RELE_VER}"
+    local target="$dir/packages/$FATE_VER/${name}_docker_image_${FATE_VER}_${RELE_VER}"
     local filepath="${target}.tar.gz"
 
     local image_hub="federatedai/$name"
@@ -337,7 +339,7 @@ function package_cluster_install
 {
     local name='fate_cluster_install'
     local source="$dir/templates/$name"
-    local target="$dir/packages/${name}_${FATE_VER}_${RELE_VER}"
+    local target="$dir/packages/$FATE_VER/${name}_${FATE_VER}_${RELE_VER}"
     local filepath="$target.tar.gz"
 
     grm -fr "$target"
@@ -346,19 +348,19 @@ function package_cluster_install
     gsed -i "s/#VERSION#/${versions[fate]}/" "$target/allInone/conf/setup.conf"
 
     gmkdir -p "$target/python-install/files"
-    gcp -af "${resources[conda]}" "$dir/build/fate/python/requirements.txt" "$dir/build/pypkg" "$target/python-install/files"
+    gcp -af "${resources[conda]}" "$dir/build/$FATE_VER/fate/python/requirements.txt" "$dir/build/$FATE_VER/pypkg" "$target/python-install/files"
 
     gmkdir -p "$target/java-install/files"
     gcp -af "${resources[jdk]}" "$target/java-install/files"
 
     gmkdir -p "$target/mysql-install/files"
-    gcp -af "${resources[mysql]}" "$dir/build/eggroll/conf/create-eggroll-meta-tables.sql" "$target/mysql-install/files"
+    gcp -af "${resources[mysql]}" "$dir/build/$FATE_VER/eggroll/conf/create-eggroll-meta-tables.sql" "$target/mysql-install/files"
 
     gmkdir -p "$target/eggroll-install/files"
-    gcp -af "$dir/build/eggroll" "$target/eggroll-install/files"
+    gcp -af "$dir/build/$FATE_VER/eggroll" "$target/eggroll-install/files"
 
     gmkdir -p "$target/fate-install/files"
-    gcp -af "$dir/build/fate" "$dir/build/fateflow" "$dir/build/fateboard" "$target/fate-install/files"
+    gcp -af "$dir/build/$FATE_VER/fate" "$dir/build/$FATE_VER/fateflow" "$dir/build/$FATE_VER/fateboard" "$target/fate-install/files"
 
     gmkdir -p "$target/allInone/logs"
 
@@ -377,11 +379,11 @@ function package_ansible
     gsed -i "s/#VERSION#/${versions[fate]}/" "$target/deploy/files/fate_init"
 
     gmkdir -p "$target/roles/python/files"
-    gcp -af "$dir/build/fate/python/requirements.txt" "$target/roles/python/files"
+    gcp -af "$dir/build/$FATE_VER/fate/python/requirements.txt" "$target/roles/python/files"
     [ "$include_large_files" -gt 0 ] &&
     {
         gcp -af "${resources[conda]}" "$target/roles/python/files"
-        gtar -cpz -f "$target/roles/python/files/pypi.tar.gz" -C "$dir/build" --transform "s/^pypkg/pypi/" 'pypkg'
+        gtar -cpz -f "$target/roles/python/files/pypi.tar.gz" -C "$dir/build/$FATE_VER" --transform "s/^pypkg/pypi/" 'pypkg'
     }
 
     gmkdir -p "$target/roles/java/files"
@@ -400,18 +402,18 @@ function package_ansible
     gln -frs "$target/roles/python/files/${resources[conda]##*/}" "$target/roles/supervisor/files"
     gcp -af "${resources[supervisor]}" "${resources[pymysql]}" "$target/roles/supervisor/files"
 
-    gtar -cpz -f "$target/roles/check/files/deploy.tar.gz" -C "$dir/build/fate" 'deploy'
+    gtar -cpz -f "$target/roles/check/files/deploy.tar.gz" -C "$dir/build/$FATE_VER/fate" 'deploy'
 
     gmkdir -p "$target/roles/eggroll/files"
-    gcp -af "$dir/build/eggroll/conf/create-eggroll-meta-tables.sql" "$target/roles/eggroll/files"
-    gtar -cpz -f "$target/roles/eggroll/files/eggroll.tar.gz" -C "$dir/build" 'eggroll'
+    gcp -af "$dir/build/$FATE_VER/eggroll/conf/create-eggroll-meta-tables.sql" "$target/roles/eggroll/files"
+    gtar -cpz -f "$target/roles/eggroll/files/eggroll.tar.gz" -C "$dir/build/$FATE_VER" 'eggroll'
 
     gmkdir -p "$target/roles/fateflow/files"
-    gtar -cpz -f "$target/roles/fateflow/files/fate.tar.gz" -C "$dir/build" 'fate'
-    gtar -cpz -f "$target/roles/fateflow/files/fateflow.tar.gz" -C "$dir/build" 'fateflow'
+    gtar -cpz -f "$target/roles/fateflow/files/fate.tar.gz" -C "$dir/build/$FATE_VER" 'fate'
+    gtar -cpz -f "$target/roles/fateflow/files/fateflow.tar.gz" -C "$dir/build/$FATE_VER" 'fateflow'
 
     gmkdir -p "$target/roles/fateboard/files"
-    gtar -cpz -f "$target/roles/fateboard/files/fateboard.tar.gz" -C "$dir/build" 'fateboard'
+    gtar -cpz -f "$target/roles/fateboard/files/fateboard.tar.gz" -C "$dir/build/$FATE_VER" 'fateboard'
 
     gtar -cpz -f "$filepath" -C "${target%/*}" "${target##*/}"
     filepath="$filepath" push_archive
@@ -420,7 +422,7 @@ function package_ansible
 function package_ansible_offline
 {
     local name='AnsibleFATE'
-    local target="$dir/packages/${name}_${FATE_VER}_${RELE_VER}_offline"
+    local target="$dir/packages/$FATE_VER/${name}_${FATE_VER}_${RELE_VER}_offline"
 
     name="$name" target="$target" include_large_files=1 package_ansible
 }
@@ -428,7 +430,7 @@ function package_ansible_offline
 function package_ansible_online
 {
     local name='AnsibleFATE'
-    local target="$dir/packages/${name}_${FATE_VER}_${RELE_VER}_online"
+    local target="$dir/packages/$FATE_VER/${name}_${FATE_VER}_${RELE_VER}_online"
 
     name="$name" target="$target" include_large_files=0 package_ansible
 }
