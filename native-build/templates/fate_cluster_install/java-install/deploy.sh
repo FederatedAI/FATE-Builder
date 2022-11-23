@@ -9,7 +9,7 @@ if [ ! -f ${jhome}/jdk-${jversion}/bin/java ]
 then
   mkdir -p ${jhome}
   echo "untar ${workdir}/files/jdk-${jversion}.tar.xz to ${jhome}"
-  tar xzf ${workdir}/files/jdk-${jversion}.tar.xz -C ${jhome}
+  tar xJf ${workdir}/files/jdk-${jversion}.tar.xz -C ${jhome}
 fi
 
 echo "deploy java init"

@@ -3,8 +3,8 @@ FROM centos:centos7
 ARG version
 
 USER root
-ENV VIRTUAL_ENV ""
 WORKDIR /data/projects/python/
+ENV VIRTUAL_ENV /data/projects/python/venv
 COPY requirements.txt /data/projects/python/
 
 RUN set -eux && \
@@ -29,6 +29,9 @@ RUN curl -o Python-3.8.13.tar.xz https://www.python.org/ftp/python/3.8.13/Python
     cd .. && \
     rm Python-3.8.13.tar.xz && \
     rm -rf Python-3.8.13
+
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 RUN pip install --upgrade pip && \
     sed -i '/tensorflow.*/d' /data/projects/python/requirements.txt && \
