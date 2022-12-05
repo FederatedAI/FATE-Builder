@@ -154,7 +154,7 @@ python setup.py install
 
 cd ${pbase}/${pname}
 
-flow init -c ${pbase}/${pname}/conf/service_conf.yaml
-flow init --ip ${fate_flow_ip} --port ${fate_flow_httpPort}
+flow init -c "${pbase}/${pname}/conf/service_conf.yaml"
+pipeline init --ip "${fate_flow_ip}" --port "${fate_flow_httpPort}"
 
 fate_test data upload -t min_test -y
