@@ -120,7 +120,7 @@ do
       ;;
     "fateboard")
         function_install_fateboard
-        cd ${pbase}/${pname}/$role;
+        cd ${pbase}/${pname}/fateboard;
         source ${pbase}/${pname}/bin/init_env.sh;
         /bin/bash ./service.sh start
       ;;
@@ -156,5 +156,3 @@ cd ${pbase}/${pname}
 
 flow init -c "${pbase}/${pname}/conf/service_conf.yaml"
 pipeline init --ip "${fate_flow_ip}" --port "${fate_flow_httpPort}"
-
-fate_test data upload -t min_test -y
