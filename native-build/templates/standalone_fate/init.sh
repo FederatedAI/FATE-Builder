@@ -101,7 +101,7 @@ init() {
   echo "[INFO] setup fateflow"
   sed -i "s#PYTHONPATH=.*#PYTHONPATH=${project_base}/fate/python:${project_base}/fateflow/python#g" ${project_base}/bin/init_env.sh
   sed -i "s#venv=.*#venv=${venv_dir}#g" ${project_base}/bin/init_env.sh
-  sed -i "s#JAVA_HOME=.*#JAVA_HOME=${jdk_dir}/#g" ${project_base}/bin/init_env.sh
+  sed -i "s#JAVA_HOME=.*#JAVA_HOME=${jdk_dir}#g" ${project_base}/bin/init_env.sh
   echo "[INFO] setup fateflow done"
 
   echo "[INFO] setup fateboard"
