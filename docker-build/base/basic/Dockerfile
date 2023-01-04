@@ -10,9 +10,8 @@ COPY requirements.txt /data/projects/python/
 RUN set -eux && \
     rpm --rebuilddb && \
     rpm --import /etc/pki/rpm-gpg/RPM* && \
-    yum -y install gcc gcc-c++ make openssl-devel gmp-devel mpfr-devel libmpc-devel\
-    libmpcdevel libaio numactl autoconf automake libtool libffi-devel  \
-    snappy snappy-devel zlib zlib-devel bzip2 bzip2-devel lz4-devel libasan lsof sysstat telnet psmisc && \
+    yum -y install gcc gcc-c++ make openssl-devel supervisor gmp-devel mpfr-devel libmpc-devel \
+    libaio numactl autoconf automake libtool libffi-devel snappy snappy-devel zlib zlib-devel bzip2 bzip2-devel lz4-devel libasan lsof xz-devel && \
     yum clean all
 
 RUN curl -o Python-3.8.13.tar.xz https://www.python.org/ftp/python/3.8.13/Python-3.8.13.tar.xz && \
