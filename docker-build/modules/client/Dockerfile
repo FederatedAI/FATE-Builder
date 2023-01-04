@@ -12,6 +12,8 @@ FROM python:3.8
 
 WORKDIR /data/projects/fate/
 
+RUN apt-get update && apt-get install -y vim && apt-get clean
+
 COPY pipeline /data/projects/fate/pipeline
 RUN pip install notebook torch pandas sklearn markupsafe==2.0.1
 RUN mkdir /data/projects/fate/logs
