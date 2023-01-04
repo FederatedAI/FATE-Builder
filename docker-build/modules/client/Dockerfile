@@ -25,4 +25,4 @@ RUN cd /data/projects/fate/; pip install fate_client-*-py3-none-any.whl; rm fate
 ENV FATE_FLOW_IP=fateflow
 ENV FATE_FLOW_PORT=9380
 
-CMD flow init --ip ${FATE_FLOW_IP} --port ${FATE_FLOW_PORT} && pipeline init --ip ${FATE_FLOW_IP} --port ${FATE_FLOW_PORT} && jupyter notebook --ip=0.0.0.0 --port=20000 --allow-root --debug --NotebookApp.notebook_dir='/data/projects/fate/' --no-browser --NotebookApp.token='' --NotebookApp.password=''
+CMD pipeline init --ip ${FATE_FLOW_IP} --port ${FATE_FLOW_PORT} && flow init --ip ${FATE_FLOW_IP} --port ${FATE_FLOW_PORT} && jupyter notebook --ip=0.0.0.0 --port=20000 --allow-root --debug --NotebookApp.notebook_dir='/data/projects/fate/' --no-browser --NotebookApp.token='' --NotebookApp.password=''
