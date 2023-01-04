@@ -3,7 +3,6 @@ ARG BASE_TAG=tag
 ARG BASE_IMAGE=image
 FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG} as data
 
-# TODO pip pkg install
 WORKDIR /data/projects/fate/
 
 RUN cd /data/projects/fate/fate/python/fate_client; \
