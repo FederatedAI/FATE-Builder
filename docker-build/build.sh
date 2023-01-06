@@ -342,6 +342,16 @@ pushImage() {
                         echo ""
                 done
         fi
+
+        if [ "$Build_IPCL" -gt 0 ] && [ "$Build_OP" -gt 0 ]
+        then
+                for module in "fate-test-ipcl"; do
+                        echo "### START PUSH ${module} ###"
+                        docker push ${PREFIX}/${module}:${TAG}
+                        echo "### FINISH PUSH ${module} ###"
+                        echo ""
+                done
+        fi
 }
 
 # start 
