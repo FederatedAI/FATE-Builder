@@ -21,6 +21,7 @@ shopt -s expand_aliases extglob
 : "${PATH_RMQ:=cos://fate/resources/rabbitmq-server-generic-unix-3.9.14.tar.xz}"
 : "${PATH_SVR:=cos://fate/resources/supervisor-4.2.4-py2.py3-none-any.whl}"
 : "${PATH_PYM:=cos://fate/resources/PyMySQL-1.0.2-py3-none-any.whl}"
+: "${PATH_WBE:=cos://fate/resources/wb-info-enc-1.0-SNAPSHOT.jar}"
 : "${SYNC_RES:=1}"
 : "${RELE_VER:=release}"
 : "${PACK_ARC:=0}"
@@ -125,6 +126,7 @@ function build_eggroll
                 "$source/jvm/$module/target/lib/"*.jar \
                 "$target/lib"
     }
+    gcp -af "${resources[wbenc]}" "$target/lib"
 
     gcp -af "$source/"{BUILD_INFO,bin,conf,data,deploy,python} "$target"
     gcp -af "$source/jvm/core/main/resources/"*.sql "$target/conf"
@@ -226,6 +228,7 @@ function get_resources
         [rabbitmq]="$PATH_RMQ"
         [supervisor]="$PATH_SVR"
         [pymysql]="$PATH_PYM"
+        [wbenc]="$PATH_WBE"
     )
 
     gmkdir -p "$dir/resources"
@@ -455,6 +458,8 @@ get_versions
 
 [ "$CHEC_BRA" -gt 0 ] && check_branch
 
+get_resources
+
 [ "$SKIP_BUI" -gt 0 ] ||
 {
     [ "$BUIL_PYP" -gt 0 ] && build_python_packages
@@ -467,8 +472,6 @@ get_versions
 
 [ "$SKIP_PKG" -gt 0 ] ||
 {
-    get_resources
-
     gmkdir -p "$dir/"{packages,dist}"/$FATE_VER"
 
     [ "$PACK_ARC" -gt 0 ] && package_fate_install
