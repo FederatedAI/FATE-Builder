@@ -8,7 +8,7 @@ ARG LC_ALL LANG WORKDIR
 WORKDIR $WORKDIR
 COPY . .
 
-RUN is_root=1 ./bin/init.sh init && rm -fr env/jdk env/pypi env/python/*.sh
+RUN is_root=1 ./bin/init.sh init && rm -fr env/jdk/jdk-*.tar.xz env/pypi env/python/Miniconda3-*-Linux-x86_64.sh
 
 From centos:7
 
@@ -24,4 +24,4 @@ COPY --from=builder $WORKDIR .
 RUN is_root=1 ./bin/install_os_dependencies.sh && yum clean all
 
 ENTRYPOINT ["./bin/docker-entrypoint.sh"]
-CMD ["/bin/bash"]
+CMD ["bash"]

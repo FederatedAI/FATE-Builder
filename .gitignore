@@ -1,4 +1,5 @@
 /native-build/build/
+/native-build/dist/
 /native-build/packages/
 /native-build/resources/
 /native-build/.env

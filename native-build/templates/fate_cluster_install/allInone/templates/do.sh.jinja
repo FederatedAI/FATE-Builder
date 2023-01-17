@@ -30,3 +30,8 @@ source ${pbase}/${pname}/bin/init_env.sh
 echo "restart fate_flow"
 cd ${pbase}/${pname}/fateflow/bin
 /bin/bash ./service.sh restart
+
+echo "sleep 30"
+sleep 30
+echo "upload test data"
+fate_test data upload -t min_test -y
