@@ -86,7 +86,8 @@ init() {
   echo "[INFO] install fate client"
   cd ${project_base}/fate/python/fate_client
   python setup.py install
-  flow init -c ${project_base}/conf/service_conf.yaml
+  flow init -c "${project_base}/conf/service_conf.yaml"
+  pipeline init --ip '127.0.0.1' --port '9380'
   echo "[INFO] install fate client done"
 
   echo "[INFO] install fate test"
@@ -94,12 +95,13 @@ init() {
   sed -i "s#data_base_dir:.*#data_base_dir: ${project_base}#g" ./fate_test/fate_test_config.yaml
   sed -i "s#fate_base:.*#fate_base: ${project_base}/fate#g" ./fate_test/fate_test_config.yaml
   python setup.py install
+  fate_test data upload -t min_test -y
   echo "[INFO] install fate test done"
 
   echo "[INFO] setup fateflow"
   sed -i "s#PYTHONPATH=.*#PYTHONPATH=${project_base}/fate/python:${project_base}/fateflow/python#g" ${project_base}/bin/init_env.sh
   sed -i "s#venv=.*#venv=${venv_dir}#g" ${project_base}/bin/init_env.sh
-  sed -i "s#JAVA_HOME=.*#JAVA_HOME=${jdk_dir}/#g" ${project_base}/bin/init_env.sh
+  sed -i "s#JAVA_HOME=.*#JAVA_HOME=${jdk_dir}#g" ${project_base}/bin/init_env.sh
   echo "[INFO] setup fateflow done"
 
   echo "[INFO] setup fateboard"

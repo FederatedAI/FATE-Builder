@@ -4,6 +4,19 @@
         "role": "guest",
         "party_id": 9999
     },
+    "job_parameters": {
+        "common": {
+            "eggroll_run": {
+                "eggroll.session.processors.per.node": 4
+            },
+            "spark_run": {
+                "num-executors": 4,
+                "total-executor-cores": 4,
+                "executor-memory": "1G",
+                "executor-cores": 1
+            }
+        }
+    },
     "role": {
         "arbiter": [
             10000

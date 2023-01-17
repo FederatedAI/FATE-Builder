@@ -21,6 +21,7 @@ shopt -s expand_aliases extglob
 : "${PATH_RMQ:=cos://fate/resources/rabbitmq-server-generic-unix-3.9.14.tar.xz}"
 : "${PATH_SVR:=cos://fate/resources/supervisor-4.2.4-py2.py3-none-any.whl}"
 : "${PATH_PYM:=cos://fate/resources/PyMySQL-1.0.2-py3-none-any.whl}"
+: "${PATH_WBE:=cos://fate/resources/wb-info-enc-1.0-SNAPSHOT.jar}"
 : "${SYNC_RES:=1}"
 : "${RELE_VER:=release}"
 : "${PACK_ARC:=0}"
@@ -125,6 +126,7 @@ function build_eggroll
                 "$source/jvm/$module/target/lib/"*.jar \
                 "$target/lib"
     }
+    gcp -af "${resources[wbenc]}" "$target/lib"
 
     gcp -af "$source/"{BUILD_INFO,bin,conf,data,deploy,python} "$target"
     gcp -af "$source/jvm/core/main/resources/"*.sql "$target/conf"
@@ -161,12 +163,19 @@ function build_python_packages
     gmkdir -p "$target"
 
     docker run --pull=always --rm \
-        -v "$(greadlink -f ~/.config/pip):/root/.config/pip:ro" \
-        -v "$source:/requirements.txt:ro" \
-        -v "$target:/wheelhouse:rw" \
-        quay.io/pypa/manylinux2014_x86_64:latest \
-        /bin/bash -c \
-        'yum install -q -y gmp-devel mpfr-devel libmpc-devel && \
+        -v "$(greadlink -f ~/.config/pip/pip.conf):/root/.config/pip/pip.conf:ro" \
+        -v "$source:/requirements.txt:ro" -v "$target:/wheelhouse:rw" \
+        quay.io/pypa/manylinux2014_x86_64:latest /bin/bash -c '
+
+        sed -e "s!^mirrorlist=!#mirrorlist=!g" -e "s!^#baseurl=!baseurl=!g" \
+        -e "s!http://mirror\.centos\.org!https://mirrors.cloud.tencent.com!g" \
+        -i /etc/yum.repos.d/CentOS-*.repo && \
+
+        sed -e "s!^metalink=!#metalink=!g" -e "s!^#baseurl=!baseurl=!g" \
+        -e "s!http://download\.example/pub!https://mirrors.cloud.tencent.com!g" \
+        -i /etc/yum.repos.d/epel*.repo && \
+
+        yum install -q -y gmp-devel mpfr-devel libmpc-devel && \
         /opt/python/cp38-cp38/bin/pip wheel -q -r /requirements.txt -w /wheelhouse || \
         exit 1
 
@@ -195,6 +204,8 @@ function build_fate
     gmkdir -p "$dir/build/$FATE_VER/fate/conf" "$dir/build/$FATE_VER/fate/proxy"
     gcp -af "$FATE_DIR/conf/"!(local.*).yaml "$dir/build/$FATE_VER/fate/conf"
     gcp -af "$FATE_DIR/c/proxy" "$dir/build/$FATE_VER/fate/proxy/nginx"
+
+    gsed -i '/--extra-index-url/d' "$dir/build/$FATE_VER/fate/python/requirements.txt"
 }
 
 function build_cleanup
@@ -217,6 +228,7 @@ function get_resources
         [rabbitmq]="$PATH_RMQ"
         [supervisor]="$PATH_SVR"
         [pymysql]="$PATH_PYM"
+        [wbenc]="$PATH_WBE"
     )
 
     gmkdir -p "$dir/resources"
@@ -243,8 +255,9 @@ function push_archive
 function package_fate_install
 {
     local source="$dir/build/$FATE_VER/fate"
-    local target="$dir/packages/$FATE_VER/fate_install_${FATE_VER}_${RELE_VER}"
-    local filepath="$target.tar.gz"
+    local name="fate_install_${FATE_VER}_${RELE_VER}"
+    local target="$dir/packages/$FATE_VER/$name"
+    local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
 
     grm -fr "$target"
     gmkdir -p "$target"
@@ -272,7 +285,7 @@ function package_fate_install
 function package_python_packages
 {
     local name="pip_packages_fate_${FATE_VER}"
-    local filepath="$dir/packages/$FATE_VER/$name.tar.gz"
+    local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
 
     gtar -cpz -f "$filepath" -C "$dir/build/$FATE_VER" --transform "s/^pypkg/$name/" 'pypkg'
     filepath="$filepath" push_archive
@@ -280,7 +293,7 @@ function package_python_packages
 
 function package_standalone
 {
-    local source="$dir/templates/$name"
+    local source="$dir/templates/standalone_fate"
 
     grm -fr "$target"
     gmkdir -p "$target/fate"
@@ -301,11 +314,11 @@ function package_standalone
 
 function package_standalone_install
 {
-    local name='standalone_fate'
-    local target="$dir/packages/$FATE_VER/${name}_install_${FATE_VER}_${RELE_VER}"
-    local filepath="$target.tar.gz"
+    local name="standalone_fate_install_${FATE_VER}_${RELE_VER}"
+    local target="$dir/packages/$FATE_VER/$name"
+    local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
 
-    name="$name" target="$target" package_standalone
+    target="$target" package_standalone
 
     gtar -cpz -f "$filepath" -C "${target%/*}" "${target##*/}"
     filepath="$filepath" push_archive
@@ -313,17 +326,17 @@ function package_standalone_install
 
 function package_standalone_docker
 {
-    local name='standalone_fate'
-    local target="$dir/packages/$FATE_VER/${name}_docker_image_${FATE_VER}_${RELE_VER}"
-    local filepath="${target}.tar.gz"
+    local name="standalone_fate_docker_image_${FATE_VER}_${RELE_VER}"
+    local target="$dir/packages/$FATE_VER/$name"
+    local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
 
-    local image_hub="federatedai/$name"
-    local image_tcr="ccr.ccs.tencentyun.com/federatedai/$name"
+    local image_hub="federatedai/standalone_fate"
+    local image_tcr="ccr.ccs.tencentyun.com/federatedai/standalone_fate"
 
     local image_tag="$FATE_VER"
     [ "$RELE_VER" == 'release' ] || image_tag+="-$RELE_VER"
 
-    name="$name" target="$target" package_standalone
+    target="$target" package_standalone
 
     docker buildx build --compress --progress=plain --pull --rm \
         --file "$target/Dockerfile" --tag "$image_hub:$image_tag" "$target"
@@ -332,20 +345,22 @@ function package_standalone_docker
     filepath="$filepath" push_archive
 
     docker tag "$image_hub:$image_tag" "$image_tcr:$image_tag"
-    [ "$PUSH_ARC" -gt 0 ] && docker push "$image_tcr:$image_tag"
+
+    [ "$PUSH_ARC" -gt 0 ] || return 0
+    docker push "$image_tcr:$image_tag"
 }
 
 function package_cluster_install
 {
-    local name='fate_cluster_install'
-    local source="$dir/templates/$name"
-    local target="$dir/packages/$FATE_VER/${name}_${FATE_VER}_${RELE_VER}"
-    local filepath="$target.tar.gz"
+    local source="$dir/templates/fate_cluster_install"
+    local name="fate_cluster_install_${FATE_VER}_${RELE_VER}"
+    local target="$dir/packages/$FATE_VER/$name"
+    local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
 
     grm -fr "$target"
     gcp -af "$source" "$target"
 
-    gsed -i "s/#VERSION#/${versions[fate]}/" "$target/allInone/conf/setup.conf"
+    gsed -i "s/#VERSION#/$FATE_VER/" "$target/allInone/conf/setup.conf"
 
     gmkdir -p "$target/python-install/files"
     gcp -af "${resources[conda]}" "$dir/build/$FATE_VER/fate/python/requirements.txt" "$dir/build/$FATE_VER/pypkg" "$target/python-install/files"
@@ -370,13 +385,12 @@ function package_cluster_install
 
 function package_ansible
 {
-    local source="$dir/templates/$name"
-    local filepath="$target.tar.gz"
+    local source="$dir/templates/AnsibleFATE"
 
     grm -fr "$target"
     gcp -af "$source" "$target"
 
-    gsed -i "s/#VERSION#/${versions[fate]}/" "$target/deploy/files/fate_init"
+    gsed -i "s/#VERSION#/$FATE_VER/" "$target/deploy/files/fate_init"
 
     gmkdir -p "$target/roles/python/files"
     gcp -af "$dir/build/$FATE_VER/fate/python/requirements.txt" "$target/roles/python/files"
@@ -421,18 +435,20 @@ function package_ansible
 
 function package_ansible_offline
 {
-    local name='AnsibleFATE'
-    local target="$dir/packages/$FATE_VER/${name}_${FATE_VER}_${RELE_VER}_offline"
+    local name="AnsibleFATE_${FATE_VER}_${RELE_VER}_offline"
+    local target="$dir/packages/$FATE_VER/$name"
+    local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
 
-    name="$name" target="$target" include_large_files=1 package_ansible
+    target="$target" filepath="$filepath" include_large_files=1 package_ansible
 }
 
 function package_ansible_online
 {
-    local name='AnsibleFATE'
-    local target="$dir/packages/$FATE_VER/${name}_${FATE_VER}_${RELE_VER}_online"
+    local name="AnsibleFATE_${FATE_VER}_${RELE_VER}_online"
+    local target="$dir/packages/$FATE_VER/$name"
+    local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
 
-    name="$name" target="$target" include_large_files=0 package_ansible
+    target="$target" filepath="$filepath" include_large_files=0 package_ansible
 }
 
 [ "$PULL_GIT" -gt 0 ] && git_pull
@@ -441,6 +457,8 @@ get_versions
 : "${FATE_VER:=${versions[fate]}}"
 
 [ "$CHEC_BRA" -gt 0 ] && check_branch
+
+get_resources
 
 [ "$SKIP_BUI" -gt 0 ] ||
 {
@@ -454,9 +472,7 @@ get_versions
 
 [ "$SKIP_PKG" -gt 0 ] ||
 {
-    get_resources
-
-    gmkdir -p "$dir/packages"
+    gmkdir -p "$dir/"{packages,dist}"/$FATE_VER"
 
     [ "$PACK_ARC" -gt 0 ] && package_fate_install
     [ "$PACK_PYP" -gt 0 ] && package_python_packages
