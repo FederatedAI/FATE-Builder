@@ -45,6 +45,11 @@ init() {
   cd ${project_base}
 
   echo "[INFO] install os dependency"
+
+  sed -e "s!^mirrorlist=!#mirrorlist=!g" -e "s!^#baseurl=!baseurl=!g" \
+  -e "s!http://mirror\.centos\.org!https://mirrors.cloud.tencent.com!g" \
+  -i /etc/yum.repos.d/CentOS-*.repo
+
   bash bin/install_os_dependencies.sh
   echo "[INFO] install os dependency done"
 
@@ -79,10 +84,11 @@ init() {
   pip install setuptools --no-index -f ${pypi_resource}
   echo "[INFO] install virtualenv done"
 
-  echo "[INFO] install python dependency packages by ${project_base}/requirements.txt using ${pypi_resource}"
-  pip install -r ${project_base}/requirements.txt -f ${pypi_resource} --no-index
+  echo "[INFO] install python dependency packages by ${project_base}/fate/python/requirements.txt using ${pypi_resource}"
+  pip install -r ${project_base}/fate/python/requirements.txt -f ${pypi_resource} --no-index
   echo "[INFO] install python dependency packages done"
 
+  : '
   echo "[INFO] install fate client"
   cd ${project_base}/fate/python/fate_client
   python setup.py install
@@ -97,6 +103,7 @@ init() {
   python setup.py install
   fate_test data upload -t min_test -y
   echo "[INFO] install fate test done"
+  '
 
   echo "[INFO] setup fateflow"
   sed -i "s#PYTHONPATH=.*#PYTHONPATH=${project_base}/fate/python:${project_base}/fateflow/python#g" ${project_base}/bin/init_env.sh
@@ -104,9 +111,11 @@ init() {
   sed -i "s#JAVA_HOME=.*#JAVA_HOME=${jdk_dir}#g" ${project_base}/bin/init_env.sh
   echo "[INFO] setup fateflow done"
 
+  : '
   echo "[INFO] setup fateboard"
   sed -i "s#fateflow.url=.*#fateflow.url=http://localhost:9380#g" ${project_base}/fateboard/conf/application.properties
   echo "[INFO] setup fateboard done"
+  '
 }
 
 action() {
