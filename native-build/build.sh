@@ -329,8 +329,8 @@ function package_standalone_docker
     local target="$dir/packages/$FATE_VER/$name"
     local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
 
-    local image_hub="federatedai/standalone_fate"
-    local image_tcr="ccr.ccs.tencentyun.com/federatedai/standalone_fate"
+    local image_hub="federatedai/fate_algorithm"
+    local image_tcr="ccr.ccs.tencentyun.com/federatedai/fate_algorithm"
 
     local image_tag="$FATE_VER"
     [ "$RELE_VER" == 'release' ] || image_tag+="-$RELE_VER"
@@ -340,12 +340,12 @@ function package_standalone_docker
     docker buildx build --compress --progress=plain --pull --rm \
         --file "$target/Dockerfile" --tag "$image_hub:$image_tag" "$target"
 
+    docker tag "$image_hub:$image_tag" "$image_tcr:$image_tag"
+
     return 0
 
     docker save "$image_hub:$image_tag" | gzip > "$filepath"
     filepath="$filepath" push_archive
-
-    docker tag "$image_hub:$image_tag" "$image_tcr:$image_tag"
 
     [ "$PUSH_ARC" -gt 0 ] || return 0
     docker push "$image_tcr:$image_tag"
