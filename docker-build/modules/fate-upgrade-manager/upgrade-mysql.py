@@ -2,24 +2,29 @@ import mysql.connector
 import sys
 import os
 
+from functools import cmp_to_key
+
+
+def cmp_ver(a, b):
+    for va, vb in zip(a.split('.'), b.split('.')):
+        va, vb = int(va), int(vb)
+        if va > vb:
+            return 1
+        if va < vb:
+            return -1
+    return 0
+
+
+def cmp_file_ver(a, b):
+    return cmp_ver(a.split('-')[0], b.split('-')[0])
+
 
 def get_script_list(start_ver, target_ver):
     sql_script_names = os.listdir("sql")
-    sql_script_names.sort()
-    res = []
-    start_index = -1
-    end_index = -1
-    for i in range(len(sql_script_names)):
-        if sql_script_names[i].startswith(start_ver):
-            start_index = i
-        if sql_script_names[i].replace(".sql", "").endswith(target_ver):
-            end_index = i
-    if start_index == -1 or end_index == -1 or start_index > end_index:
-        return res
-    res = sql_script_names[start_index:end_index+1]
-    print("will run scripts:")
-    print(res)
-    return res
+    print("FUM upgradeable sql list:", sql_script_names)
+    inclusive_files = filter(lambda x: cmp_ver(
+        x.split('-')[0], start_ver) >= 0 and cmp_ver(x.split('-')[1], target_ver) <= 0, sql_script_names)
+    return sorted(inclusive_files, key=cmp_to_key(cmp_file_ver))
 
 
 def preprocess_script(script):
@@ -51,7 +56,9 @@ def run_script(script, cursor):
 
 if __name__ == '__main__':
     _, user, password, start_ver, end_ver = sys.argv
+    print("Version upgrade span:", start_ver, end_ver)
     scripts_to_run = get_script_list(start_ver, end_ver)
+    print("Filtered sql list:", scripts_to_run)
     mydb = mysql.connector.connect(
         host="mysql",
         user=user,
