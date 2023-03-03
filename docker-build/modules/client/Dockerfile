@@ -6,6 +6,7 @@ FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG}
 WORKDIR /data/projects/fate/
 
 COPY pipeline /data/projects/fate/pipeline
+RUN yum install sqlite-devel -y
 RUN pip install notebook torch pandas sklearn markupsafe==2.0.1
 
 RUN cd /data/projects/fate/fate/python/fate_client; \
