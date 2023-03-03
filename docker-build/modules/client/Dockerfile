@@ -5,8 +5,6 @@ FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG}
 
 WORKDIR /data/projects/fate/
 
-RUN yum update && yum install -y vim && yum clean all
-
 COPY pipeline /data/projects/fate/pipeline
 RUN pip install notebook torch pandas sklearn markupsafe==2.0.1
 
