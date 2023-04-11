@@ -27,6 +27,7 @@ set -euxo pipefail
 : "${Build_Spark:=1}"
 : "${Build_IPCL:=0}"
 : "${IPCL_VERSION:=v1.1.3}"
+: "${Build_GPU:=0}"
 
 BASE_DIR=$(dirname "$0")
 cd $BASE_DIR
@@ -166,6 +167,37 @@ buildSparkNNCPU(){
 
 }
 
+
+buildEggrollNNGPU(){
+        echo "### START BUILDING fateflow-nn-gpu ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-nn-gpu:${TAG} \
+                -f ${WORKING_DIR}/modules/nn/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING fateflow-nn-gpu ###"
+        echo ""
+
+        echo "### START BUILDING eggroll-nn-gpu ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=eggroll --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/eggroll-nn-gpu:${TAG} \
+                -f ${WORKING_DIR}/modules/nn/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING eggroll-nn-gpu ###"
+        echo ""
+
+}
+
+buildSparkNNGPU(){
+        echo "### START BUILDING fateflow-spark-nn-gpu ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-spark --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-spark-nn-gpu:${TAG} \
+                -f ${WORKING_DIR}/modules/nn/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING fateflow-spark-nn-gpu ###"
+        echo ""
+
+        echo "### START BUILDING spark-worker-nn-gpu ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=spark-worker --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/spark-worker-nn-gpu:${TAG} \
+                -f ${WORKING_DIR}/modules/nn/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING spark-worker-nn-gpu ###"
+        echo ""
+
+}
+
 buildEggrollBasicIPCL(){
         echo "### START BUILDING base-ipcl ###"
         docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/base-image-ipcl:${TAG} -f ${WORKING_DIR}/base/ipcl/Dockerfile ${PACKAGE_DIR_CACHE}
@@ -253,7 +285,8 @@ buildModule(){
         [ "$Build_IPCL" -gt 0 ] && buildEggrollBasicIPCL
         [ "$Build_Spark" -gt 0 ] && [ "$Build_IPCL" -gt 0 ] && buildSparkBasicIPCL
         [ "$Build_OP" -gt 0 ] && [ "$Build_IPCL" -gt 0 ] && buildOptionalIPCLModule
-
+        [ "$Build_GPU" -gt 0 ]   buildEggrollNNGPU
+        [ "$Build_GPU" -gt 0 ] &&  [ "$Build_Spark" -gt 0 ]   buildSparkNNGPU
 }
 
 pushImage() {
