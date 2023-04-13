@@ -38,4 +38,4 @@ RUN pip install --upgrade pip && \
     # sed -i '/torchvision.*/d' /data/projects/python/requirements.txt && \
     sed -i '/pytorch-lightning.*/d' /data/projects/python/requirements.txt && \
     sed -i '/pyspark.*/d' /data/projects/python/requirements.txt && \
-    pip install -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt 

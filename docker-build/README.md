@@ -94,6 +94,7 @@ FATE_DIR=/root/FATE bash build.sh all
 | `Build_NN` | Build images containing the NN algorithm | 1 |
 | `Build_Spark` | Build images of the Spark computing engine | 1 |
 | `Build_IPCL` | Build images that supports IPCL | 0 |
+| `Build_GPU` | Build images that supports GPU | 0 |
 
 The command creates the base images and then the component images. After the command finishes, all images of FATE should be created. Use `docker images` to check the newly generated images:
 

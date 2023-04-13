@@ -6,7 +6,7 @@ FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG}
 WORKDIR /data/projects/fate/
 
 COPY pipeline /data/projects/fate/pipeline
-RUN pip install notebook torch pandas sklearn markupsafe==2.0.1
+RUN pip install --no-cache-dir notebook torch pandas sklearn markupsafe==2.0.1
 
 RUN cd /data/projects/fate/fate/python/fate_client; \
     python setup.py install;

@@ -95,6 +95,7 @@ FATE_DIR=/root/FATE bash build.sh all
 | `Build_NN` | 构建包含NN算法的镜像 | 1 |
 | `Build_Spark` | 构建Spark计算引擎的镜像 | 1 |
 | `Build_IPCL` | 构建支持IPCL的镜像 | 0 |
+| `Build_GPU` | 构建支持GPU的镜像 | 0 |
 
 所有用于构建镜像的“ Dockerfile”文件都存储在“docker/“子目录下。在脚本运行完之后，用户可以通过以下命令来检查构建好的镜像：
 
