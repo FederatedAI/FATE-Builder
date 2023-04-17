@@ -17,7 +17,8 @@ RUN tar -xzf fate.tar.gz; \
     tar -xzf fateflow.tar.gz; \
     tar -xzf eggroll.tar.gz; \
     tar -xzf examples.tar.gz; \
-    tar -xzf conf.tar.gz;
+    tar -xzf conf.tar.gz; \
+    tar -xzf doc.tar.gz; 
 
 FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG} 
 
