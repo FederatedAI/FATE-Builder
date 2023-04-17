@@ -11,6 +11,7 @@ COPY fateflow.tar.gz .
 COPY eggroll.tar.gz .
 COPY examples.tar.gz .
 COPY conf.tar.gz .
+COPY doc.tar.gz .
 COPY fate.env .
 
 RUN tar -xzf fate.tar.gz; \
