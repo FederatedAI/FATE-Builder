@@ -29,6 +29,7 @@ COPY  --from=builder /data/projects/fate/eggroll /data/projects/fate/eggroll
 COPY  --from=builder /data/projects/fate/examples /data/projects/fate/examples
 COPY  --from=builder /data/projects/fate/conf /data/projects/fate/conf
 COPY  --from=builder /data/projects/fate/fate.env /data/projects/fate/
+COPY  --from=builder /data/projects/fate/doc /data/projects/fate/
 
 RUN mkdir -p ./fml_agent/data; 
 

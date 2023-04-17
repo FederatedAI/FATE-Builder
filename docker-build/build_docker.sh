@@ -22,7 +22,7 @@ source_dir=$(
     cd ../
     pwd
 )
-support_modules=(bin conf examples build deploy proxy fate fateflow fateboard eggroll)
+support_modules=(bin conf examples build deploy proxy fate fateflow fateboard eggroll doc)
 [ "$Build_IPCL" -gt 0 ] && support_modules[${#support_modules[@]}]=ipcl_pkg
 environment_modules=(python36 jdk pypi)
 packaging_modules=()
@@ -68,6 +68,10 @@ function packaging_build() {
 
 function packaging_deploy() {
     packaging_general_dir "deploy"
+}
+
+function packaging_doc() {
+    packaging_general_dir "doc"
 }
 
 function packaging_general_dir() {
