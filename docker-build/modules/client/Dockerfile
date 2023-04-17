@@ -8,8 +8,9 @@ WORKDIR /data/projects/fate/
 COPY pipeline /data/projects/fate/pipeline
 RUN pip install --no-cache-dir notebook torch pandas sklearn markupsafe==2.0.1
 
-RUN cd /data/projects/fate/fate/python/fate_client; \
-    python setup.py install;
+RUN cd /data/projects/fate/fate/; \
+    pip install -e python/fate_client; \
+    pip install -e python/fate_test;
 ENV FATE_FLOW_IP=fateflow
 ENV FATE_FLOW_PORT=9380
 
