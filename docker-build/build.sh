@@ -385,6 +385,26 @@ pushImage() {
                         echo ""
                 done
         fi
+
+        if [ "$Build_GPU" -gt 0 ]
+        then
+                for module in "eggroll-nn-gpu" "fateflow-nn-gpu" ; do
+                        echo "### START PUSH ${module} ###"
+                        docker push ${PREFIX}/${module}:${TAG}
+                        echo "### FINISH PUSH ${module} ###"
+                        echo ""
+                done
+        fi
+
+        if [ "$Build_GPU" -gt 0 ] && [ "$Build_Spark" -gt 0 ]
+        then
+                for module in "spark-worker-nn-gpu" "fateflow-spark-nn-gpu" ; do
+                        echo "### START PUSH ${module} ###"
+                        docker push ${PREFIX}/${module}:${TAG}
+                        echo "### FINISH PUSH ${module} ###"
+                        echo ""
+                done
+        fi
 }
 
 # start 
