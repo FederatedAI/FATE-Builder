@@ -6,4 +6,4 @@ FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG}
 
 COPY requirements.txt /data/projects/python/
 RUN sed -i '/pyspark.*/d' /data/projects/python/requirements.txt && \
-RUN pip install --no-cache-dir -r /data/projects/python/requirements.txt
+    pip install --no-cache-dir -r /data/projects/python/requirements.txt
