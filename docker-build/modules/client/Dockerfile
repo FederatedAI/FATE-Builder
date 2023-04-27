@@ -1,27 +1,16 @@
 ARG PREFIX=prefix
 ARG BASE_TAG=tag
 ARG BASE_IMAGE=image
-FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG} as data
+FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG}
 
 WORKDIR /data/projects/fate/
-
-RUN cd /data/projects/fate/fate/python/fate_client; \
-    python setup.py bdist_wheel;
-
-FROM python:3.8
-
-WORKDIR /data/projects/fate/
-
-RUN apt-get update && apt-get install -y vim && apt-get clean
 
 COPY pipeline /data/projects/fate/pipeline
-RUN pip install notebook torch pandas sklearn markupsafe==2.0.1
-RUN mkdir /data/projects/fate/logs
-COPY --from=data /data/projects/fate/examples /data/projects/fate/examples
-COPY --from=data /data/projects/fate/fateflow/examples /data/projects/fate/fateflow/examples
-COPY --from=data /data/projects/fate/fate/python/fate_client/dist/fate_client-*-py3-none-any.whl /data/projects/fate/
-RUN cd /data/projects/fate/; pip install fate_client-*-py3-none-any.whl; rm fate_client-*-py3-none-any.whl
+RUN pip install --no-cache-dir notebook torch pandas sklearn markupsafe==2.0.1
 
+RUN cd /data/projects/fate/fate/; \
+    pip install -e python/fate_client; \
+    pip install -e python/fate_test;
 ENV FATE_FLOW_IP=fateflow
 ENV FATE_FLOW_PORT=9380
 

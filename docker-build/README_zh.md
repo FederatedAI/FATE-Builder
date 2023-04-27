@@ -95,6 +95,9 @@ FATE_DIR=/root/FATE bash build.sh all
 | `Build_NN` | 构建包含NN算法的镜像 | 1 |
 | `Build_Spark` | 构建Spark计算引擎的镜像 | 1 |
 | `Build_IPCL` | 构建支持IPCL的镜像 | 0 |
+| `IPCL_PKG_DIR` | IPCL的代码路径 ｜ 无 ｜
+| `IPCL_VERSION` | IPCL的版本号 ｜ v1.1.3 ｜
+| `Build_GPU` | 构建支持GPU的镜像 | 0 |
 
 所有用于构建镜像的“ Dockerfile”文件都存储在“docker/“子目录下。在脚本运行完之后，用户可以通过以下命令来检查构建好的镜像：
 
@@ -113,6 +116,12 @@ federatedai/eggroll                              <TAG>
 federatedai/fateboard                            <TAG>
 federatedai/python                               <TAG>
 federatedai/base-image                           <TAG>
+```
+
+全部构建，如果想要构建全部类型的镜像可以使用下面的命令。
+
+```sh
+FATE_DIR=/root/FATE TAG=1.11.1-release Build_Basic=1 Build_NN=1 Build_FUM=1 Build_Spark=1 Build_OP=1 Build_IPCL=1 Build_GPU=1 IPCL_PKG_DIR=/root/pailliercryptolib_python/ IPCL_VERSION=v1.1.3 bash docker-build/build.sh all
 ```
 
 ### 把镜像推送到镜像仓库（可选）
