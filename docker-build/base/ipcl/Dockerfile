@@ -9,7 +9,7 @@ SHELL ["/usr/bin/scl", "enable", "devtoolset-8"]
 
 ENV PATH=${PATH}:/opt/python3/bin/
 
-RUN pip install cmake==3.22 wheel
+RUN pip install --no-cache-dir cmake==3.22 wheel
 
 # install nasm
 RUN wget --no-check-certificate https://www.nasm.us/pub/nasm/releasebuilds/2.15.05/nasm-2.15.05.tar.gz \

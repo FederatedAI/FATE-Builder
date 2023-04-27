@@ -5,4 +5,5 @@ ARG BASE_IMAGE=image
 FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG}
 
 COPY requirements.txt /data/projects/python/
-RUN pip install -r /data/projects/python/requirements.txt
+RUN sed -i '/pyspark.*/d' /data/projects/python/requirements.txt && \
+    pip install --no-cache-dir -r /data/projects/python/requirements.txt

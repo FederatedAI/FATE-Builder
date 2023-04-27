@@ -22,7 +22,7 @@ source_dir=$(
     cd ../
     pwd
 )
-support_modules=(bin conf examples build deploy proxy fate fateflow fateboard eggroll)
+support_modules=(bin conf examples build deploy proxy fate fateflow fateboard eggroll doc)
 [ "$Build_IPCL" -gt 0 ] && support_modules[${#support_modules[@]}]=ipcl_pkg
 environment_modules=(python36 jdk pypi)
 packaging_modules=()
@@ -70,6 +70,10 @@ function packaging_deploy() {
     packaging_general_dir "deploy"
 }
 
+function packaging_doc() {
+    packaging_general_dir "doc"
+}
+
 function packaging_general_dir() {
     dir_name=$1
     echo "[INFO] package ${dir_name} start"
@@ -104,7 +108,7 @@ packaging_fateboard() {
     fateboard_version=$(grep -E -m 1 -o "<version>(.*)</version>" ./pom.xml | tr -d '[\\-a-z<>//]' | awk -F "version" '{print $2}')
     echo "[INFO] fateboard version "${fateboard_version}
         
-    docker run --rm -u $(id -u):$(id -g) -v ${source_dir}/fateboard:/data/projects/fate/fateboard --entrypoint="" maven:3.6-jdk-8 /bin/bash -c "cd /data/projects/fate/fateboard && mvn clean package -DskipTests"
+    docker run --rm -u $(id -u):$(id -g) -v ${source_dir}/fateboard:/data/projects/fate/fateboard --entrypoint="" maven:3.8-jdk-8 /bin/bash -c "cd /data/projects/fate/fateboard && mvn clean package -DskipTests"
     mkdir -p ${package_dir}/fateboard/conf
     mkdir -p ${package_dir}/fateboard/ssh
     cp ./target/fateboard-${fateboard_version}.jar ${package_dir}/fateboard/
@@ -121,7 +125,7 @@ packaging_eggroll() {
     pull_eggroll
     cd ./eggroll
     cd ./deploy
-    docker run --rm -u $(id -u):$(id -g) -v ${source_dir}/eggroll:/data/projects/fate/eggroll --entrypoint="" maven:3.6-jdk-8 /bin/bash -c "cd /data/projects/fate/eggroll/deploy && bash auto-packaging.sh"
+    docker run --rm -u $(id -u):$(id -g) -v ${source_dir}/eggroll:/data/projects/fate/eggroll --entrypoint="" maven:3.8-jdk-8 /bin/bash -c "cd /data/projects/fate/eggroll/deploy && bash auto-packaging.sh"
     mkdir -p ${package_dir}/eggroll
     mv ${source_dir}/eggroll/eggroll.tar.gz ${package_dir}/eggroll/
     cd ${package_dir}/eggroll/
