@@ -29,7 +29,7 @@ set -euxo pipefail
 : "${IPCL_VERSION:=v1.1.3}"
 : "${Build_GPU:=0}"
 : "${Build_LLM:=0}"
-: "${Build_LLM_VERSION:=v1.1.0}"
+: "${Build_LLM_VERSION:=v1.2.0}"
 
 BASE_DIR=$(dirname "$0")
 cd $BASE_DIR

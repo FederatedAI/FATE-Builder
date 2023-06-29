@@ -99,7 +99,7 @@ FATE_DIR=/root/FATE bash build.sh all
 | `IPCL_VERSION` | IPCL的版本号 ｜ v1.1.3 ｜
 | `Build_GPU` | 构建支持GPU的镜像 | 0 |
 | `Build_LLM` | 构建支持FATE-LLM的镜像 | 0 |
-| `Build_LLM_VERSION` | 构建支持Build_LLM_VERSION镜像的版本 | v1.1.0 |
+| `Build_LLM_VERSION` | 构建支持Build_LLM_VERSION镜像的版本 | v1.2.0 |
 
 所有用于构建镜像的“ Dockerfile”文件都存储在“docker/“子目录下。在脚本运行完之后，用户可以通过以下命令来检查构建好的镜像：
 
@@ -146,7 +146,7 @@ federatedai/base-image               <TAG>
 以上是使用FATE-Builder可以构建的全部镜像，如果想要构建全部类型的镜像可以使用下面的命令。
 
 ```sh
-FATE_DIR=/root/FATE TAG=1.11.2-release Build_Basic=1 Build_NN=1 Build_FUM=1 Build_Spark=1 Build_OP=1 Build_IPCL=1 Build_GPU=1 Build_LLM=1 Build_LLM_VERSION=v1.1.0 IPCL_PKG_DIR=/root/pailliercryptolib_python/ IPCL_VERSION=v1.1.3 bash docker-build/build.sh all
+FATE_DIR=/root/FATE TAG=1.11.2-release Build_Basic=1 Build_NN=1 Build_FUM=1 Build_Spark=1 Build_OP=1 Build_IPCL=1 Build_GPU=1 Build_LLM=1 Build_LLM_VERSION=v1.2.0 IPCL_PKG_DIR=/root/pailliercryptolib_python/ IPCL_VERSION=v1.1.3 bash docker-build/build.sh all
 ```
 
 ### 把镜像推送到镜像仓库（可选）

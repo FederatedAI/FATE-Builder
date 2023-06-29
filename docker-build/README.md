@@ -98,7 +98,7 @@ FATE_DIR=/root/FATE bash build.sh all
 | `IPCL_VERSION` | IPCL version ｜ v1.1.3 ｜
 | `Build_GPU` | Build images that supports GPU | 0 |
 | `Build_LLM` | Build images that supports FATE-LLM | 0 |
-| `Build_LLM_VERSION` | FATE-LLM version | v1.1.0 |
+| `Build_LLM_VERSION` | FATE-LLM version | v1.2.0 |
 
 The command creates the base images and then the component images. After the command finishes, all images of FATE should be created. Use `docker images` to check the newly generated images:
 
@@ -138,7 +138,7 @@ federatedai/base-image               <TAG>
 The above are all images that can be built using FATE-Builder, if you want to build all types of images, you can use the following command.
 
 ```sh
-FATE_DIR=/root/FATE TAG=1.11.2-release Build_Basic=1 Build_NN=1 Build_FUM=1 Build_Spark=1 Build_OP=1 Build_IPCL=1 Build_GPU=1 Build_LLM=1 Build_LLM_VERSION=v1.1.0 IPCL_PKG_DIR=/root/pailliercryptolib_python/ IPCL_VERSION=v1.1.3 bash docker-build/build.sh all
+FATE_DIR=/root/FATE TAG=1.11.2-release Build_Basic=1 Build_NN=1 Build_FUM=1 Build_Spark=1 Build_OP=1 Build_IPCL=1 Build_GPU=1 Build_LLM=1 Build_LLM_VERSION=v1.2.0 IPCL_PKG_DIR=/root/pailliercryptolib_python/ IPCL_VERSION=v1.1.3 bash docker-build/build.sh all
 ``
 
 ### Pushing images to a registry (optional)
