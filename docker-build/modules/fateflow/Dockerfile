@@ -35,7 +35,7 @@ COPY  --from=builder /data/projects/fate/doc /data/projects/fate/doc
 
 RUN mkdir -p ./fml_agent/data; 
 
-ENV PYTHONPATH=$PYTHONPATH:/data/projects/fate/:/data/projects/fate/eggroll/python:/data/projects/fate/fate/python:/data/projects/fate/fateflow/python
+ENV PYTHONPATH=/data/projects/fate/:/data/projects/fate/eggroll/python:/data/projects/fate/fate/python:/data/projects/fate/fateflow/python
 ENV EGGROLL_HOME=/data/projects/fate/eggroll
 ENV FATE_PROJECT_BASE=/data/projects/fate
 
