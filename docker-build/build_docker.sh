@@ -22,7 +22,7 @@ source_dir=$(
     cd ../
     pwd
 )
-support_modules=(bin conf examples build deploy proxy fate fateflow fateboard eggroll doc)
+support_modules=(bin conf examples build deploy proxy fate fateflow fateboard eggroll doc fate_llm)
 [ "$Build_IPCL" -gt 0 ] && support_modules[${#support_modules[@]}]=ipcl_pkg
 environment_modules=(python36 jdk pypi)
 packaging_modules=()
@@ -53,7 +53,7 @@ function packaging_bin() {
 
 function packaging_conf() {
     echo "[INFO] package conf start"
-    cp fate.env RELEASE.md python/requirements.txt ${package_dir}/
+    cp fate.env RELEASE.md python/requirements*.txt ${package_dir}/
     cp -r conf ${package_dir}/
     echo "[INFO] package bin done"
 }
@@ -238,6 +238,44 @@ pull_eggroll() {
         git clone ${eggroll_git_url} -b ${eggroll_git_branch} --depth=1 eggroll
     fi
     echo "[INFO] get eggroll code done"
+}
+
+function pull_fate_llm() {
+echo "[INFO] get fate_llm code start"
+    cd ${source_dir}
+    fate_llm_git_url="https://github.com/FederatedAI/FATE-LLM.git"
+    fate_llm_git_branch="$Build_LLM_VERSION"
+    echo "[INFO] git clone fate_llm source code from ${fate_llm_git_url} branch ${fate_llm_git_branch}"
+    if [[ -d "fate_llm" ]]; then
+        while [[ true ]]; do
+            read -p "the fate_llm directory already exists, delete and re-download? [y/n] " input
+            case ${input} in
+            [yY]*)
+                echo "[INFO] delete the original fate_llm"
+                rm -rf fate_llm
+                git clone ${fate_llm_git_url} -b ${fate_llm_git_branch} --depth=1 fate_llm
+                break
+                ;;
+            [nN]*)
+                echo "[INFO] use the original fate_llm"
+                break
+                ;;
+            *)
+                echo "just enter y or n, please."
+                ;;
+            esac
+        done
+    else
+        git clone ${fate_llm_git_url} -b ${fate_llm_git_branch} --depth=1 fate_llm
+    fi
+    echo "[INFO] get fate_llm code done"
+}
+
+function packaging_fate_llm() {
+    echo "[INFO] package FATE-LLM start"
+    pull_fate_llm
+    cp -r fate_llm ${package_dir}/
+    echo "[INFO] package FATE-LLM done"
 }
 
 function packaging_proxy() {
