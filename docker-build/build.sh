@@ -371,7 +371,7 @@ pushImage() {
         ## push Spark nn image (Spark NN CPU)
         if [ "$Build_Spark" -gt 0 ] && [ "$Build_NN" -gt 0 ]
         then
-                for module in "fateflow-nn" "eggroll-nn" ; do
+                for module in "fateflow-spark-nn" "spark-worker-nn" ; do
                         echo "### START PUSH ${module} ###"
                         docker push ${PREFIX}/${module}:${TAG}
                         echo "### FINISH PUSH ${module} ###"
