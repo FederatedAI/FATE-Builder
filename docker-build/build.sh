@@ -62,13 +62,6 @@ package() {
 #     echo "Built builder"
 # }
 
-check_fate_dir() {
-    if [ ! -d "$FATE_DIR" ]; then
-        echo "FATE_DIR ($FATE_DIR) does not exist"
-        exit 1
-    fi
-}
-
 # build_fate() {
 #     echo "Building fate"
 #     docker run -v $FATE_DIR:$FATE_DIR federatedai/builder /bin/bash -c "cd $FATE_DIR && ./build.sh"
@@ -89,14 +82,16 @@ buildEggrollBasicCPU() {
         echo "START BUILDING Eggroll Module IMAGE"
 
         echo "### START BUILDING fateflow ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow:${TAG} \
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-base:${TAG} \
                 -f ${WORKING_DIR}/modules/fateflow/Dockerfile ${PACKAGE_DIR_CACHE}
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-base --build-arg BASE_TAG=${TAG} ${Docker_Options} -t ${PREFIX}/fateflow:${TAG} \
+                -f ${WORKING_DIR}/modules/fateflow-eggroll/Dockerfile ${PACKAGE_DIR_CACHE}
         echo "### FINISH BUILDING fateflow ###"
         echo ""
-        echo "### START BUILDING fateboard ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateboard:${TAG} \
-                -f ${WORKING_DIR}/modules/fateboard/Dockerfile ${PACKAGE_DIR_CACHE}
-        echo "### FINISH BUILDING fateboard ###"
+        echo "### START BUILDING osx ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/osx:${TAG} \
+                -f ${WORKING_DIR}/modules/osx/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING osx ###"
         echo ""
 
         echo "### START BUILDING eggroll ###"
@@ -113,12 +108,12 @@ buildSparkBasicCPU(){
 
 
         echo "### START BUILDING fateflow-spark ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-spark:${TAG} -f ${WORKING_DIR}/modules/fateflow-spark/Dockerfile ${WORKING_DIR}/modules/fateflow-spark/
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${TAG} ${Docker_Options} -t ${PREFIX}/fateflow-spark:${TAG} -f ${WORKING_DIR}/modules/fateflow-spark/Dockerfile ${WORKING_DIR}/modules/fateflow-spark/
         echo "### FINISH BUILDING fateflow-spark ###"
         echo ""
 
         echo "### START BUILDING spark-base ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/spark-base:${TAG} -f ${WORKING_DIR}/modules/spark-base/Dockerfile ${WORKING_DIR}/modules/spark-base/
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-spark --build-arg BASE_TAG=${TAG} ${Docker_Options} -t ${PREFIX}/spark-base:${TAG} -f ${WORKING_DIR}/modules/spark-base/Dockerfile ${WORKING_DIR}/modules/spark-base/
         echo "### FINISH BUILDING spark-base ###"
         echo ""
 
@@ -242,8 +237,10 @@ buildEggrollBasicIPCL(){
         echo ""
 
         echo "### START BUILDING fateflow-ipcl ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image-ipcl --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-ipcl:${TAG} \
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image-ipcl --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-ipcl-base:${TAG} \
                 -f ${WORKING_DIR}/modules/fateflow/Dockerfile ${PACKAGE_DIR_CACHE}
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-ipcl-base --build-arg BASE_TAG=${TAG} ${Docker_Options} -t ${PREFIX}/fateflow-ipcl:${TAG} \
+                -f ${WORKING_DIR}/modules/fateflow-eggroll/Dockerfile ${PACKAGE_DIR_CACHE}
         echo "### FINISH BUILDING fateflow-ipcl ###"
         echo ""
 
@@ -256,7 +253,7 @@ buildEggrollBasicIPCL(){
 
 buildSparkBasicIPCL(){
         echo "### START BUILDING fateflow-spark-ipcl ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-ipcl --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-spark-ipcl:${TAG} \
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-ipcl-base --build-arg BASE_TAG=${TAG} ${Docker_Options} -t ${PREFIX}/fateflow-spark-ipcl:${TAG} \
                 -f ${WORKING_DIR}/modules/fateflow-spark/Dockerfile ${WORKING_DIR}/modules/fateflow-spark/
         echo "### FINISH BUILDING fateflow-spark-ipcl ###"
         echo ""
@@ -284,7 +281,7 @@ buildOptionalModule(){
         echo ""
 
         echo "### START BUILDING fate-test ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fate-test:${TAG} -f ${WORKING_DIR}/modules/fate-test/Dockerfile ${WORKING_DIR}/modules/fate-test/
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=client --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fate-test:${TAG} -f ${WORKING_DIR}/modules/fate-test/Dockerfile ${WORKING_DIR}/modules/fate-test/
         echo "### FINISH BUILDING fate-test ###"
         echo ""
 
@@ -339,7 +336,7 @@ pushImage() {
         ## push EggRoll image (EggRoll Basic CPU)
         if [ "$Build_Basic" -gt 0 ]
         then
-                for module in "fateflow" "fateboard" "eggroll" ; do
+                for module in "fateflow" "osx" "eggroll" ; do
                         echo "### START PUSH ${module} ###"
                         docker push ${PREFIX}/${module}:${TAG}
                         echo "### FINISH PUSH ${module} ###"
@@ -513,18 +510,18 @@ while getopts "hfpt:" opt; do
     esac
 done
 
+check_fate_dir() {
+    if [ ! -d "$FATE_DIR" ]; then
+        echo "FATE_DIR ($FATE_DIR) does not exist"
+        exit 1
+    fi
+}
 
 # check fate dir
 check_fate_dir
 
 # cd ${WORKING_DIR}
-if [ -f "$FATE_DIR/fate.env" ]; then
-  version="$(grep "FATE=" $FATE_DIR/fate.env | awk -F '=' '{print $2}')"
-else
-  echo "Error: Please set FATE_DIR or Check FATE_DIR=$FATE_DIR is a FATE directory"
-  # TODO git clone FATE
-  exit 1
-fi
+version="$(cd "$FATE_DIR"; git describe --tags --abbrev=0)"
 
 # set image PREFIX and TAG
 if [  -z "${TAG}" ]; then
