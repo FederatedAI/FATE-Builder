@@ -5,13 +5,10 @@ FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG} as builder
 WORKDIR /data/projects/fate/
 COPY eggroll.tar.gz .
 COPY fate.tar.gz .
-COPY conf.tar.gz .
-COPY fateflow.tar.gz .
-COPY fate.env .
+COPY fate_flow.tar.gz .
 RUN tar -xzf eggroll.tar.gz; \
     tar -xzf fate.tar.gz; \
-    tar -xzf conf.tar.gz; \
-    tar -xzf fateflow.tar.gz;
+    tar -xzf fate_flow.tar.gz;
 
 RUN ls -l
 
@@ -27,12 +24,14 @@ WORKDIR /data/projects/fate/eggroll/
 
 COPY --from=builder /data/projects/fate/eggroll /data/projects/fate/eggroll
 COPY --from=builder /data/projects/fate/fate /data/projects/fate/fate
-COPY --from=builder /data/projects/fate/fateflow /data/projects/fate/fateflow
-COPY  --from=builder /data/projects/fate/conf /data/projects/fate/conf
-COPY --from=builder /data/projects/fate/fate.env /data/projects/fate/
+COPY --from=builder /data/projects/fate/fate_flow /data/projects/fate/fate_flow
 
-ENV PYTHONPATH=/data/projects/fate/fate/python:/data/projects/fate/eggroll/python:/data/projects/fate/fateflow/python
+ENV PYTHONPATH=/data/projects/fate/fate/python:/data/projects/fate/eggroll/python:/data/projects/fate/fate_flow/python
 ENV EGGROLL_HOME=/data/projects/fate/eggroll/
+
+RUN sed -i "s/python-rocksdb==0.7.0/# python-rocksdb==0.7.0/g" requirements.txt && \
+    pip install -r /data/projects/fate/eggroll/requirements.txt && \
+    pip install -r /data/projects/python/requirements-fate.txt 
 
 ENV TINI_VERSION v0.18.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
