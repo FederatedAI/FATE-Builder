@@ -70,7 +70,9 @@ do
   cd ${pbase}/${pname}/${role_name};
   source ${pbase}/${pname}/bin/init_env.sh;
   /bin/bash bin/eggroll.sh $role start;
-
+  cd ${pbase}/${pname}/${role_name}/python/client;
+  python setup.py install;
+  eggroll init --ip ${rollsite_ip} --port 4670;
 done
 
 num=$( ps aux|grep -v grep |grep -c "fate" );

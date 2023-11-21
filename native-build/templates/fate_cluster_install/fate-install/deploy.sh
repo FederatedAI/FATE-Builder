@@ -152,7 +152,11 @@ python setup.py install
 cd ${pbase}/${pname}/fate/python/fate_test
 python setup.py install
 
+cd ${pbase}/${pname}/eggroll/python/client
+python setup.py install
+
 cd ${pbase}/${pname}
 
 flow init -c "${pbase}/${pname}/conf/service_conf.yaml"
 pipeline init --ip "${fate_flow_ip}" --port "${fate_flow_httpPort}"
+eggroll init --ip "${fate_flow_ip}" --port 4670

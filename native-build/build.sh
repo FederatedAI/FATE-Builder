@@ -3,14 +3,15 @@
 set -euxo pipefail
 shopt -s expand_aliases extglob
 
-: "${FATE_DIR:=/data/projects/fate}"
+: "${FATE_DIR:=/data/projects/llm/FATE}"
+: "${LLM_DIR:=/data/projects/llm/LLM_test}"
 : "${CLON_GIT:=0}"
 : "${PULL_GIT:=0}"
 : "${PULL_OPT:=--rebase --stat --autostash}"
 : "${CHEC_BRA:=0}"
 : "${SKIP_BUI:=0}"
 : "${COPY_ONL:=0}"
-: "${BUIL_PYP:=1}"
+: "${BUIL_PYP:=0}"
 : "${BUIL_EGG:=1}"
 : "${BUIL_BOA:=1}"
 : "${BUIL_FAT:=1}"
@@ -24,13 +25,15 @@ shopt -s expand_aliases extglob
 : "${PATH_WBE:=cos://fate/resources/wb-info-enc-1.0-SNAPSHOT.jar}"
 : "${SYNC_RES:=1}"
 : "${RELE_VER:=release}"
-: "${PACK_ARC:=0}"
-: "${PACK_PYP:=0}"
-: "${PACK_STA:=0}"
+: "${LLM_VER:=1.3.0}"
+: "${PACK_ARC:=1}"
+: "${PACK_PYP:=1}"
+: "${PACK_STA:=1}"
 : "${PACK_DOC:=0}"
-: "${PACK_CLU:=0}"
-: "${PACK_OFF:=0}"
-: "${PACK_ONL:=0}"
+: "${PACK_CLU:=1}"
+: "${PACK_OFF:=1}"
+: "${PACK_ONL:=1}"
+: "${PACK_LLM:=1}"
 : "${PUSH_ARC:=0}"
 
 commands=( 'date' 'dirname' 'readlink' 'mkdir' 'printf' 'cp' 'ln' 'grep'
@@ -157,26 +160,37 @@ function build_fateboard
 function build_python_packages
 {
     local source="$FATE_DIR/python/requirements.txt"
+    local source_llm="$FATE_DIR/python/requirements-fate-llm.txt"
     local target="$dir/build/$FATE_VER/pypkg"
 
     grm -rf "$target"
     gmkdir -p "$target"
-
-    docker run --pull=always --rm \
+    
+    if [ "$PACK_LLM" -gt 0 ]
+    then
+	echo "PACK_LLM is 1"
+	docker run --pull=always --rm \
         -v "$(greadlink -f ~/.config/pip/pip.conf):/root/.config/pip/pip.conf:ro" \
-        -v "$source:/requirements.txt:ro" -v "$target:/wheelhouse:rw" \
+        -v "$source_llm:/requirements-fate-llm.txt:ro" -v "$source:/requirements.txt:rw" -v "$target:/wheelhouse:rw" \
         quay.io/pypa/manylinux2014_x86_64:latest /bin/bash -c '
 
         sed -e "s!^mirrorlist=!#mirrorlist=!g" -e "s!^#baseurl=!baseurl=!g" \
-        -e "s!http://mirror\.centos\.org!https://mirrors.cloud.tencent.com!g" \
+        -e "s!http://mirror\.centos\.org!http://mirrors.tencentyun.com!g" \
         -i /etc/yum.repos.d/CentOS-*.repo && \
 
         sed -e "s!^metalink=!#metalink=!g" -e "s!^#baseurl=!baseurl=!g" \
-        -e "s!http://download\.example/pub!https://mirrors.cloud.tencent.com!g" \
+        -e "s!http://download\.example/pub!http://mirrors.tencentyun.com!g" \
         -i /etc/yum.repos.d/epel*.repo && \
 
+	echo "$(sed 's!https://download\.pytorch\.org/whl/cpu!https://download.pytorch.org/whl!g' /requirements.txt)" > /requirements.txt && \
+	echo "$(sed 's/torchvision==0.14.1+cpu/torchvision==0.14.1/' /requirements.txt)" > /requirements.txt && \
+	echo "$(sed 's/torch==1.13.1+cpu/torch==1.13.1/' /requirements.txt)" > /requirements.txt && \
+	cat /requirements-fate-llm.txt &&\
+	cat /requirements.txt && \
+
         yum install -q -y gmp-devel mpfr-devel libmpc-devel && \
-        /opt/python/cp38-cp38/bin/pip wheel -q -r /requirements.txt -w /wheelhouse || \
+        /opt/python/cp38-cp38/bin/pip wheel -q -r /requirements.txt -w /wheelhouse  -i https://mirrors.cloud.tencent.com/pypi/simple --trusted-host mirrors.cloud.tencent.com && \
+        /opt/python/cp38-cp38/bin/pip wheel -q -r /requirements-fate-llm.txt -w /wheelhouse  -i https://mirrors.cloud.tencent.com/pypi/simple --trusted-host mirrors.cloud.tencent.com || \
         exit 1
 
         for whl in /wheelhouse/*.whl
@@ -189,6 +203,35 @@ function build_python_packages
             }
         }
         :'
+    else
+	echo "$PACK_LLM is 0"
+	docker run --pull=always --rm \
+		-v "$(greadlink -f ~/.config/pip/pip.conf):/root/.config/pip/pip.conf:ro" \
+		-v "$source:/requirements.txt:ro" -v "$target:/wheelhouse:rw" \
+		quay.io/pypa/manylinux2014_x86_64:latest /bin/bash -c '
+	        
+	        sed -e "s!^mirrorlist=!#mirrorlist=!g" -e "s!^#baseurl=!baseurl=!g" \
+		-e "s!http://mirror\.centos\.org!http://mirrors.tencentyun.com!g" \
+		-i /etc/yum.repos.d/CentOS-*.repo && \
+
+		sed -e "s!^metalink=!#metalink=!g" -e "s!^#baseurl=!baseurl=!g" \
+		-e "s!http://download\.example/pub!http://mirrors.tencentyun.com!g" \
+		-i /etc/yum.repos.d/epel*.repo && \
+                cat /requirements.txt && \
+		yum install -q -y gmp-devel mpfr-devel libmpc-devel && \
+		/opt/python/cp38-cp38/bin/pip wheel -q -r /requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com || \
+		exit 1
+		for whl in /wheelhouse/*.whl
+		{
+		    auditwheel show "$whl" &>/dev/null &&
+		    {
+			new_whl=$(auditwheel repair --plat manylinux2014_x86_64 -w /wheelhouse "$whl" 2>&1 | \
+				  grep -ioP "(?<=Fixed-up wheel written to ).+\.whl")
+			[ -n "$new_whl" ] && [ "$new_whl" != "$whl" ] && rm -f "$whl"
+		    }
+	        }
+	        :'
+    fi
 
     sudo chown "$(id -u):$(id -g)" "$target/"*
 }
@@ -206,6 +249,10 @@ function build_fate
     gcp -af "$FATE_DIR/c/proxy" "$dir/build/$FATE_VER/fate/proxy/nginx"
 
     gsed -i '/--extra-index-url/d' "$dir/build/$FATE_VER/fate/python/requirements.txt"
+    if [ "$PACK_LLM" -gt 0 ]
+    then
+	gcp -af "$LLM_DIR" "$dir/build/$FATE_VER/fate/python"
+    fi
 }
 
 function build_cleanup
@@ -286,6 +333,13 @@ function package_python_packages
 {
     local name="pip_packages_fate_${FATE_VER}"
     local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
+    local pack_llm=$PACK_LLM
+
+    if [ "$pack_llm" -gt 0 ]
+    then
+        name="pip_packages_fate_${FATE_VER}_llm_${LLM_VER}"
+        filepath="$dir/dist/$FATE_VER/$name.tar.gz"
+    fi
 
     gtar -cpz -f "$filepath" -C "$dir/build/$FATE_VER" --transform "s/^pypkg/$name/" 'pypkg'
     filepath="$filepath" push_archive
@@ -337,7 +391,7 @@ function package_standalone_docker
     [ "$RELE_VER" == 'release' ] || image_tag+="-$RELE_VER"
 
     target="$target" package_standalone
-
+    echo "target is $target"
     docker buildx build --compress --progress=plain --pull --rm \
         --file "$target/Dockerfile" --tag "$image_hub:$image_tag" "$target"
 
@@ -356,6 +410,14 @@ function package_cluster_install
     local name="fate_cluster_install_${FATE_VER}_${RELE_VER}"
     local target="$dir/packages/$FATE_VER/$name"
     local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
+    local pack_llm=${PACK_LLM}
+    
+    if [ "$pack_llm" -gt 0 ]
+    then
+	name="fate_cluster_install_${FATE_VER}_LLM_${LLM_VER}_${RELE_VER}"
+	target="$dir/packages/$FATE_VER/$name"
+	filepath="$dir/dist/$FATE_VER/$name.tar.gz"
+    fi
 
     grm -fr "$target"
     gcp -af "$source" "$target"
@@ -363,7 +425,7 @@ function package_cluster_install
     gsed -i "s/#VERSION#/$FATE_VER/" "$target/allInone/conf/setup.conf"
 
     gmkdir -p "$target/python-install/files"
-    gcp -af "${resources[conda]}" "$dir/build/$FATE_VER/fate/python/requirements.txt" "$dir/build/$FATE_VER/pypkg" "$target/python-install/files"
+    gcp -af "${resources[conda]}" "$dir/build/$FATE_VER/fate/python/requirements.txt" "$dir/build/$FATE_VER/fate/python/requirements-fate-llm.txt" "$dir/build/$FATE_VER/pypkg" "$target/python-install/files"
 
     gmkdir -p "$target/java-install/files"
     gcp -af "${resources[jdk]}" "$target/java-install/files"
@@ -390,10 +452,18 @@ function package_ansible
     grm -fr "$target"
     gcp -af "$source" "$target"
 
+    [ "$pack_llm" -gt 0 ] &&
+    {
+	gsed -i "s/eggroll.rollsite.push.max.retry=3/eggroll.rollsite.push.max.retry=1000/" "$target/roles/eggroll/templates/eggroll.properties.jinja"
+	gsed -i "s/eggroll.rollsite.push.long.retry=2/eggroll.rollsite.push.long.retry=999/" "$target/roles/eggroll/templates/eggroll.properties.jinja"
+	gsed -i "s/eggroll.rollsite.push.max.retry=3/eggroll.rollsite.push.max.retry=1000/" "$target/roles/eggroll/templates/eggroll-exchange.properties.jinja"
+	gsed -i "s/eggroll.rollsite.push.long.retry=2/eggroll.rollsite.push.long.retry=999/" "$target/roles/eggroll/templates/eggroll-exchange.properties.jinja"
+    }
     gsed -i "s/#VERSION#/$FATE_VER/" "$target/deploy/files/fate_init"
 
     gmkdir -p "$target/roles/python/files"
     gcp -af "$dir/build/$FATE_VER/fate/python/requirements.txt" "$target/roles/python/files"
+    gcp -af "$dir/build/$FATE_VER/fate/python/requirements-fate-llm.txt" "$target/roles/python/files"
     [ "$include_large_files" -gt 0 ] &&
     {
         gcp -af "${resources[conda]}" "$target/roles/python/files"
@@ -438,8 +508,25 @@ function package_ansible_offline
     local name="AnsibleFATE_${FATE_VER}_${RELE_VER}_offline"
     local target="$dir/packages/$FATE_VER/$name"
     local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
+    local pack_llm=$PACK_LLM
 
-    target="$target" filepath="$filepath" include_large_files=1 package_ansible
+    if [ "$pack_llm" -gt 0 ]
+    then
+	name_llm="AnsibleFATE_${FATE_VER}_LLM_${LLM_VER}_${RELE_VER}_offline"
+	target_llm="$dir/packages/$FATE_VER/${name_llm}"
+	filepath_llm="$dir/dist/$FATE_VER/${name_llm}.tar.gz"
+	#name="${name}" target="$target" filepath="$filepath" pack_llm="$pack_llm" include_large_files=1 package_ansible
+	echo "${name_llm}"
+	echo "${target_llm}"
+	echo "${filepath_llm}"
+	name="${name_llm}" target="${target_llm}" filepath="${filepath_llm}" pack_llm="$pack_llm" include_large_files=1 package_ansible
+    else
+	name="$name" target="$target" filepath="$filepath" pack_llm="$pack_llm" include_large_files=1 package_ansible
+	 echo "$name"
+	 echo "$target"
+	 echo "$filepath"
+    fi
+    # target="$target" filepath="$filepath" include_large_files=1 package_ansible
 }
 
 function package_ansible_online
@@ -447,8 +534,24 @@ function package_ansible_online
     local name="AnsibleFATE_${FATE_VER}_${RELE_VER}_online"
     local target="$dir/packages/$FATE_VER/$name"
     local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
+    local pack_llm=$PACK_LLM
 
-    target="$target" filepath="$filepath" include_large_files=0 package_ansible
+    if [ "$pack_llm" -gt 0 ]
+    then
+        name_llm="AnsibleFATE_${FATE_VER}_LLM_${LLM_VER}_${RELE_VER}_online"
+	target_llm="$dir/packages/$FATE_VER/${name_llm}"
+	filepath_llm="$dir/dist/$FATE_VER/${name_llm}.tar.gz"
+	echo "${name_llm}"
+	echo "${target_llm}"
+	echo "${filepath_llm}"
+	name="${name_llm}" target="${target_llm}" filepath="${filepath_llm}" pack_llm="$pack_llm" include_large_files=0 package_ansible
+    else
+	name="$name" target="$target" filepath="$filepath" pack_llm="$pack_llm" include_large_files=0 package_ansible
+        echo "$name"
+	echo "$target"
+	echo "$filepath"
+    fi
+    #target="$target" filepath="$filepath" include_large_files=0 package_ansible
 }
 
 [ "$PULL_GIT" -gt 0 ] && git_pull

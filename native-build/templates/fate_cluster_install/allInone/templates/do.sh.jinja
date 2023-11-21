@@ -30,6 +30,9 @@ source ${pbase}/${pname}/bin/init_env.sh
 echo "restart fate_flow"
 cd ${pbase}/${pname}/fateflow/bin
 /bin/bash ./service.sh restart
+echo "restart eggroll"
+cd ${pbase}/${pname}/eggroll/bin
+/bin/bash ./eggroll.sh all restart
 
 echo "sleep 30"
 sleep 30

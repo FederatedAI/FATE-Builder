@@ -99,4 +99,16 @@ then
 
 fi
 
-echo "deploy mysql ok"
+#echo "deploy mysql ok"
+while true
+do
+  $pbase/fate/common/mysql/mysql-8.0.28/bin/mysql -h  127.0.0.1 -P 3306 -S ./run/mysgl.sock -uroot -pfate_dev -e "SHOW DATABASES;" >/dev/null 2>&1
+  if [ $? -eq 0 ]; then
+    echo "mysql connection successful!" 
+    echo "deploy mysql ok"
+    exit 0
+  else
+    echo "mysql connection failed!Please check!"
+    exit 1
+  fi
+done
