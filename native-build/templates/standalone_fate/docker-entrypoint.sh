@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-cd ${WORKDIR}/fateflow
+cd ${WORKDIR}/fate_flow
 bash bin/service.sh start
 
 cd ${WORKDIR}/fateboard

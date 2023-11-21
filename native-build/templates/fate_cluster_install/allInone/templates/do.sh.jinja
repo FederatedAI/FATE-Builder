@@ -26,9 +26,9 @@ do
   sleep 2
 done
 
-source ${pbase}/${pname}/bin/init_env.sh
+source ${pbase}/${pname}/fate_flow/bin/init_env.sh
 echo "restart fate_flow"
-cd ${pbase}/${pname}/fateflow/bin
+cd ${pbase}/${pname}/fate_flow/bin
 /bin/bash ./service.sh restart
 echo "restart eggroll"
 cd ${pbase}/${pname}/eggroll/bin

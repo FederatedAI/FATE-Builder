@@ -60,8 +60,10 @@ echo "CREATE USER ${mysql_user}@'${clustermanager_ip%:*}' IDENTIFIED BY '${mysql
 echo "GRANT ALL ON ${fate_flow_dbname}.* TO ${mysql_user}@'${clustermanager_ip%:*}';"
 echo "GRANT ALL ON ${eggroll_dbname}.* TO ${mysql_user}@'${clustermanager_ip%:*}';"
 echo "use ${eggroll_dbname};"
+echo "INSERT INTO server_node (host, port, node_type, status) values ('${clustermanager_ip%:*}', '${clustermanager_ip#*:}', 'CLUSTER_MANAGER', 'HEALTHY');"
 for temp in ${nodemanager_ips[*]}
 do
+echo "INSERT INTO server_node (host, port, node_type, status) values ('${temp%:*}', '${temp#*:}', 'NODE_MANAGER', 'HEALTHY');"
 if [  ${temp%:*} != ${clustermanager_ip%:*} ]
 then
   echo "CREATE USER ${mysql_user}@'${temp%:*}' IDENTIFIED BY '${mysql_pass}';"
@@ -99,16 +101,4 @@ then
 
 fi
 
-#echo "deploy mysql ok"
-while true
-do
-  $pbase/fate/common/mysql/mysql-8.0.28/bin/mysql -h  127.0.0.1 -P 3306 -S ./run/mysgl.sock -uroot -pfate_dev -e "SHOW DATABASES;" >/dev/null 2>&1
-  if [ $? -eq 0 ]; then
-    echo "mysql connection successful!" 
-    echo "deploy mysql ok"
-    exit 0
-  else
-    echo "mysql connection failed!Please check!"
-    exit 1
-  fi
-done
+echo "deploy mysql ok"
