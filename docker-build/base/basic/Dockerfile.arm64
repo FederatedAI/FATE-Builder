@@ -1,0 +1,49 @@
+FROM ubuntu:bionic-20220913
+
+ARG version
+
+USER root
+WORKDIR /data/projects/python/
+ENV VIRTUAL_ENV /data/projects/python/venv
+
+RUN apt-get update && \
+    apt-get install -y curl gcc g++ make openssl supervisor libgmp-dev \
+        libmpfr-dev libmpc-dev libaio1 libaio-dev numactl autoconf automake \
+        libtool libffi-dev libssl-dev liblz4-1 liblz4-dev liblz4-tool zlib1g \
+        zlib1g-dev xz-utils libopenblas-dev liblapack-dev libsm-dev pkg-config \
+        libblas-dev libatlas-base-dev libtinfo-dev gfortran && \
+    apt-get autoremove && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* 
+
+RUN curl -o Python-3.8.13.tar.xz https://www.python.org/ftp/python/3.8.13/Python-3.8.13.tar.xz && \
+    tar -xvf Python-3.8.13.tar.xz && \
+    cd Python-3.8.13 && \
+    ./configure --prefix=/opt/python3 && \
+    make altinstall && \
+    ln -s /opt/python3/bin/python3.8 /usr/local/bin/python3.8 && \
+    ln -s /usr/local/bin/python3.8 /usr/local/bin/python3 && \
+    ln -s /usr/local/bin/python3 /usr/local/bin/python && \
+    ln -s /opt/python3/bin/pip3.8 /usr/bin/pip3.8 && \
+    ln -s /usr/bin/pip3.8 /usr/bin/pip3 && \
+    ln -s /usr/bin/pip3 /usr/bin/pip && \
+    cd .. && \
+    rm Python-3.8.13.tar.xz && \
+    rm -rf Python-3.8.13
+
+RUN curl -L https://github.com/llvm/llvm-project/releases/download/llvmorg-9.0.1/clang+llvm-9.0.1-aarch64-linux-gnu.tar.xz \
+        -o /root/clang+llvm-9.0.1-aarch64-linux-gnu.tar.xz && \
+    tar xJvf /root/clang+llvm-9.0.1-aarch64-linux-gnu.tar.xz -C /root/ && \
+    mv /root/clang+llvm-9.0.1-aarch64-linux-gnu /root/clang-llvm-9.0.1 \
+    && rm -f /root/clang+llvm-9.0.1-aarch64-linux-gnu.tar.xz
+
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:/root/clang-llvm-9.0.1/bin:$PATH"
+COPY requirements*.txt /data/projects/python/
+
+RUN pip install --upgrade pip && \
+    sed -i 's/tensorflow-cpu==2.11.1/tensorflow-aarch64==2.11.1/g' requirements.txt && \
+    sed -i 's/torch==1.13.1+cpu/torch==1.13.1/g' requirements.txt && \
+    sed -i 's/torchvision==0.14.1+cpu/torchvision==0.14.1/g' requirements.txt && \
+    sed -i 's/ipcl-python==2.0.0/#ipcl-python==2.0.0/g' requirements.txt && \
+    pip install --no-cache-dir -r requirements.txt
