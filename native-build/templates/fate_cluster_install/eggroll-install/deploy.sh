@@ -55,7 +55,7 @@ else
 fi
 printf "$variables\ncat << EOF\n$tpl\nEOF" | bash > ${pbase}/${pname}/${role_name}/conf/route_table.json
 
-variables="javahome=$javahome pyenv=$pyenv pypath=$pypath id=$id rollsite_ip=${rollsite_ip} rollsite_port=${rollsite_port} clustermanager_ip=${clustermanager_ip} clustermanager_port=${clustermanager_port} nodemanager_port=${nodemanager_port} eggroll_db_ip=${eggroll_db_ip} eggroll_db_port=${eggroll_db_port} eggroll_db_name=${eggroll_db_name} eggroll_db_username=${eggroll_db_username} eggroll_db_passwd=${eggroll_db_passwd} coordinator=$coordinator pyenv=$pyenv javahome=$javahome role=$group pypath=$pypath "
+variables="pbase=$pbase pname=$pname javahome=$javahome pyenv=$pyenv pypath=$pypath id=$id rollsite_ip=${rollsite_ip} rollsite_port=${rollsite_port} clustermanager_ip=${clustermanager_ip} clustermanager_port=${clustermanager_port} nodemanager_port=${nodemanager_port} eggroll_db_ip=${eggroll_db_ip} eggroll_db_port=${eggroll_db_port} eggroll_db_name=${eggroll_db_name} eggroll_db_username=${eggroll_db_username} eggroll_db_passwd=${eggroll_db_passwd} coordinator=$coordinator pyenv=$pyenv javahome=$javahome role=$group pypath=$pypath "
 tpl=$( cat ${workdir}/templates/eggroll.properties.jinja )
 printf "$variables\ncat << EOF\n$tpl\nEOF" | bash > ${pbase}/${pname}/${role_name}/conf/eggroll.properties
 

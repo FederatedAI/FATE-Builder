@@ -10,13 +10,13 @@ all_examples_data_config: examples/data/upload_config/all_examples_data_testsuit
 fate_base: ${pbase}/${pname}/fate
 clean_data: true
 parties:
-  guest: [${local_id}]
-  host: [${other_id}, ${local_id}]
-  arbiter: [${other_id}]
+  guest: ['${local_id}']
+  host: ['${other_id}', '${local_id}']
+  arbiter: ['${other_id}']
 services:
   - flow_services:
-      - {address: ${local_fate_flow_ip}:${fate_flow_httpPort}, parties: [${local_id}]}
-      - {address: ${other_fate_flow_ip}:${fate_flow_httpPort}, parties: [${other_id}]}
+      - {address: ${local_fate_flow_ip}:${fate_flow_httpPort}, parties: ['${local_id}']}
+      - {address: ${other_fate_flow_ip}:${fate_flow_httpPort}, parties: ['${other_id}']}
     serving_setting:
       address: 127.0.0.1:8059
 

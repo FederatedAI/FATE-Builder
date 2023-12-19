@@ -45,7 +45,7 @@ function_install_fate_flow()
 
   #make settings.py
   echo "partyid:${party_id}"
-  variables="pbase=$pbase pname=$pname role_name=${role_name} jbase=$jbase pybase=$pybase party_id=${party_id} fate_flow_ip=${fate_flow_ip} fate_flow_httpPort=${fate_flow_httpPort}  fate_flow_grpcPort=${fate_flow_grpcPort} fate_flow_dbname=${fate_flow_dbname} mysql_user=${mysql_user} mysql_pass=${mysql_pass} mysql_ip=${mysql_ip} mysql_port=${mysql_port} redis_ip=${redis_ip} redis_port=${redis_port} redis_pass=${redis_pass} default_storage=${default_storage} fateboard_ip=${fate_flow_ip} fateboard_port=${fateboard_port}  rollsite_ip=${fate_flow_ip} cores_per_node=${cores_per_node}"
+  variables="pbase=$pbase pname=$pname role_name=${role_name} jbase=$jbase pybase=$pybase party_id=${party_id} fate_flow_ip=${fate_flow_ip} fate_flow_httpPort=${fate_flow_httpPort}  fate_flow_grpcPort=${fate_flow_grpcPort} fate_flow_dbname=${fate_flow_dbname} mysql_user=${mysql_user} mysql_pass=${mysql_pass} mysql_ip=${mysql_ip} mysql_port=${mysql_port} redis_ip=${redis_ip} redis_port=${redis_port} redis_pass=${redis_pass} default_storage=${default_storage} fateboard_ip=${fate_flow_ip} fateboard_port=${fateboard_port}  rollsite_ip=${fate_flow_ip} cores_per_node=${cores_per_node} clustermanager_ip=${clustermanager_ip} clustermanager_port=${clustermanager_port}"
   tpl=$( cat ${workdir}/templates/service_conf.yaml.jinja )
   printf "$variables\ncat << EOF\n$tpl\nEOF" | bash > ${pbase}/${pname}/fate_flow/conf/service_conf.yaml
   ps aux|grep -v grep | grep 'mysql-install/deploy.sh'
@@ -143,17 +143,17 @@ do
         source ${pbase}/${pname}/fate_flow/bin/init_env.sh;
         /bin/bash ./service.sh start
       ;;
-    #"fateboard")
-    #    function_install_fateboard
-    #    cd ${pbase}/${pname}/fateboard;
-    #    source ${pbase}/${pname}/fate_flow/bin/init_env.sh;
-    #    /bin/bash ./service.sh start
-    #  ;;
+    "fateboard")
+        function_install_fateboard
+        cd ${pbase}/${pname}/fateboard;
+        source ${pbase}/${pname}/fate_flow/bin/init_env.sh;
+        /bin/bash ./service.sh start
+      ;;
     "osx")
         function_install_osx
         cd ${pbase}/${pname}/${pname}/proxy/osx;
         source ${pbase}/${pname}/fate_flow/bin/init_env.sh;
-	/bin/bash ${pbase}/${pname}/eggroll/bin/eggroll.sh rollsite stop;
+	      /bin/bash ${pbase}/${pname}/eggroll/bin/eggroll.sh rollsite stop;
         /bin/bash ./service.sh start
       ;;
     *)

@@ -27,14 +27,14 @@ env_dir=${project_base}/env
 
 python_resouce=${project_base}/env/python
 pypi_resource=${project_base}/env/pypi
-jdk_resource=${project_base}/env/jdk
+#jdk_resource=${project_base}/env/jdk
 
-jdk_dir=${jdk_resource}/jdk-8u345
+#jdk_dir=${jdk_resource}/jdk-8u345
 miniconda_dir=${python_resouce}/miniconda
 venv_dir=${python_resouce}/venv
 
 echo "[INFO] env dir: ${env_dir}"
-echo "[INFO] jdk dir: ${jdk_dir}"
+#echo "[INFO] jdk dir: ${jdk_dir}"
 echo "[INFO] venv dir: ${venv_dir}"
 
 cd ${project_base}
@@ -56,14 +56,14 @@ init() {
   bash ${python_resouce}/Miniconda3-*-Linux-x86_64.sh -b -f -p ${miniconda_dir}
   echo "[INFO] install python done"
 
-  echo "[INFO] install jdk"
-  if [ -d ${jdk_dir} ] || [ -f ${jdk_dir} ]; then
-    rm -rf ${jdk_dir}
-    echo "[INFO] delete jdk: ${jdk_dir}"
-  fi
-  cd ${jdk_resource}
-  tar xJf jdk-*.tar.xz
-  echo "[INFO] install jdk done"
+#  echo "[INFO] install jdk"
+#  if [ -d ${jdk_dir} ] || [ -f ${jdk_dir} ]; then
+#    rm -rf ${jdk_dir}
+#    echo "[INFO] delete jdk: ${jdk_dir}"
+#  fi
+#  cd ${jdk_resource}
+#  tar xJf jdk-*.tar.xz
+#  echo "[INFO] install jdk done"
 
   cd ${project_base}
 
@@ -113,9 +113,9 @@ init() {
   ln -frs "${project_base}/fate/python" "${project_base}/python"
   echo "[INFO] setup fateflow done"
 
-  echo "[INFO] setup fateboard"
-  sed -i "s#fateflow.url=.*#fateflow.url=http://localhost:9380#g" ${project_base}/fateboard/conf/application.properties
-  echo "[INFO] setup fateboard done"
+#  echo "[INFO] setup fateboard"
+#  sed -i "s#fateflow.url=.*#fateflow.url=http://localhost:9380#g" ${project_base}/fateboard/conf/application.properties
+#  echo "[INFO] setup fateboard done"
 }
 
 action() {
@@ -123,11 +123,11 @@ action() {
 
   source $project_base/fate_flow/bin/init_env.sh
 
-  cd $project_base/fate_flow
-  bash bin/service.sh $1
+  #cd $project_base/fate_flow
+  #bash bin/service.sh $1
 
-  cd $project_base/fateboard
-  bash service.sh $1
+  #cd $project_base/fateboard
+  #bash service.sh $1
 
   cd $project_base
 }

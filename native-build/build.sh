@@ -387,7 +387,7 @@ function package_standalone
     grm -fr "$target"
     gmkdir -p "$target/fate"
    
-    gcp -af "$dir/build/$FATE_VER/fate/"!(python*|proxy*) "$dir/build/$FATE_VER/"{fateboard,fate_flow} "$target"
+    gcp -af "$dir/build/$FATE_VER/fate/"!(python*|proxy*) "$dir/build/$FATE_VER/"{fate_flow} "$target"
     gcp -af  "$dir/build/$FATE_VER/fate/python" "$target/fate"
     gcp -af  "$dir/build/$FATE_VER/fate/fate_test" "$target/fate"
     gln -frs "$target/fate_flow/python/requirements.txt" "$target/requirements.txt"
@@ -402,8 +402,8 @@ function package_standalone
     gcp -af "$source/"*.sh "$target/bin"
     gcp -af "$source/"!(*.sh) "$target"
 
-    gmkdir -p "$target/env/"{jdk,python}
-    gcp -af "${resources[jdk]}" "$target/env/jdk"
+    gmkdir -p "$target/env/"{python}
+    #gcp -af "${resources[jdk]}" "$target/env/jdk"
     gcp -af "${resources[conda]}" "$target/env/python"
 
     gcp -af "$dir/build/$FATE_VER/pypkg" "$target/env/pypi"
@@ -642,13 +642,7 @@ get_resources
 {
     gmkdir -p "$dir/"{packages,dist}"/$FATE_VER"
 
-    [ "$PACK_ARC" -gt 0 ] && package_fate_install
-    [ "$PACK_PYP" -gt 0 ] && package_python_packages
-    [ "$PACK_STA" -gt 0 ] && package_standalone_install
     [ "$PACK_DOC" -gt 0 ] && package_standalone_docker
-    [ "$PACK_CLU" -gt 0 ] && package_cluster_install
-    [ "$PACK_OFF" -gt 0 ] && package_ansible_offline
-    [ "$PACK_ONL" -gt 0 ] && package_ansible_online
 }
 
 echo 'Done'

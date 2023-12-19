@@ -31,7 +31,7 @@ database:
     path:
 default_engines:
   computing: eggroll
-  federation: rollsite
+  federation: osx
   storage: eggroll
 default_provider:
   name: fate
@@ -68,18 +68,20 @@ federation:
     # mode: replication / client, default: replication
     mode: replication
     max_message_size: 1048576
-  rollsite:
-    host: ${fate_flow_ip}
-    port: 9370
   osx:
     host: ${fate_flow_ip}
     port: 9370
+    # stream or queue
+    mode: queue
 computing:
   standalone:
     cores: 32
   eggroll:
-    cores: 32
-    nodes: 2
+    cores: ${cores_per_node}
+    nodes: 1
+    # cluster manager host and port
+    host: ${clustermanager_ip}
+    port: ${clustermanager_port}
   spark:
     # default use SPARK_HOME environment variable
     home:
