@@ -99,6 +99,7 @@ FATE_DIR=/root/FATE bash build.sh all
 | `Build_GPU` | Build images that supports GPU | 0 |
 | `Build_LLM` | Build images that supports FATE-LLM | 0 |
 | `Build_LLM_VERSION` | FATE-LLM version | v1.2.0 |
+| `Platform` | Architecture types | amd64 |
 
 The command creates the base images and then the component images. After the command finishes, all images of FATE should be created. Use `docker images` to check the newly generated images:
 
@@ -139,7 +140,18 @@ The above are all images that can be built using FATE-Builder, if you want to bu
 
 ```sh
 FATE_DIR=/root/FATE TAG=1.11.2-release Build_Basic=1 Build_NN=1 Build_FUM=1 Build_Spark=1 Build_OP=1 Build_IPCL=1 Build_GPU=1 Build_LLM=1 Build_LLM_VERSION=v1.2.0 IPCL_PKG_DIR=/root/pailliercryptolib_python/ IPCL_VERSION=v1.1.3 bash docker-build/build.sh all
-``
+```
+
+### Cross-compilation function (optional)
+The "Platform" field can be used to specify the processor architecture types that the built image can support, currently supporting arm64 and amd64. If this field is not specified, amd64 will be defaulted.
+
+This function supports building images that support either arm64 or amd64 architecture under the amd64 architecture, and it also supports building images that support either arm64 or amd64 architectures under the arm64 architecture.
+
+For example, if you want to build an arm64 image, you can use the following command.For example, if you want to build an arm64 image, you can use the following command. (The current version only supports building basic images when building images that support the arm64 architecture, that is, Build_Basic=1)
+
+```sh
+Platform=arm64 FATE_DIR=/root/FATE TAG=1.11.2-release Build_Basic=1 Build_NN=0 Build_FUM=0 Build_Spark=0 Build_OP=0 Build_IPCL=0 Build_GPU=0 Build_LLM=0 Build_LLM_VERSION=v1.2.0 IPCL_PKG_DIR=/root/pailliercryptolib_python/ IPCL_VERSION=v1.1.3 bash docker-build/build.sh all
+```
 
 ### Pushing images to a registry (optional)
 
