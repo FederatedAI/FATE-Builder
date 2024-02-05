@@ -11,7 +11,8 @@ RUN apt-get update && \
         libmpfr-dev libmpc-dev libaio1 libaio-dev numactl autoconf automake \
         libtool libffi-dev libssl-dev liblz4-1 liblz4-dev liblz4-tool zlib1g \
         zlib1g-dev xz-utils libopenblas-dev liblapack-dev libsm-dev pkg-config \
-        libblas-dev libatlas-base-dev libtinfo-dev gfortran && \
+        libblas-dev libatlas-base-dev libtinfo-dev gfortran libbz2-dev liblzma-dev \
+        libsnappy-dev && \
     apt-get autoremove && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* 
@@ -47,3 +48,5 @@ RUN pip install --upgrade pip && \
     sed -i 's/torchvision==0.14.1+cpu/torchvision==0.14.1/g' requirements.txt && \
     sed -i 's/ipcl-python==2.0.0/#ipcl-python==2.0.0/g' requirements.txt && \
     pip install --no-cache-dir -r requirements.txt
+
+ENV LD_PRELOAD=/data/projects/python/venv/lib/python3.8/site-packages/scikit_learn.libs/libgomp-d22c30c5.so.1.0.0
