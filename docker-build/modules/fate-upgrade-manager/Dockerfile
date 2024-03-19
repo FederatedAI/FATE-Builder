@@ -8,7 +8,7 @@ COPY deploy.tar.gz .
 
 RUN tar -xzf deploy.tar.gz;
 
-FROM centos/python-36-centos7
+FROM python:3.8
 
 WORKDIR /
 COPY  --from=builder /data/projects/fate/deploy/upgrade/sql ./sql

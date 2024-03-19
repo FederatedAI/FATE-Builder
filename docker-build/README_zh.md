@@ -95,24 +95,58 @@ FATE_DIR=/root/FATE bash build.sh all
 | `Build_NN` | 构建包含NN算法的镜像 | 1 |
 | `Build_Spark` | 构建Spark计算引擎的镜像 | 1 |
 | `Build_IPCL` | 构建支持IPCL的镜像 | 0 |
+| `IPCL_PKG_DIR` | IPCL的代码路径 ｜ 无 ｜
+| `IPCL_VERSION` | IPCL的版本号 ｜ v1.1.3 ｜
+| `Build_GPU` | 构建支持GPU的镜像 | 0 |
+| `Build_LLM` | 构建支持FATE-LLM的镜像 | 0 |
+| `Build_LLM_VERSION` | 构建支持Build_LLM_VERSION镜像的版本 | v1.2.0 |
 
 所有用于构建镜像的“ Dockerfile”文件都存储在“docker/“子目录下。在脚本运行完之后，用户可以通过以下命令来检查构建好的镜像：
 
 ```bash
 $ docker images | grep federatedai
-REPOSITORY                                       TAG
-federatedai/python-nn                            <TAG>
-federatedai/fate-test                            <TAG>
-federatedai/nginx                                <TAG>
-federatedai/spark-master                         <TAG>
-federatedai/spark-worker                         <TAG>
-federatedai/spark-base                           <TAG>
-federatedai/python-spark                         <TAG>
-federatedai/client                               <TAG>
-federatedai/eggroll                              <TAG>
-federatedai/fateboard                            <TAG>
-federatedai/python                               <TAG>
-federatedai/base-image                           <TAG>
+REPOSITORY                           TAG
+federatedai/fate-test-ipcl           <TAG>
+federatedai/spark-worker-ipcl        <TAG>
+federatedai/spark-base-ipcl          <TAG>
+federatedai/fateflow-spark-ipcl      <TAG>
+federatedai/eggroll-ipcl             <TAG>
+federatedai/fateflow-ipcl            <TAG>
+federatedai/base-image-ipcl          <TAG>
+federatedai/spark-worker-all-gpu     <TAG>
+federatedai/spark-bash-all-gpu       <TAG>
+federatedai/fateflow-spark-all-gpu   <TAG>
+federatedai/eggroll-all-gpu          <TAG>
+federatedai/fateflow-all-gpu         <TAG>
+federatedai/spark-worker-nn-gpu      <TAG>
+federatedai/spark-bash-nn-gpu        <TAG>
+federatedai/fateflow-spark-nn-gpu    <TAG>
+federatedai/eggroll-nn-gpu           <TAG>
+federatedai/fateflow-nn-gpu          <TAG>
+federatedai/spark-worker-nn          <TAG>
+federatedai/spark-bash-nn            <TAG>
+federatedai/fateflow-spark-nn        <TAG>
+federatedai/eggroll-nn               <TAG>
+federatedai/fateflow-nn              <TAG>
+federatedai/fate-upgrade-manager     <TAG>
+federatedai/fate-test                <TAG>
+federatedai/client                   <TAG>
+federatedai/nginx                    <TAG>
+federatedai/spark-worker             <TAG>
+federatedai/spark-master             <TAG>
+federatedai/spark-base               <TAG>
+federatedai/fateflow-spark           <TAG>
+federatedai/eggroll                  <TAG>
+federatedai/fateboard                <TAG>
+federatedai/fateflow                 <TAG>
+federatedai/base-image               <TAG>
+```
+
+**all代表包含所有算法（basic，NN 和 LLM），通过Build_LLM就可以构建。**
+以上是使用FATE-Builder可以构建的全部镜像，如果想要构建全部类型的镜像可以使用下面的命令。
+
+```sh
+FATE_DIR=/root/FATE TAG=1.11.2-release Build_Basic=1 Build_NN=1 Build_FUM=1 Build_Spark=1 Build_OP=1 Build_IPCL=1 Build_GPU=1 Build_LLM=1 Build_LLM_VERSION=v1.2.0 IPCL_PKG_DIR=/root/pailliercryptolib_python/ IPCL_VERSION=v1.1.3 bash docker-build/build.sh all
 ```
 
 ### 把镜像推送到镜像仓库（可选）
@@ -133,7 +167,7 @@ federatedai/base-image                           <TAG>
 因为FATE的部署需要用到mysql的Docker镜像，因此在构建镜像的机器上没有这两个镜像的话还需要手动拉取。拉取及打包镜像的命令如下：
 
 ```bash
-docker pull mysql
+docker pull mysql:8.0.28
 docker save $(docker images | grep -E "mysql" | awk '{print $1":"$2}') -o third-party.images.tar.gz
 docker save $(docker images | grep federatedai| grep -v -E "base|builder" | awk '{print $1":"$2}') -o fate.images.tar.gz
 ```

@@ -94,25 +94,52 @@ FATE_DIR=/root/FATE bash build.sh all
 | `Build_NN` | Build images containing the NN algorithm | 1 |
 | `Build_Spark` | Build images of the Spark computing engine | 1 |
 | `Build_IPCL` | Build images that supports IPCL | 0 |
+| `IPCL_PKG_DIR` | IPCL code path ｜ None ｜
+| `IPCL_VERSION` | IPCL version ｜ v1.1.3 ｜
+| `Build_GPU` | Build images that supports GPU | 0 |
+| `Build_LLM` | Build images that supports FATE-LLM | 0 |
+| `Build_LLM_VERSION` | FATE-LLM version | v1.2.0 |
 
 The command creates the base images and then the component images. After the command finishes, all images of FATE should be created. Use `docker images` to check the newly generated images:
 
 ```bash
 $ docker images | grep federatedai
-REPOSITORY                                       TAG  
-federatedai/python-nn                            <TAG>
-federatedai/fate-test                            <TAG>
-federatedai/nginx                                <TAG>
-federatedai/spark-master                         <TAG>
-federatedai/spark-worker                         <TAG>
-federatedai/spark-base                           <TAG>
-federatedai/python-spark                         <TAG>
-federatedai/client                               <TAG>
-federatedai/eggroll                              <TAG>
-federatedai/fateboard                            <TAG>
-federatedai/python                               <TAG>
-federatedai/base-image                           <TAG>
+REPOSITORY                           TAG  
+federatedai/spark-worker-all-gpu     <TAG>
+federatedai/fateflow-spark-all-gpu   <TAG>
+federatedai/eggroll-all-gpu          <TAG>
+federatedai/fateflow-all-gpu         <TAG>
+federatedai/fate-test-ipcl           <TAG>
+federatedai/spark-worker-ipcl        <TAG>
+federatedai/spark-base-ipcl          <TAG>
+federatedai/fateflow-spark-ipcl      <TAG>
+federatedai/eggroll-ipcl             <TAG>
+federatedai/fateflow-ipcl            <TAG>
+federatedai/base-image-ipcl          <TAG>
+federatedai/spark-worker-nn          <TAG>
+federatedai/fateflow-spark-nn        <TAG>
+federatedai/eggroll-nn               <TAG>
+federatedai/fateflow-nn              <TAG>
+federatedai/fate-upgrade-manager     <TAG>
+federatedai/fate-test                <TAG>
+federatedai/client                   <TAG>
+federatedai/nginx                    <TAG>
+federatedai/spark-worker             <TAG>
+federatedai/spark-master             <TAG>
+federatedai/spark-base               <TAG>
+federatedai/fateflow-spark           <TAG>
+federatedai/eggroll                  <TAG>
+federatedai/fateboard                <TAG>
+federatedai/fateflow                 <TAG>
+federatedai/base-image               <TAG>
 ```
+
+**all represents all algorithms (basic, NN and LLM), which can be built through Build_LLM.**
+The above are all images that can be built using FATE-Builder, if you want to build all types of images, you can use the following command.
+
+```sh
+FATE_DIR=/root/FATE TAG=1.11.2-release Build_Basic=1 Build_NN=1 Build_FUM=1 Build_Spark=1 Build_OP=1 Build_IPCL=1 Build_GPU=1 Build_LLM=1 Build_LLM_VERSION=v1.2.0 IPCL_PKG_DIR=/root/pailliercryptolib_python/ IPCL_VERSION=v1.1.3 bash docker-build/build.sh all
+``
 
 ### Pushing images to a registry (optional)
 
@@ -146,7 +173,7 @@ On the machine with all FATE docker images available, use the following commands
 
 ```bash
 # Pull mysql first if you don't have those images in your machine.
-$ docker pull mysql
+$ docker pull mysql:8.0.28
 $ docker save $(docker images | grep -E "mysql" | awk '{print $1":"$2}') -o third-party.images.tar.gz
 $ docker save $(docker images | grep federatedai| grep -v -E "base|builder" | awk '{print $1":"$2}') -o fate.images.tar.gz
 ```
