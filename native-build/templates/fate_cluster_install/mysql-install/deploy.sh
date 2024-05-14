@@ -60,8 +60,10 @@ echo "CREATE USER ${mysql_user}@'${clustermanager_ip%:*}' IDENTIFIED BY '${mysql
 echo "GRANT ALL ON ${fate_flow_dbname}.* TO ${mysql_user}@'${clustermanager_ip%:*}';"
 echo "GRANT ALL ON ${eggroll_dbname}.* TO ${mysql_user}@'${clustermanager_ip%:*}';"
 echo "use ${eggroll_dbname};"
+echo "INSERT INTO server_node (host, port, node_type, status) values ('${clustermanager_ip%:*}', '${clustermanager_ip#*:}', 'CLUSTER_MANAGER', 'HEALTHY');"
 for temp in ${nodemanager_ips[*]}
 do
+echo "INSERT INTO server_node (host, port, node_type, status) values ('${temp%:*}', '${temp#*:}', 'NODE_MANAGER', 'HEALTHY');"
 if [  ${temp%:*} != ${clustermanager_ip%:*} ]
 then
   echo "CREATE USER ${mysql_user}@'${temp%:*}' IDENTIFIED BY '${mysql_pass}';"
@@ -78,7 +80,7 @@ then
   /bin/bash ${pbase}/${pname}/${mysql_path}/${role_name}-${mysql_version}/init.sh
   sleep 10
   #boot mysql
-  nohup $pbase/$pname/${mysql_path}/${role_name}-${mysql_version}/bin/mysqld_safe --defaults-file=$pbase/$pname/${mysql_path}/${role_name}-${mysql_version}/conf/my.cnf --user=app >> $pbase/$pname/${mysql_path}/${role_name}-${mysql_version}/logs/mysqld.log 2>&1 &
+  nohup $pbase/$pname/${mysql_path}/${role_name}-${mysql_version}/bin/mysqld_safe --defaults-file=$pbase/$pname/${mysql_path}/${role_name}-${mysql_version}/conf/my.cnf --user=`whoami` >> $pbase/$pname/${mysql_path}/${role_name}-${mysql_version}/logs/mysqld.log 2>&1 &
   sleep 10
 
   num=$( ps aux|grep -v grep |grep -c mysql )

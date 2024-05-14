@@ -6,11 +6,17 @@ workdir=$(cd $(dirname $0); pwd)
 
 echo "Install python"
 
+os_plat=`arch`
+
 #install base python
 if [ ! -f ${pydir}/bin/python ]
 then
   mkdir -p ${pydir%/*}
-  bash ${workdir}/files/Miniconda3-*-Linux-x86_64.sh -b -f -p ${pydir}
+  if [ $os_plat == "x86_64" ];then
+    bash ${workdir}/files/Miniconda3-*-Linux-x86_64.sh -b -f -p ${pydir}
+  elif [ $os_plat == "aarch64" ];then
+    bash ${workdir}/files/Miniconda3-*-Linux-aarch64.sh -b -f -p ${pydir}
+  fi
 fi
 
 if [ ! -f ${pyenv}/bin/python ]
