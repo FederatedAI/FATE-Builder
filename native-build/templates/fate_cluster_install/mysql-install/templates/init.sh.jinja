@@ -2,9 +2,11 @@
 
 cd ${mbase}
 
+user=`whoami`
+
 mkdir -pv ${lbase}/${pname}/${role_name}
 if [ ! -f .init ]
 then
   #./bin/mysqld --initialize --user=app --basedir=$mbase  --datadir=${pbase}/${pname}/data/mysql/ > ${mbase}/logs/init.log 2>&1 && touch .init
-  ./bin/mysqld --initialize-insecure --user=app --basedir=$mbase  --datadir=${pbase}/${pname}/data/mysql/ > ${mbase}/logs/init.log 2>&1 && touch .init
+  ./bin/mysqld --initialize-insecure --user=$user --basedir=$mbase  --datadir=${pbase}/${pname}/data/mysql/ > ${mbase}/logs/init.log 2>&1 && touch .init
 fi
