@@ -15,7 +15,7 @@
 set -euxo pipefail
 
 
-: "${FATE_DIR:=/data/projects/fate}"
+: "${FATE_DIR:=/data/projects/llm/fate/FATE}"
 : "${TAG:=latest}"
 : "${PREFIX:=federatedai}"
 : "${version_tag:=release}"
@@ -29,7 +29,7 @@ set -euxo pipefail
 : "${IPCL_VERSION:=v1.1.3}"
 : "${Build_GPU:=0}"
 : "${Build_LLM:=0}"
-: "${Build_LLM_VERSION:=v1.2.0}"
+: "${Build_LLM_VERSION:=v1.3.0}"
 
 BASE_DIR=$(dirname "$0")
 cd $BASE_DIR
@@ -62,6 +62,13 @@ package() {
 #     echo "Built builder"
 # }
 
+check_fate_dir() {
+    if [ ! -d "$FATE_DIR" ]; then
+        echo "FATE_DIR ($FATE_DIR) does not exist"
+        exit 1
+    fi
+}
+
 # build_fate() {
 #     echo "Building fate"
 #     docker run -v $FATE_DIR:$FATE_DIR federatedai/builder /bin/bash -c "cd $FATE_DIR && ./build.sh"
@@ -82,16 +89,19 @@ buildEggrollBasicCPU() {
         echo "START BUILDING Eggroll Module IMAGE"
 
         echo "### START BUILDING fateflow ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-base:${TAG} \
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow:${TAG} \
                 -f ${WORKING_DIR}/modules/fateflow/Dockerfile ${PACKAGE_DIR_CACHE}
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-base --build-arg BASE_TAG=${TAG} ${Docker_Options} -t ${PREFIX}/fateflow:${TAG} \
-                -f ${WORKING_DIR}/modules/fateflow-eggroll/Dockerfile ${PACKAGE_DIR_CACHE}
         echo "### FINISH BUILDING fateflow ###"
         echo ""
+        echo "### START BUILDING fateboard ###"
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateboard:${TAG} \
+                -f ${WORKING_DIR}/modules/fateboard/Dockerfile ${PACKAGE_DIR_CACHE}
+        echo "### FINISH BUILDING fateboard ###"
+        echo ""
         echo "### START BUILDING osx ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/osx:${TAG} \
-                -f ${WORKING_DIR}/modules/osx/Dockerfile ${PACKAGE_DIR_CACHE}
-        echo "### FINISH BUILDING osx ###"
+	docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/osx:${TAG} \
+	                -f ${WORKING_DIR}/modules/osx/Dockerfile ${PACKAGE_DIR_CACHE}
+	echo "### FINISH BUILDING osx ###"
         echo ""
 
         echo "### START BUILDING eggroll ###"
@@ -108,12 +118,12 @@ buildSparkBasicCPU(){
 
 
         echo "### START BUILDING fateflow-spark ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${TAG} ${Docker_Options} -t ${PREFIX}/fateflow-spark:${TAG} -f ${WORKING_DIR}/modules/fateflow-spark/Dockerfile ${WORKING_DIR}/modules/fateflow-spark/
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-spark:${TAG} -f ${WORKING_DIR}/modules/fateflow-spark/Dockerfile ${WORKING_DIR}/modules/fateflow-spark/
         echo "### FINISH BUILDING fateflow-spark ###"
         echo ""
 
         echo "### START BUILDING spark-base ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-spark --build-arg BASE_TAG=${TAG} ${Docker_Options} -t ${PREFIX}/spark-base:${TAG} -f ${WORKING_DIR}/modules/spark-base/Dockerfile ${WORKING_DIR}/modules/spark-base/
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/spark-base:${TAG} -f ${WORKING_DIR}/modules/spark-base/Dockerfile ${WORKING_DIR}/modules/spark-base/
         echo "### FINISH BUILDING spark-base ###"
         echo ""
 
@@ -237,10 +247,8 @@ buildEggrollBasicIPCL(){
         echo ""
 
         echo "### START BUILDING fateflow-ipcl ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image-ipcl --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-ipcl-base:${TAG} \
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image-ipcl --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-ipcl:${TAG} \
                 -f ${WORKING_DIR}/modules/fateflow/Dockerfile ${PACKAGE_DIR_CACHE}
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-ipcl-base --build-arg BASE_TAG=${TAG} ${Docker_Options} -t ${PREFIX}/fateflow-ipcl:${TAG} \
-                -f ${WORKING_DIR}/modules/fateflow-eggroll/Dockerfile ${PACKAGE_DIR_CACHE}
         echo "### FINISH BUILDING fateflow-ipcl ###"
         echo ""
 
@@ -253,7 +261,7 @@ buildEggrollBasicIPCL(){
 
 buildSparkBasicIPCL(){
         echo "### START BUILDING fateflow-spark-ipcl ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-ipcl-base --build-arg BASE_TAG=${TAG} ${Docker_Options} -t ${PREFIX}/fateflow-spark-ipcl:${TAG} \
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow-ipcl --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-spark-ipcl:${TAG} \
                 -f ${WORKING_DIR}/modules/fateflow-spark/Dockerfile ${WORKING_DIR}/modules/fateflow-spark/
         echo "### FINISH BUILDING fateflow-spark-ipcl ###"
         echo ""
@@ -281,7 +289,7 @@ buildOptionalModule(){
         echo ""
 
         echo "### START BUILDING fate-test ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=client --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fate-test:${TAG} -f ${WORKING_DIR}/modules/fate-test/Dockerfile ${WORKING_DIR}/modules/fate-test/
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fate-test:${TAG} -f ${WORKING_DIR}/modules/fate-test/Dockerfile ${WORKING_DIR}/modules/fate-test/
         echo "### FINISH BUILDING fate-test ###"
         echo ""
 
@@ -510,18 +518,18 @@ while getopts "hfpt:" opt; do
     esac
 done
 
-check_fate_dir() {
-    if [ ! -d "$FATE_DIR" ]; then
-        echo "FATE_DIR ($FATE_DIR) does not exist"
-        exit 1
-    fi
-}
 
 # check fate dir
 check_fate_dir
 
 # cd ${WORKING_DIR}
-version="$(cd "$FATE_DIR"; git describe --tags --abbrev=0)"
+if [ -f "$FATE_DIR/fate.env" ]; then
+  version="$(grep "FATE=" $FATE_DIR/fate.env | awk -F '=' '{print $2}')"
+else
+  echo "Error: Please set FATE_DIR or Check FATE_DIR=$FATE_DIR is a FATE directory"
+  # TODO git clone FATE
+  exit 1
+fi
 
 # set image PREFIX and TAG
 if [  -z "${TAG}" ]; then
@@ -569,3 +577,129 @@ while [ -n "${1-}" ]; do
         esac
         shift
 done
+/build/$FATE_VER/fate_flow/python/requirements-container.txt" "$target/roles/python/files"
+    [ "$include_large_files" -gt 0 ] &&
+    {
+        gcp -af "${resources[conda]}" "$target/roles/python/files"
+        gtar -cpz -f "$target/roles/python/files/pypi.tar.gz" -C "$dir/build/$FATE_VER" --transform "s/^pypkg/pypi/" 'pypkg'
+    }
+
+    gmkdir -p "$target/roles/java/files"
+    [ "$include_large_files" -gt 0 ] && \
+        gcp -af "${resources[jdk]}" "$target/roles/java/files"
+
+    gmkdir -p "$target/roles/mysql/files"
+    [ "$include_large_files" -gt 0 ] && \
+        gcp -af "${resources[mysql]}" "$target/roles/mysql/files"
+
+    gmkdir -p "$target/roles/rabbitmq/files"
+    [ "$include_large_files" -gt 0 ] && \
+        gcp -af "${resources[rabbitmq]}" "$target/roles/rabbitmq/files"
+
+    gmkdir -p "$target/roles/supervisor/files"
+    gln -frs "$target/roles/python/files/${resources[conda]##*/}" "$target/roles/supervisor/files"
+    gcp -af "${resources[supervisor]}" "${resources[pymysql]}" "$target/roles/supervisor/files"
+
+    #gtar -cpz -f "$target/roles/check/files/deploy.tar.gz" -C "$dir/build/$FATE_VER/fate" 'deploy'
+
+    gmkdir -p "$target/roles/eggroll/files"
+    gcp -af "$dir/build/$FATE_VER/eggroll/conf/create-eggroll-meta-tables.sql" "$target/roles/eggroll/files"
+    gtar -cpz -f "$target/roles/eggroll/files/eggroll.tar.gz" -C "$dir/build/$FATE_VER" 'eggroll'
+
+    gmkdir -p "$target/roles/fateflow/files"
+    gtar -cpz -f "$target/roles/fateflow/files/fate.tar.gz" -C "$dir/build/$FATE_VER" 'fate'
+    gtar -cpz -f "$target/roles/fateflow/files/fate_flow.tar.gz" -C "$dir/build/$FATE_VER" 'fate_flow'
+    gtar -cpz -f "$target/roles/fateflow/files/osx.tar.gz" -C "$dir/build/$FATE_VER/fate" 'osx'
+    gcp -af "$target/roles/fateflow/files/osx.tar.gz" "$target/roles/eggroll/files"
+
+    gmkdir -p "$target/roles/fateboard/files"
+    gtar -cpz -f "$target/roles/fateboard/files/fateboard.tar.gz" -C "$dir/build/$FATE_VER" 'fateboard'
+
+    gtar -cpz -f "$filepath" -C "${target%/*}" "${target##*/}"
+    filepath="$filepath" push_archive
+}
+
+function package_ansible_offline
+{
+    local name="AnsibleFATE_${FATE_VER}_${RELE_VER}_offline"
+    local target="$dir/packages/$FATE_VER/$name"
+    local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
+    local pack_llm=$PACK_LLM
+
+    if [ "$pack_llm" -gt 0 ]
+    then
+	name_llm="AnsibleFATE_${FATE_VER}_LLM_${LLM_VER}_${RELE_VER}_offline"
+	target_llm="$dir/packages/$FATE_VER/${name_llm}"
+	filepath_llm="$dir/dist/$FATE_VER/${name_llm}.tar.gz"
+	#name="${name}" target="$target" filepath="$filepath" pack_llm="$pack_llm" include_large_files=1 package_ansible
+	echo "${name_llm}"
+	echo "${target_llm}"
+	echo "${filepath_llm}"
+	name="${name_llm}" target="${target_llm}" filepath="${filepath_llm}" pack_llm="$pack_llm" include_large_files=1 package_ansible
+    else
+	name="$name" target="$target" filepath="$filepath" pack_llm="$pack_llm" include_large_files=1 package_ansible
+	 echo "$name"
+	 echo "$target"
+	 echo "$filepath"
+    fi
+    # target="$target" filepath="$filepath" include_large_files=1 package_ansible
+}
+
+function package_ansible_online
+{
+    local name="AnsibleFATE_${FATE_VER}_${RELE_VER}_online"
+    local target="$dir/packages/$FATE_VER/$name"
+    local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
+    local pack_llm=$PACK_LLM
+
+    if [ "$pack_llm" -gt 0 ]
+    then
+        name_llm="AnsibleFATE_${FATE_VER}_LLM_${LLM_VER}_${RELE_VER}_online"
+	target_llm="$dir/packages/$FATE_VER/${name_llm}"
+	filepath_llm="$dir/dist/$FATE_VER/${name_llm}.tar.gz"
+	echo "${name_llm}"
+	echo "${target_llm}"
+	echo "${filepath_llm}"
+	name="${name_llm}" target="${target_llm}" filepath="${filepath_llm}" pack_llm="$pack_llm" include_large_files=0 package_ansible
+    else
+	name="$name" target="$target" filepath="$filepath" pack_llm="$pack_llm" include_large_files=0 package_ansible
+        echo "$name"
+	echo "$target"
+	echo "$filepath"
+    fi
+    #target="$target" filepath="$filepath" include_large_files=0 package_ansible
+}
+
+[ "$PULL_GIT" -gt 0 ] && git_pull
+
+get_versions
+: "${FATE_VER:=${versions[fate]}}"
+
+[ "$CHEC_BRA" -gt 0 ] && check_branch
+
+get_resources
+
+[ "$SKIP_BUI" -gt 0 ] ||
+{
+    [ "$BUIL_PYP" -gt 0 ] && build_python_packages
+    [ "$BUIL_EGG" -gt 0 ] && build_eggroll
+    [ "$BUIL_BOA" -gt 0 ] && build_fateboard
+    [ "$BUIL_FAT" -gt 0 ] && build_fate
+
+    build_cleanup
+}
+
+[ "$SKIP_PKG" -gt 0 ] ||
+{
+    gmkdir -p "$dir/"{packages,dist}"/$FATE_VER"
+
+    [ "$PACK_ARC" -gt 0 ] && package_fate_install
+    [ "$PACK_PYP" -gt 0 ] && package_python_packages
+    [ "$PACK_STA" -gt 0 ] && package_standalone_install
+    [ "$PACK_DOC" -gt 0 ] && package_standalone_docker
+    [ "$PACK_CLU" -gt 0 ] && package_cluster_install
+    [ "$PACK_OFF" -gt 0 ] && package_ansible_offline
+    [ "$PACK_ONL" -gt 0 ] && package_ansible_online
+}
+
+echo 'Done'

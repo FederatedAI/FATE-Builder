@@ -3,14 +3,15 @@
 set -euxo pipefail
 shopt -s expand_aliases extglob
 
-: "${FATE_DIR:=/data/projects/fate}"
+: "${FATE_DIR:=/data/projects/llm/FATE}"
+: "${LLM_DIR:=/data/projects/llm/LLM_test}"
 : "${CLON_GIT:=0}"
 : "${PULL_GIT:=0}"
 : "${PULL_OPT:=--rebase --stat --autostash}"
 : "${CHEC_BRA:=0}"
 : "${SKIP_BUI:=0}"
 : "${COPY_ONL:=0}"
-: "${BUIL_PYP:=1}"
+: "${BUIL_PYP:=0}"
 : "${BUIL_EGG:=1}"
 : "${BUIL_BOA:=1}"
 : "${BUIL_FAT:=1}"
@@ -24,18 +25,21 @@ shopt -s expand_aliases extglob
 : "${PATH_WBE:=cos://fate/resources/wb-info-enc-1.0-SNAPSHOT.jar}"
 : "${SYNC_RES:=1}"
 : "${RELE_VER:=release}"
-: "${PACK_ARC:=0}"
-: "${PACK_PYP:=0}"
-: "${PACK_STA:=0}"
+: "${LLM_VER:=2.0.0}"
+: "${PACK_ARC:=1}"
+: "${PACK_PYP:=1}"
+: "${PACK_STA:=1}"
 : "${PACK_DOC:=0}"
-: "${PACK_CLU:=0}"
-: "${PACK_OFF:=0}"
-: "${PACK_ONL:=0}"
+: "${PACK_CLU:=1}"
+: "${PACK_OFF:=1}"
+: "${PACK_ONL:=1}"
+: "${PACK_LLM:=1}"
 : "${PUSH_ARC:=0}"
 
 commands=( 'date' 'dirname' 'readlink' 'mkdir' 'printf' 'cp' 'ln' 'grep'
            'xargs' 'chmod' 'rm' 'awk' 'find' 'tar' 'sed' 'md5sum')
 tools=( 'git' 'mvn' 'npm' 'docker' )
+modules=( 'fate' 'fate_flow' 'fateboard' 'eggroll' )
 
 case "$OSTYPE" in
     linux*)  plat='linux' ;;
@@ -89,10 +93,10 @@ function get_versions
 {
     declare -gA versions
 
-    versions[fate]="$(ggrep -ioP '(?<=__version__ = ").+(?=")' "$FATE_DIR/python/fate/_info.py")"
-    versions[fateflow]="${versions[fate]}"
-    versions[fateboard]="${versions[fate]}"
-    versions[eggroll]="$(ggrep -ioP '(?<=eggroll.version=).+' "$FATE_DIR/eggroll/BUILD_INFO")"
+    for module in "${modules[@]}"
+    {
+        versions[$module]="$(ggrep -ioP "(?<=$module=).+" "$FATE_DIR/fate.env")"
+    }
 }
 
 function check_branch
@@ -114,72 +118,105 @@ function build_eggroll
     local source="$FATE_DIR/eggroll"
     local target="$dir/build/$FATE_VER/eggroll"
 
-    [ "$COPY_ONL" -gt 0 ] || mvn -DskipTests -f "$source/jvm/pom.xml" clean package
+    [ "$COPY_ONL" -gt 0 ] || mvn -DskipTests -f "$source/jvm/pom.xml" -q clean package
 
     grm -rf "$target"
     gmkdir -p "$target/lib"
 
-    for module in 'core' 'roll_pair' 'roll_site'
-    {
-        gcp -af "$source/jvm/$module/target/eggroll-"${module//_/-}"-${versions[eggroll]}.jar" \
-                "$source/jvm/$module/target/lib/"*.jar \
-                "$target/lib"
-    }
-    gcp -af "${resources[wbenc]}" "$target/lib"
-
-    gcp -af "$source/"{BUILD_INFO,bin,conf,data,deploy,python} "$target"
-    gcp -af "$source/jvm/core/main/resources/"*.sql "$target/conf"
+   # for module in 'core' 'roll_pair' 'roll_site'
+   # {
+   #     gcp -af "$source/jvm/$module/target/eggroll-"${module//_/-}"-${versions[eggroll]}.jar" \
+   #             "$source/jvm/$module/target/lib/"*.jar \
+   #             "$target/lib"
+   # }
+   # gcp -af "${resources[wbenc]}" "$target/lib"
+   
+   # gcp -af "$source/"{BUILD_INFO,bin,conf,data,deploy,python} "$target"
+   # gcp -af "$source/jvm/core/main/resources/"*.sql "$target/conf"
+   gtar -zxvf $FATE_DIR/eggroll/eggroll.tar.gz -C $target
 }
 
 function build_fateboard
 {
-    local source="$FATE_DIR/fateboard"
+    local source="$FATE_DIR/fate_board"
     local target="$dir/build/$FATE_VER/fateboard"
 
     [ "$COPY_ONL" -gt 0 ] ||
     {
-        mvn -DskipTests -f "$source/pom.xml" clean package
+        mvn -DskipTests -f "$source/pom.xml" -q clean package
     }
 
     grm -rf "$target"
-    gmkdir -p "$target/conf"
+    gmkdir -p "$target"
 
-    gcp -af "$source/src/main/resources/application.properties" "$target/conf"
-    gcp -af "$source/target/fateboard-${versions[fateboard]}.jar" \
-            "$source/bin/service.sh" \
-            "$source/RELEASE.md" \
-            "$target"
-
+    #gcp -af "$source/src/main/resources/application.properties" "$target/conf"
+    #gcp -af "$source/target/fateboard-${versions[fateboard]}.jar" \
+    #        "$source/bin/service.sh" \
+    #        "$source/RELEASE.md" \
+    #        "$target"
+    #gcp -af "$source/target/fateboard/fateboard-${versions[fateboard]}.jar" \
+    #	    "$source/target/fateboard/service.sh" \
+    #	    "$source/target/fateboard/conf" \
+    #	    "$source/target/fateboard/lib" \
+    #	    "$source/RELEASE.md" \
+    #	    "$target"
+    gcp -ap "$source/RELEASE.md" "$target"
+    unzip "$source/target/fateboard-${versions[fateboard]}-release.zip" -d "$target"
     gln -frs "$target/fateboard-${versions[fateboard]}.jar" "$target/fateboard.jar"
 }
 
 function build_python_packages
 {
-    local source="$FATE_DIR/python"
+    local source="$FATE_DIR/python/requirements.txt"
+    local source_llm="/data/projects/llm/fate-llm/python/requirements.txt"
+    local source_flow="$FATE_DIR/fate_flow/python/requirements.txt"
     local target="$dir/build/$FATE_VER/pypkg"
 
     grm -rf "$target"
     gmkdir -p "$target"
-
-    docker run --pull=always --rm \
-        -v "$(greadlink -f ~/.config/pip/pip.conf):/root/.config/pip/pip.conf:ro" \
-        -v "$source:/fate:ro" -v "$target:/wheelhouse:rw" \
-        quay.io/pypa/manylinux2014_x86_64:latest /bin/bash -c '
-        set -x \
+    
+    if [ "$PACK_LLM" -gt 0 ]
+    then
+	echo "PACK_LLM is 1"
+        docker run --pull=always --rm \
+		-v "$(greadlink -f ~/.config/pip/pip.conf):/root/.config/pip/pip.conf:ro" \
+		-v "$source_llm:/fate_llm/requirements.txt:ro" -v "$source_flow:/fate_flow/requirements.txt:ro" -v "$TEST_DIR/python/requirements.txt:/fate_test/requirements.txt:ro"  -v "$FATE_DIR/fate_client/python/requirements.txt:/fate_client/requirements.txt:ro" \
+		-v "$FATE_DIR/python/requirements-fate.txt:/fate_flow/requirements-fate.txt:rw" -v "$FATE_DIR/fate_flow/python/requirements-container.txt:/fate_flow/requirements-container.txt:ro" \
+		-v "$FATE_DIR/fate_flow/python/requirements-flow.txt:/fate_flow/requirements-flow.txt:ro" -v "$FATE_DIR/fate_flow/python/requirements-eggroll.txt:/fate_flow/requirements-eggroll.txt:ro" \
+		-v "$FATE_DIR/fate_flow/python/requirements-rabbitmq.txt:/fate_flow/requirements-rabbitmq.txt:ro" -v "$FATE_DIR/fate_flow/python/requirements-pulsar.txt:/fate_flow/requirements-pulsar.txt:ro" \
+		-v "$FATE_DIR/fate_flow/python/requirements-spark.txt:/fate_flow/requirements-spark.txt:ro" -v "$target:/wheelhouse:rw" \
+		quay.io/pypa/manylinux2014_x86_64:latest /bin/bash -c '
 
         sed -e "s!^mirrorlist=!#mirrorlist=!g" -e "s!^#baseurl=!baseurl=!g" \
-        -e "s!http://mirror\.centos\.org!https://mirrors.cloud.tencent.com!g" \
-        -i /etc/yum.repos.d/CentOS-*.repo && \
+		-e "s!http://mirror\.centos\.org!http://mirrors.tencentyun.com!g" \
+		-i /etc/yum.repos.d/CentOS-*.repo && \
 
-        sed -e "s!^metalink=!#metalink=!g" -e "s!^#baseurl=!baseurl=!g" \
-        -e "s!http://download\.example/pub!https://mirrors.cloud.tencent.com!g" \
-        -i /etc/yum.repos.d/epel*.repo && \
+	sed -e "s!^metalink=!#metalink=!g" -e "s!^#baseurl=!baseurl=!g" \
+	-e "s!http://download\.example/pub!http://mirrors.tencentyun.com!g" \
+	-i /etc/yum.repos.d/epel*.repo && \
 
-        yum install -y gmp-devel mpfr-devel libmpc-devel && \
-        /opt/python/cp38-cp38/bin/pip wheel -r /fate/requirements.txt -w /wheelhouse || \
-        exit 1
+	echo "$(sed 's!https://download\.pytorch\.org/whl/cpu!https://download.pytorch.org/whl!g' /fate_flow/requirements-fate.txt)" > /fate_flow/requirements-fate.txt && \
+	echo "$(sed 's/torch==1.13.1+cpu/torch==1.13.1/' /fate_flow/requirements-fate.txt)" > /fate_flow/requirements-fate.txt && \
+	cat /fate_llm/requirements.txt
+	cat /fate_client/requirements.txt && \	
+	cat /fate_test/requirements.txt && \
+	cat /fate_flow/requirements.txt && \
+	cat /fate_flow/requirements-fate.txt && \
+	cat /fate_flow/requirements-container.txt && \
+	cat /fate_flow/requirements-flow.txt && \
+	cat /fate_flow/requirements-rabbitmq.txt && \
+	cat /fate_flow/requirements-eggroll.txt && \
+	cat /fate_flow/requirements-pulsar.txt && \
+	cat /fate_flow/requirements-spark.txt && \
 
-        for whl in /wheelhouse/*.whl
+	yum install -q -y gmp-devel mpfr-devel libmpc-devel && \
+	    /opt/python/cp38-cp38/bin/pip wheel -q -r /fate_llm/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
+		/opt/python/cp38-cp38/bin/pip wheel -q -r /fate_flow/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
+		/opt/python/cp38-cp38/bin/pip wheel -q -r /fate_flow/requirements-fate.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
+		/opt/python/cp38-cp38/bin/pip wheel -q -r /fate_client/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
+		/opt/python/cp38-cp38/bin/pip wheel -q -r /fate_test/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com || \
+															        exit 1
+	for whl in /wheelhouse/*.whl
         {
             auditwheel show "$whl" &>/dev/null &&
             {
@@ -189,28 +226,82 @@ function build_python_packages
             }
         }
         :'
+    else
+	echo "$PACK_LLM is 0"
+	docker run --pull=always --rm \
+		-v "$(greadlink -f ~/.config/pip/pip.conf):/root/.config/pip/pip.conf:ro" \
+		-v "$source_flow:/fate_flow/requirements.txt:ro" -v "$TEST_DIR/python/requirements.txt:/fate_test/requirements.txt:ro"  -v "$FATE_DIR/fate_client/python/requirements.txt:/fate_client/requirements.txt:ro" \
+		-v "$FATE_DIR/python/requirements-fate.txt:/fate_flow/requirements-fate.txt:ro" -v "$FATE_DIR/fate_flow/python/requirements-container.txt:/fate_flow/requirements-container.txt:ro" \
+		-v "$FATE_DIR/fate_flow/python/requirements-flow.txt:/fate_flow/requirements-flow.txt:ro" -v "$FATE_DIR/fate_flow/python/requirements-eggroll.txt:/fate_flow/requirements-eggroll.txt:ro" \
+		-v "$FATE_DIR/fate_flow/python/requirements-rabbitmq.txt:/fate_flow/requirements-rabbitmq.txt:ro" -v "$FATE_DIR/fate_flow/python/requirements-pulsar.txt:/fate_flow/requirements-pulsar.txt:ro" \
+		-v "$FATE_DIR/fate_flow/python/requirements-spark.txt:/fate_flow/requirements-spark.txt:ro" -v "$target:/wheelhouse:rw" \
+		quay.io/pypa/manylinux2014_x86_64:latest /bin/bash -c '
+	        
+	        sed -e "s!^mirrorlist=!#mirrorlist=!g" -e "s!^#baseurl=!baseurl=!g" \
+		-e "s!http://mirror\.centos\.org!http://mirrors.tencentyun.com!g" \
+		-i /etc/yum.repos.d/CentOS-*.repo && \
+
+		sed -e "s!^metalink=!#metalink=!g" -e "s!^#baseurl=!baseurl=!g" \
+		-e "s!http://download\.example/pub!http://mirrors.tencentyun.com!g" \
+		-i /etc/yum.repos.d/epel*.repo && \
+	        
+	    cat /fate_client/requirements.txt && \	
+		cat /fate_test/requirements.txt && \
+		cat /fate_flow/requirements.txt && \
+		cat /fate_flow/requirements-fate.txt && \
+		cat /fate_flow/requirements-container.txt && \
+		cat /fate_flow/requirements-flow.txt && \
+		cat /fate_flow/requirements-rabbitmq.txt && \
+		cat /fate_flow/requirements-eggroll.txt && \
+		cat /fate_flow/requirements-pulsar.txt && \
+		cat /fate_flow/requirements-spark.txt && \
+
+		yum install -q -y gmp-devel mpfr-devel libmpc-devel && \
+		/opt/python/cp38-cp38/bin/pip wheel -q -r /fate_flow/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
+		/opt/python/cp38-cp38/bin/pip wheel -q -r /fate_flow/requirements-fate.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
+		/opt/python/cp38-cp38/bin/pip wheel -q -r /fate_client/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
+		/opt/python/cp38-cp38/bin/pip wheel -q -r /fate_test/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com || \
+		exit 1
+		for whl in /wheelhouse/*.whl
+		{
+		    auditwheel show "$whl" &>/dev/null &&
+		    {
+			new_whl=$(auditwheel repair --plat manylinux2014_x86_64 -w /wheelhouse "$whl" 2>&1 | \
+				  grep -ioP "(?<=Fixed-up wheel written to ).+\.whl")
+			[ -n "$new_whl" ] && [ "$new_whl" != "$whl" ] && rm -f "$whl"
+		    }
+	        }
+	        :'
+    fi
 
     sudo chown "$(id -u):$(id -g)" "$target/"*
 }
 
 function build_fate
 {
-    grm -rf "$dir/build/$FATE_VER/fate" "$dir/build/$FATE_VER/fateflow"
-    gmkdir -p "$dir/build/$FATE_VER/fate" "$dir/build/$FATE_VER/fateflow"
+    grm -rf "$dir/build/$FATE_VER/fate" "$dir/build/$FATE_VER/fate_flow"
+    gmkdir -p "$dir/build/$FATE_VER/fate" "$dir/build/$FATE_VER/fate_flow"  "$dir/build/$FATE_VER/fate/fate_test"
 
-    gcp -af "$FATE_DIR/"{RELEASE.md,bin,examples,python} "$dir/build/$FATE_VER/fate"
-    gcp -af "$FATE_DIR/fateflow/"{RELEASE.md,bin,conf,examples,python} "$dir/build/$FATE_VER/fateflow"
+    gcp -af "$FATE_DIR/"{RELEASE.md,fate.env,bin,examples,python,fate_client,configs} "$dir/build/$FATE_VER/fate"
+    gcp -ap "$TEST_DIR/"{doc,LICENSE,python,README.md,README_zh.md} "$dir/build/$FATE_VER/fate/fate_test"
+    gcp -af "$FATE_DIR/fate_flow/"{RELEASE.md,fateflow.env,bin,conf,examples,python} "$dir/build/$FATE_VER/fate_flow"
 
-    gmkdir -p "$dir/build/$FATE_VER/fate/conf" "$dir/build/$FATE_VER/fate/proxy"
-    gcp -af "$FATE_DIR/c/proxy" "$dir/build/$FATE_VER/fate/proxy/nginx"
+    #gcp -af "$FATE_DIR/conf/"!(local.*).yaml "$dir/build/$FATE_VER/fate/conf"
+    #gcp -af "$FATE_DIR/c/proxy" "$dir/build/$FATE_VER/fate/proxy/nginx"
+    gcp -af "$FATE_DIR/java/osx/deploy/osx" "$dir/build/$FATE_VER/fate/osx"
 
-    gsed -i '/--extra-index-url/d' "$dir/build/$FATE_VER/fate/python/requirements-fate.txt"
+    gsed -i '/--extra-index-url/d' "$dir/build/$FATE_VER/fate_flow/python/requirements.txt"
+    if [ "$PACK_LLM" -gt 0 ]
+    then
+	gcp -af "$LLM_DIR/python/fate_llm" "$dir/build/$FATE_VER/fate/python"
+	gcp -af "$LLM_DIR/python/requirements.txt" "$dir/build/$FATE_VER/fate/python/fate_llm"
+    fi
 }
 
 function build_cleanup
 {
     gfind "$dir/build/$FATE_VER" -type d -print0 | parallel -0Xj1 gchmod 755
-    gfind "$dir/build/$FATE_VER" -type f -print0 | parallel -0Xj1 gchmod 644
+   # gfind "$dir/build/$FATE_VER" -type f -print0 | parallel -0Xj1 gchmod 644
 
     gfind "$dir/build/$FATE_VER" -iname '*.sh' -print0 | parallel -0Xj1 gchmod a+x
 
@@ -253,7 +344,7 @@ function push_archive
 
 function package_fate_install
 {
-    local source="$dir/build/$FATE_VER/fate"
+    local source="$dir/build/$FATE_VER/fate_flow"
     local name="fate_install_${FATE_VER}_${RELE_VER}"
     local target="$dir/packages/$FATE_VER/$name"
     local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
@@ -261,10 +352,11 @@ function package_fate_install
     grm -fr "$target"
     gmkdir -p "$target"
 
-    for module in 'eggroll' 'fateboard' 'fateflow'
+    for module in 'eggroll' 'fateboard' 'fate_flow'
     {
         gtar -cpz -f "$target/$module.tar.gz" -C "$dir/build/$FATE_VER" "$module"
     }
+    gtar -cpz -f "$target/osx.tar.gz" -C "$dir/build/$FATE_VER/fate/" 'osx'
 
     gfind "$source" -mindepth 1 -maxdepth 1 -type d -not -iname 'python' -print0 | \
         parallel -0 gtar -cpz -f "$target/{/}.tar.gz" -C "$source" '{/}'
@@ -275,7 +367,14 @@ function package_fate_install
 
     gfind "$source" -mindepth 1 -maxdepth 1 -type f -print0 | \
         parallel -0Xj1 gcp -af '{}' "$target"
-    gcp -af "$source/python/"requirements*.txt "$target"
+    gcp -af "$source/python/requirements.txt" "$target"
+    gcp -af "$dir/build/$FATE_VER/fate/python/requirements-fate.txt" "$target"
+    gcp -af "$source/python/requirements-flow.txt" "$target"
+    gcp -af "$source/python/requirements-eggroll.txt" "$target"
+    gcp -af "$source/python/requirements-rabbitmq.txt" "$target"
+    gcp -af "$source/python/requirements-pulsar.txt" "$target"
+    gcp -af "$source/python/requirements-spark.txt" "$target"
+    gcp -af "$source/python/requirements-container.txt" "$target"
 
     gtar -cpz -f "$filepath" -C "${target%/*}" "${target##*/}"
     filepath="$filepath" push_archive
@@ -285,6 +384,13 @@ function package_python_packages
 {
     local name="pip_packages_fate_${FATE_VER}"
     local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
+    local pack_llm=$PACK_LLM
+
+    if [ "$pack_llm" -gt 0 ]
+    then
+        name="pip_packages_fate_llm_${LLM_VER}"
+        filepath="$dir/dist/$FATE_VER/$name.tar.gz"
+    fi
 
     gtar -cpz -f "$filepath" -C "$dir/build/$FATE_VER" --transform "s/^pypkg/$name/" 'pypkg'
     filepath="$filepath" push_archive
@@ -296,10 +402,18 @@ function package_standalone
 
     grm -fr "$target"
     gmkdir -p "$target/fate"
-
-    # gcp -af "$dir/build/$FATE_VER/fate/"!(python*|proxy*) "$dir/build/$FATE_VER/"{fateboard,fateflow} "$target"
-    gcp -af "$dir/build/$FATE_VER/fate/"!(python*|proxy*) "$dir/build/$FATE_VER/"{eggroll,fateflow} "$target"
+   
+    gcp -af "$dir/build/$FATE_VER/fate/"!(python*|proxy*) "$dir/build/$FATE_VER/"{fateboard,fate_flow} "$target"
     gcp -af  "$dir/build/$FATE_VER/fate/python" "$target/fate"
+    gcp -af  "$dir/build/$FATE_VER/fate/fate_test" "$target/fate"
+    gln -frs "$target/fate_flow/python/requirements.txt" "$target/requirements.txt"
+    gln -frs "$target/fate/python/requirements-fate.txt" "$target/requirements-fate.txt"
+    gln -frs "$target/fate_flow/python/requirements-flow.txt" "$target/requirements-flow.txt"
+    gln -frs "$target/fate_flow/python/requirements-eggroll.txt" "$target/requirements-eggroll.txt"
+    gln -frs "$target/fate_flow/python/requirements-rabbitmq.txt" "$target/requirements-rabbitmq.txt"
+    gln -frs "$target/fate_flow/python/requirements-pulsar.txt" "$target/requirements-pulsar.txt"
+    gln -frs "$target/fate_flow/python/requirements-spark.txt" "$target/requirements-spark.txt"
+    gln -frs "$target/fate_flow/python/requirements-container.txt" "$target/requirements-container.txt"
 
     gcp -af "$source/"*.sh "$target/bin"
     gcp -af "$source/"!(*.sh) "$target"
@@ -329,23 +443,21 @@ function package_standalone_docker
     local target="$dir/packages/$FATE_VER/$name"
     local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
 
-    local image_hub="federatedai/fate_algorithm"
-    local image_tcr="ccr.ccs.tencentyun.com/federatedai/fate_algorithm"
+    local image_hub="federatedai/standalone_fate"
+    local image_tcr="ccr.ccs.tencentyun.com/federatedai/standalone_fate"
 
     local image_tag="$FATE_VER"
     [ "$RELE_VER" == 'release' ] || image_tag+="-$RELE_VER"
 
     target="$target" package_standalone
-
+    echo "target is $target"
     docker buildx build --compress --progress=plain --pull --rm \
         --file "$target/Dockerfile" --tag "$image_hub:$image_tag" "$target"
 
-    docker tag "$image_hub:$image_tag" "$image_tcr:$image_tag"
-
-    return 0
-
     docker save "$image_hub:$image_tag" | gzip > "$filepath"
     filepath="$filepath" push_archive
+
+    docker tag "$image_hub:$image_tag" "$image_tcr:$image_tag"
 
     [ "$PUSH_ARC" -gt 0 ] || return 0
     docker push "$image_tcr:$image_tag"
@@ -357,14 +469,37 @@ function package_cluster_install
     local name="fate_cluster_install_${FATE_VER}_${RELE_VER}"
     local target="$dir/packages/$FATE_VER/$name"
     local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
+    local pack_llm=${PACK_LLM}
+    
+    if [ "$pack_llm" -gt 0 ]
+    then
+	name="fate_cluster_install_${FATE_VER}_LLM_${LLM_VER}_${RELE_VER}"
+	target="$dir/packages/$FATE_VER/$name"
+	filepath="$dir/dist/$FATE_VER/$name.tar.gz"
+    fi
 
     grm -fr "$target"
     gcp -af "$source" "$target"
 
     gsed -i "s/#VERSION#/$FATE_VER/" "$target/allInone/conf/setup.conf"
 
-    gmkdir -p "$target/python-install/files"
-    gcp -af "${resources[conda]}" "$dir/build/$FATE_VER/fate/python/"requirements*.txt "$dir/build/$FATE_VER/pypkg" "$target/python-install/files"
+    gmkdir -p "$target/python-install/files/fate_test" 
+    gmkdir -p  "$target/python-install/files/fate_client"
+    if [ "$pack_llm" -gt 0 ]
+    then
+	gmkdir -p "$target/python-install/files/fate_llm"
+	gcp -af "$dir/build/$FATE_VER/fate/python/fate_llm/requirements.txt" "$target/python-install/files/fate_llm"
+    fi
+    gcp -af "${resources[conda]}" "$dir/build/$FATE_VER/fate_flow/python/requirements.txt" "$dir/build/$FATE_VER/pypkg" "$target/python-install/files"
+    gcp -af "$dir/build/$FATE_VER/fate/fate_test/python/requirements.txt" "$target/python-install/files/fate_test"
+    gcp -af "$dir/build/$FATE_VER/fate/fate_client/python/requirements.txt" "$target/python-install/files/fate_client"
+    gcp -af "$dir/build/$FATE_VER/fate/python/requirements-fate.txt" "$target/python-install/files"
+    gcp -af "$dir/build/$FATE_VER/fate_flow/python/requirements-flow.txt" "$target/python-install/files"
+    gcp -af "$dir/build/$FATE_VER/fate_flow/python/requirements-eggroll.txt" "$target/python-install/files"
+    gcp -af "$dir/build/$FATE_VER/fate_flow/python/requirements-rabbitmq.txt" "$target/python-install/files"
+    gcp -af "$dir/build/$FATE_VER/fate_flow/python/requirements-pulsar.txt" "$target/python-install/files"
+    gcp -af "$dir/build/$FATE_VER/fate_flow/python/requirements-spark.txt" "$target/python-install/files"
+    gcp -af "$dir/build/$FATE_VER/fate_flow/python/requirements-container.txt" "$target/python-install/files"
 
     gmkdir -p "$target/java-install/files"
     gcp -af "${resources[jdk]}" "$target/java-install/files"
@@ -376,7 +511,7 @@ function package_cluster_install
     gcp -af "$dir/build/$FATE_VER/eggroll" "$target/eggroll-install/files"
 
     gmkdir -p "$target/fate-install/files"
-    gcp -af "$dir/build/$FATE_VER/fate" "$dir/build/$FATE_VER/fateflow" "$dir/build/$FATE_VER/fateboard" "$target/fate-install/files"
+    gcp -af "$dir/build/$FATE_VER/fate" "$dir/build/$FATE_VER/fate_flow" "$dir/build/$FATE_VER/fateboard" "$target/fate-install/files"
 
     gmkdir -p "$target/allInone/logs"
 
@@ -391,10 +526,30 @@ function package_ansible
     grm -fr "$target"
     gcp -af "$source" "$target"
 
+    [ "$pack_llm" -gt 0 ] &&
+    {
+	gsed -i "s/eggroll.rollsite.push.max.retry=3/eggroll.rollsite.push.max.retry=1000/" "$target/roles/eggroll/templates/eggroll.properties.jinja"
+	gsed -i "s/eggroll.rollsite.push.long.retry=2/eggroll.rollsite.push.long.retry=999/" "$target/roles/eggroll/templates/eggroll.properties.jinja"
+	gsed -i "s/eggroll.rollsite.push.max.retry=3/eggroll.rollsite.push.max.retry=1000/" "$target/roles/eggroll/templates/eggroll-exchange.properties.jinja"
+	gsed -i "s/eggroll.rollsite.push.long.retry=2/eggroll.rollsite.push.long.retry=999/" "$target/roles/eggroll/templates/eggroll-exchange.properties.jinja"
+	gmkdir -p "$target/roles/python/files/fate_llm"
+	gcp -af "$dir/build/$FATE_VER/fate/python/fate_llm/requirements.txt" "$target/roles/python/files/fate_llm"
+    }
     gsed -i "s/#VERSION#/$FATE_VER/" "$target/deploy/files/fate_init"
 
     gmkdir -p "$target/roles/python/files"
-    gcp -af "$dir/build/$FATE_VER/fate/python/"requirements*.txt "$target/roles/python/files"
+    gmkdir -p "$target/roles/python/files/fate_client"
+    gmkdir -p "$target/roles/python/files/fate_test"
+    gcp -af "$dir/build/$FATE_VER/fate/fate_client/python/requirements.txt" "$target/roles/python/files/fate_client"
+    gcp -af "$dir/build/$FATE_VER/fate/fate_test/python/requirements.txt" "$target/roles/python/files/fate_test"
+    gcp -af "$dir/build/$FATE_VER/fate_flow/python/requirements.txt" "$target/roles/python/files"
+    gcp -af "$dir/build/$FATE_VER/fate/python/requirements-fate.txt" "$target/roles/python/files"
+    gcp -af "$dir/build/$FATE_VER/fate_flow/python/requirements-flow.txt" "$target/roles/python/files"
+    gcp -af "$dir/build/$FATE_VER/fate_flow/python/requirements-eggroll.txt" "$target/roles/python/files"
+    gcp -af "$dir/build/$FATE_VER/fate_flow/python/requirements-rabbitmq.txt" "$target/roles/python/files"
+    gcp -af "$dir/build/$FATE_VER/fate_flow/python/requirements-pulsar.txt" "$target/roles/python/files"
+    gcp -af "$dir/build/$FATE_VER/fate_flow/python/requirements-spark.txt" "$target/roles/python/files"
+    gcp -af "$dir/build/$FATE_VER/fate_flow/python/requirements-container.txt" "$target/roles/python/files"
     [ "$include_large_files" -gt 0 ] &&
     {
         gcp -af "${resources[conda]}" "$target/roles/python/files"
@@ -417,7 +572,7 @@ function package_ansible
     gln -frs "$target/roles/python/files/${resources[conda]##*/}" "$target/roles/supervisor/files"
     gcp -af "${resources[supervisor]}" "${resources[pymysql]}" "$target/roles/supervisor/files"
 
-    gtar -cpz -f "$target/roles/check/files/deploy.tar.gz" -C "$dir/build/$FATE_VER/fate" 'deploy'
+    #gtar -cpz -f "$target/roles/check/files/deploy.tar.gz" -C "$dir/build/$FATE_VER/fate" 'deploy'
 
     gmkdir -p "$target/roles/eggroll/files"
     gcp -af "$dir/build/$FATE_VER/eggroll/conf/create-eggroll-meta-tables.sql" "$target/roles/eggroll/files"
@@ -425,7 +580,9 @@ function package_ansible
 
     gmkdir -p "$target/roles/fateflow/files"
     gtar -cpz -f "$target/roles/fateflow/files/fate.tar.gz" -C "$dir/build/$FATE_VER" 'fate'
-    gtar -cpz -f "$target/roles/fateflow/files/fateflow.tar.gz" -C "$dir/build/$FATE_VER" 'fateflow'
+    gtar -cpz -f "$target/roles/fateflow/files/fate_flow.tar.gz" -C "$dir/build/$FATE_VER" 'fate_flow'
+    gtar -cpz -f "$target/roles/fateflow/files/osx.tar.gz" -C "$dir/build/$FATE_VER/fate" 'osx'
+    gcp -af "$target/roles/fateflow/files/osx.tar.gz" "$target/roles/eggroll/files"
 
     gmkdir -p "$target/roles/fateboard/files"
     gtar -cpz -f "$target/roles/fateboard/files/fateboard.tar.gz" -C "$dir/build/$FATE_VER" 'fateboard'
@@ -439,8 +596,25 @@ function package_ansible_offline
     local name="AnsibleFATE_${FATE_VER}_${RELE_VER}_offline"
     local target="$dir/packages/$FATE_VER/$name"
     local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
+    local pack_llm=$PACK_LLM
 
-    target="$target" filepath="$filepath" include_large_files=1 package_ansible
+    if [ "$pack_llm" -gt 0 ]
+    then
+	name_llm="AnsibleFATE_${FATE_VER}_LLM_${LLM_VER}_${RELE_VER}_offline"
+	target_llm="$dir/packages/$FATE_VER/${name_llm}"
+	filepath_llm="$dir/dist/$FATE_VER/${name_llm}.tar.gz"
+	#name="${name}" target="$target" filepath="$filepath" pack_llm="$pack_llm" include_large_files=1 package_ansible
+	echo "${name_llm}"
+	echo "${target_llm}"
+	echo "${filepath_llm}"
+	name="${name_llm}" target="${target_llm}" filepath="${filepath_llm}" pack_llm="$pack_llm" include_large_files=1 package_ansible
+    else
+	name="$name" target="$target" filepath="$filepath" pack_llm="$pack_llm" include_large_files=1 package_ansible
+	 echo "$name"
+	 echo "$target"
+	 echo "$filepath"
+    fi
+    # target="$target" filepath="$filepath" include_large_files=1 package_ansible
 }
 
 function package_ansible_online
@@ -448,8 +622,24 @@ function package_ansible_online
     local name="AnsibleFATE_${FATE_VER}_${RELE_VER}_online"
     local target="$dir/packages/$FATE_VER/$name"
     local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
+    local pack_llm=$PACK_LLM
 
-    target="$target" filepath="$filepath" include_large_files=0 package_ansible
+    if [ "$pack_llm" -gt 0 ]
+    then
+        name_llm="AnsibleFATE_${FATE_VER}_LLM_${LLM_VER}_${RELE_VER}_online"
+	target_llm="$dir/packages/$FATE_VER/${name_llm}"
+	filepath_llm="$dir/dist/$FATE_VER/${name_llm}.tar.gz"
+	echo "${name_llm}"
+	echo "${target_llm}"
+	echo "${filepath_llm}"
+	name="${name_llm}" target="${target_llm}" filepath="${filepath_llm}" pack_llm="$pack_llm" include_large_files=0 package_ansible
+    else
+	name="$name" target="$target" filepath="$filepath" pack_llm="$pack_llm" include_large_files=0 package_ansible
+        echo "$name"
+	echo "$target"
+	echo "$filepath"
+    fi
+    #target="$target" filepath="$filepath" include_large_files=0 package_ansible
 }
 
 [ "$PULL_GIT" -gt 0 ] && git_pull

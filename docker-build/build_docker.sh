@@ -23,6 +23,7 @@ source_dir=$(
     pwd
 )
 support_modules=(bin examples deploy proxy fate fate_flow fate_client fate_test osx eggroll doc fate_llm)
+
 [ "${Build_IPCL:-0}" -gt 0 ] && support_modules[${#support_modules[@]}]=ipcl_pkg
 # environment_modules=(python36 jdk pypi)
 packaging_modules=()
@@ -101,7 +102,25 @@ function packaging_osx() {
     cp -r java/osx "${package_dir}"/osx
     echo "[INFO] package osx done"
 }
+#packaging_fate_board() {
+#	    echo "[INFO] package fateboard start"
+#	        #pull_fateboard
+#		    cd ./fate_board
+#		        fateboard_version=$(grep -E -m 1 -o "<version>(.*)</version>" ./pom.xml | tr -d '[\\-a-z<>//]' | awk -F "version" '{print $2}')
+#			    echo "[INFO] fateboard version "${fateboard_version}
 
+#			        #docker run --rm -u $(id -u):$(id -g) -v ${source_dir}/fate_board:/data/projects/fate/fate_board --entrypoint="" maven:3.8-jdk-8 /bin/bash -c "cd /data/projects/fate/fate_board && mvn clean package -DskipTests"
+#				    docker run --rm -u $(id -u):$(id -g) -v ${source_dir}/fate_board:/data/projects/fate/fate_board --entrypoint="" maven:3.8-jdk-8 /bin/bash -c "cd /data/projects/fate/fate_board && ls ./repository && mvn -DskipTests -f ./pom.xml -q clean package -Dmaven.repo.local=./repository -X"
+#				        mkdir -p ${package_dir}/fate_board/conf
+#					    mkdir -p ${package_dir}/fate_board/ssh
+#					        cp ./target/fateboard-${fateboard_version}.jar ${package_dir}/fate_board/
+#						    cp ./bin/service.sh ${package_dir}/fate_board/
+#						        cp ./src/main/resources/application.properties ${package_dir}/fate_board/conf/
+#							    cd ${package_dir}/fate_board
+#							        touch ./ssh/ssh.properties
+#								    ln -s fateboard-${fateboard_version}.jar fateboard.jar
+#								        echo "[INFO] package fateboard done"
+#								}
 packaging_fate_client() {
      echo "[INFO] package fate_client start"
     cp -r fate_client "${package_dir}"/
@@ -118,12 +137,15 @@ packaging_eggroll() {
     cd "${package_dir}"/eggroll/
     tar xzf eggroll.tar.gz
     rm -rf eggroll.tar.gz
+    echo "${source_dir}/eggroll/requirements.txt"
     cp "${source_dir}"/eggroll/requirements.txt ./
     echo "[INFO] package eggroll done"
 }
 
 packaging_ipcl_pkg(){
     echo "[INFO] package ipcl_pkg start"
+    #IPCL_PKG_DIR = "/data/projects/llm/fate/pailliercryptolib_python"
+    echo "IPCL_PKG_DIR= ${IPCL_PKG_DIR}"
     if [[ ! -d ${IPCL_PKG_DIR} ]] 
     then
         git clone --single-branch -b "${IPCL_VERSION}"  https://github.com/intel/pailliercryptolib_python "${IPCL_PKG_DIR}"
@@ -133,6 +155,7 @@ packaging_ipcl_pkg(){
 
     echo "[INFO] package ipcl_pkg done"
 }
+
 
 function pull_fate_llm() {
 echo "[INFO] get fate_llm code start"
