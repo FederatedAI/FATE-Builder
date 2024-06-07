@@ -38,6 +38,15 @@ case "${system}" in
                  $command ln -s libcrypto.so.1.0.0 libcrypto.so.10
             fi
             ;;
+    "Kylin Linux Advanced Server")
+            echo "Kylin Linux Advanced Server System"
+            if [ `arch` == "aarch64" ]; then
+                $command yum -y install gcc gcc-c++ make openssl-devel gmp-devel mpfr-devel libmpc-devel libaio numactl autoconf automake libtool libffi-devel snappy snappy-devel zlib zlib-devel bzip2 bzip2-devel lz4-devel libasan lsof
+            else
+                echo "Not support this processor."
+                exit -1
+            fi
+            ;;
     *)
             echo "Not support this system."
             exit -1
