@@ -100,6 +100,7 @@ FATE_DIR=/root/FATE bash build.sh all
 | `Build_GPU` | 构建支持GPU的镜像 | 0 |
 | `Build_LLM` | 构建支持FATE-LLM的镜像 | 0 |
 | `Build_LLM_VERSION` | 构建支持Build_LLM_VERSION镜像的版本 | v1.2.0 |
+| `Platform` | 构建的镜像支持的架构类型 | amd64 |
 
 所有用于构建镜像的“ Dockerfile”文件都存储在“docker/“子目录下。在脚本运行完之后，用户可以通过以下命令来检查构建好的镜像：
 
@@ -147,6 +148,17 @@ federatedai/base-image               <TAG>
 
 ```sh
 FATE_DIR=/root/FATE TAG=1.11.2-release Build_Basic=1 Build_NN=1 Build_FUM=1 Build_Spark=1 Build_OP=1 Build_IPCL=1 Build_GPU=1 Build_LLM=1 Build_LLM_VERSION=v1.2.0 IPCL_PKG_DIR=/root/pailliercryptolib_python/ IPCL_VERSION=v1.1.3 bash docker-build/build.sh all
+```
+
+### 交叉编译功能（可选）
+可通过Platform字段指定构建的镜像支持的处理器架构类型，当前支持arm64和amd64。不指定该字段，则默认amd64。
+
+本功能支持在amd64架构下构建支持arm64或amd64架构的镜像，且支持在arm64架构下构建支持arm64或amd64架构的镜像。
+
+例如，如果想要构建arm64的镜像可以使用下面的命令。（当前版本在构建支持arm64架构的镜像时只支持构建基本的镜像，即Build_Basic=1）
+
+```sh
+Platform=arm64 FATE_DIR=/root/FATE TAG=1.11.2-release Build_Basic=1 Build_NN=0 Build_FUM=0 Build_Spark=0 Build_OP=0 Build_IPCL=0 Build_GPU=0 Build_LLM=0 Build_LLM_VERSION=v1.2.0 IPCL_PKG_DIR=/root/pailliercryptolib_python/ IPCL_VERSION=v1.1.3 bash docker-build/build.sh all
 ```
 
 ### 把镜像推送到镜像仓库（可选）

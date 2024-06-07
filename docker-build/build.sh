@@ -30,6 +30,7 @@ set -euxo pipefail
 : "${Build_GPU:=0}"
 : "${Build_LLM:=0}"
 : "${Build_LLM_VERSION:=v1.2.0}"
+: "${Platform:=amd64}"
 
 BASE_DIR=$(dirname "$0")
 cd $BASE_DIR
@@ -75,11 +76,22 @@ check_fate_dir() {
 #     echo "Built fate"
 # }
 
+# bootstrapDockerBuildx(){
+#         echo "BOOTSTRAP DOCKER BUILDX TOOLKIT"
+#         echo "LOGIN IN YOUR DOCKER HUB ACCOUNT: ${PREFIX}"
+#         docker login -u ${PREFIX}
+#         docker buildx create --driver docker-container --platform "linux/amd64,linux/arm64" --name cross --node cross --use --bootstrap
+#         echo "FINSH BOOTSTRAP DOCKER BUILDX TOOLKIT"
+# }
+
 buildBase() {
+        # bootstrapDockerBuildx
         echo "START BUILDING BASE IMAGE"
         #cd ${WORKING_DIR}
-        docker build --build-arg version=${version} -f ${WORKING_DIR}/base/basic/Dockerfile \
+        docker build --platform linux/${Platform} --build-arg version=${version} -f ${WORKING_DIR}/base/basic/Dockerfile.${Platform} \
           -t ${PREFIX}/base-image:${BASE_TAG} ${PACKAGE_DIR_CACHE}
+        # docker build --build-arg version=${version} -f ${WORKING_DIR}/base/basic/Dockerfile \
+        #   -t ${PREFIX}/base-image:${BASE_TAG} ${PACKAGE_DIR_CACHE}
         echo "FINISH BUILDING BASE IMAGE"
 }
 
@@ -89,19 +101,19 @@ buildEggrollBasicCPU() {
         echo "START BUILDING Eggroll Module IMAGE"
 
         echo "### START BUILDING fateflow ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow:${TAG} \
+        docker build --platform linux/${Platform} --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow:${TAG} \
                 -f ${WORKING_DIR}/modules/fateflow/Dockerfile ${PACKAGE_DIR_CACHE}
         echo "### FINISH BUILDING fateflow ###"
         echo ""
         echo "### START BUILDING fateboard ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateboard:${TAG} \
-                -f ${WORKING_DIR}/modules/fateboard/Dockerfile ${PACKAGE_DIR_CACHE}
+        docker build --platform linux/${Platform} --build-arg PREFIX=${PREFIX} --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateboard:${TAG} \
+                -f ${WORKING_DIR}/modules/fateboard/Dockerfile.${Platform} ${PACKAGE_DIR_CACHE}
         echo "### FINISH BUILDING fateboard ###"
         echo ""
 
         echo "### START BUILDING eggroll ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/eggroll:${TAG} \
-                -f ${WORKING_DIR}/modules/eggroll/Dockerfile ${PACKAGE_DIR_CACHE}
+        docker build --platform linux/${Platform} --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/eggroll:${TAG} \
+                -f ${WORKING_DIR}/modules/eggroll/Dockerfile.${Platform} ${PACKAGE_DIR_CACHE}
         echo "### FINISH BUILDING eggroll ###"
         echo ""
 
@@ -110,7 +122,6 @@ buildEggrollBasicCPU() {
 
 buildSparkBasicCPU(){
         echo "START BUILDING Spark Module IMAGE"
-
 
         echo "### START BUILDING fateflow-spark ###"
         docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=fateflow --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/fateflow-spark:${TAG} -f ${WORKING_DIR}/modules/fateflow-spark/Dockerfile ${WORKING_DIR}/modules/fateflow-spark/
