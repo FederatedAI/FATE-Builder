@@ -162,6 +162,8 @@ function build_python_packages
     grm -rf "$target"
     gmkdir -p "$target"
 
+    os_plat=`arch`
+    if [ $os_plat == "x86_64" ];then
     docker run --pull=always --rm \
         -v "$(greadlink -f ~/.config/pip/pip.conf):/root/.config/pip/pip.conf:ro" \
         -v "$source:/requirements.txt:ro" -v "$target:/wheelhouse:rw" \
@@ -189,6 +191,36 @@ function build_python_packages
             }
         }
         :'
+    elif [ $os_plat == "aarch64" ];then
+    docker run --rm \
+        -v "$(greadlink -f ~/.config/pip/pip.conf):/root/.config/pip/pip.conf:ro" \
+        -v "$source:/requirements.txt:ro" -v "$target:/wheelhouse:rw" \
+        vowpalwabbit/manylinux2014_aarch64-build:latest /bin/bash -c '
+        cp /requirements.txt /opt/requirements.txt && \
+
+        sed -e "s!tensorflow-cpu==2.11.1!tensorflow==2.10.0!g" -e "s!torch==1.13.1+cpu!torch==1.13.1!g" \
+        -e "s!torchvision==0.14.1+cpu!torchvision==0.14.1!g" \
+        -e "s!numba==0.53.0!numba==0.57.0!g" \
+        -e "s!ipcl-python==2.0.0!#ipcl-python==2.0.0!g" \
+        -i /opt/requirements.txt && cat /opt/requirements.txt && \
+
+        sed -i "57a h5py==3.10.0" /opt/requirements.txt && \
+
+        yum install  -y gmp-devel mpfr-devel libmpc-devel && \
+        /opt/python/cp38-cp38/bin/pip wheel -q -r /opt/requirements.txt -w /wheelhouse || \
+        exit 1
+
+        for whl in /wheelhouse/*.whl
+        {
+            auditwheel show "$whl" &>/dev/null &&
+            {
+                new_whl=$(auditwheel repair --plat manylinux2014_aarch64 -w /wheelhouse "$whl" 2>&1 | \
+                          grep -ioP "(?<=Fixed-up wheel written to ).+\.whl")
+                [ -n "$new_whl" ] && [ "$new_whl" != "$whl" ] && rm -f "$whl"
+            }
+        }
+        :'
+    fi
 
     sudo chown "$(id -u):$(id -g)" "$target/"*
 }

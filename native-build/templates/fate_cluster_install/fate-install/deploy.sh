@@ -42,7 +42,12 @@ function_install_fate_flow()
   ln -frs "${pbase}/${pname}/fate/"{RELEASE.md,fate.env,examples} "${pbase}/${pname}"
 
   #compute cpu core number
-  cores_per_node=$( cat /proc/cpuinfo |grep -cw 'core id' )
+  os_plat=`arch`
+  if [ $os_plat == "x86_64" ];then
+    cores_per_node=$( cat /proc/cpuinfo |grep -cw 'core id' )
+  elif [ $os_plat == "aarch64" ];then
+    cores_per_node=$( cat /proc/cpuinfo |grep -cw 'processor' )
+  fi
 
   #make settings.py
   variables="pbase=$pbase pname=$pname role_name=${role_name} jbase=$jbase pybase=$pybase  fate_flow_ip=${fate_flow_ip} fate_flow_httpPort=${fate_flow_httpPort}  fate_flow_grpcPort=${fate_flow_grpcPort} fate_flow_dbname=${fate_flow_dbname} mysql_user=${mysql_user} mysql_pass=${mysql_pass} mysql_ip=${mysql_ip} mysql_port=${mysql_port} redis_ip=${redis_ip} redis_port=${redis_port} redis_pass=${redis_pass} default_storage=${default_storage} fateboard_ip=${fate_flow_ip} fateboard_port=${fateboard_port}  rollsite_ip=${fate_flow_ip} cores_per_node=${cores_per_node}"
@@ -61,6 +66,8 @@ function_install_fate_flow()
     tpl=$( cat ${workdir}/templates/single_fate_test_config.yaml.jinja )
   fi
   printf "$variables\ncat << EOF\n$tpl\nEOF" | bash > ${pbase}/${pname}/fate/python/fate_test/fate_test/fate_test_config.yaml
+  load=`echo "export LD_PRELOAD=$pyenv/lib/python3.8/site-packages/sklearn/__check_build/../../scikit_learn.libs/libgomp-d22c30c5.so.1.0.0"`
+  sed -i '17a '"$load"'' ${pbase}/${pname}/fateflow/bin/service.sh
 }
 
 function_install_fateboard()
