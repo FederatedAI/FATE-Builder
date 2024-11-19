@@ -31,7 +31,7 @@ case "${system}" in
             ;;
     "Ubuntu")
             echo "Ubuntu System"
-            $command apt-get install -y gcc g++ make  openssl supervisor libgmp-dev  libmpfr-dev libmpc-dev libaio1 libaio-dev numactl autoconf automake libtool libffi-dev libssl1.0.0 libssl-dev  liblz4-1 liblz4-dev liblz4-1-dbg liblz4-tool  zlib1g zlib1g-dbg zlib1g-dev
+            $command apt-get install -y gcc g++ make  openssl supervisor libgmp-dev  libmpfr-dev libmpc-dev libaio1 libaio-dev numactl autoconf automake libtool libffi-dev libssl1.0.0 libssl-dev  liblz4-1 liblz4-dev liblz4-1-dbg liblz4-tool  zlib1g zlib1g-dbg zlib1g-dev libtinfo5
             cd /usr/lib/x86_64-linux-gnu
             if [ ! -f "libssl.so.10" ];then
                  $command ln -s libssl.so.1.0.0 libssl.so.10
