@@ -22,7 +22,7 @@ source_dir=$(
     cd ../
     pwd
 )
-support_modules=(bin examples deploy proxy fate fate_flow fate_client fate_test osx eggroll doc fate_llm)
+support_modules=(bin examples deploy proxy fate fate_flow fate_client fate_test osx eggroll doc fate_board)
 
 [ "${Build_IPCL:-0}" -gt 0 ] && support_modules[${#support_modules[@]}]=ipcl_pkg
 # environment_modules=(python36 jdk pypi)
@@ -36,9 +36,10 @@ fi
 
 cd "${source_dir}"
 echo "[INFO] source dir: ${source_dir}"
-git submodule init
-git submodule update
-version=$(git describe --tags --abbrev=0)
+#git submodule init
+#git submodule update
+#version=$(git describe --tags --abbrev=0)
+version="v2.2.0"
 package_dir_name="FATE_install_${version}_${version_tag}"
 package_dir=${source_dir}/${package_dir_name}
 echo "[INFO] build info"
@@ -102,27 +103,24 @@ function packaging_osx() {
     cp -r java/osx "${package_dir}"/osx
     echo "[INFO] package osx done"
 }
-#packaging_fate_board() {
-#	    echo "[INFO] package fateboard start"
-#	        #pull_fateboard
-#		    cd ./fate_board
-#		        fateboard_version=$(grep -E -m 1 -o "<version>(.*)</version>" ./pom.xml | tr -d '[\\-a-z<>//]' | awk -F "version" '{print $2}')
-#			    echo "[INFO] fateboard version "${fateboard_version}
+packaging_fate_board() {
+	        echo "[INFO] package fateboard start"
+	        #pull_fateboard
+		      cd  ./fate_board
+			    mvn -DskipTests -f "${source_dir}/fate_board/pom.xml" -q clean package
 
-#			        #docker run --rm -u $(id -u):$(id -g) -v ${source_dir}/fate_board:/data/projects/fate/fate_board --entrypoint="" maven:3.8-jdk-8 /bin/bash -c "cd /data/projects/fate/fate_board && mvn clean package -DskipTests"
-#				    docker run --rm -u $(id -u):$(id -g) -v ${source_dir}/fate_board:/data/projects/fate/fate_board --entrypoint="" maven:3.8-jdk-8 /bin/bash -c "cd /data/projects/fate/fate_board && ls ./repository && mvn -DskipTests -f ./pom.xml -q clean package -Dmaven.repo.local=./repository -X"
-#				        mkdir -p ${package_dir}/fate_board/conf
-#					    mkdir -p ${package_dir}/fate_board/ssh
-#					        cp ./target/fateboard-${fateboard_version}.jar ${package_dir}/fate_board/
-#						    cp ./bin/service.sh ${package_dir}/fate_board/
-#						        cp ./src/main/resources/application.properties ${package_dir}/fate_board/conf/
-#							    cd ${package_dir}/fate_board
-#							        touch ./ssh/ssh.properties
-#								    ln -s fateboard-${fateboard_version}.jar fateboard.jar
-#								        echo "[INFO] package fateboard done"
-#								}
+          rm -rf "${package_dir}"/fateboard
+          mkdir -p "${package_dir}"/fateboard
+
+          cp -ap "${source_dir}"/fate_board/RELEASE.md "${package_dir}"/fateboard
+          unzip "${source_dir}"/target/fateboard-*-release.zip -d "${package_dir}"/fateboard
+          ln -frs "${package_dir}"/fateboard/fateboard-*.jar "${package_dir}"/fateboard/fateboard.jar
+			    cd "${package_dir}"
+			    mv fateboard fate_board
+					echo "[INFO] package fateboard done"
+}
 packaging_fate_client() {
-     echo "[INFO] package fate_client start"
+    echo "[INFO] package fate_client start"
     cp -r fate_client "${package_dir}"/
     echo "[INFO] package fate_client done"
 }
@@ -134,6 +132,7 @@ packaging_eggroll() {
     docker run --rm -u "$(id -u):$(id -g)" -v "${source_dir}/eggroll:/data/projects/fate/eggroll" --entrypoint="" maven:3.8-jdk-8 /bin/bash -c "cd /data/projects/fate/eggroll/deploy && bash auto-packaging.sh"
     mkdir -p "${package_dir}"/eggroll
     mv "${source_dir}"/eggroll/eggroll.tar.gz "${package_dir}"/eggroll/
+    echo "package_dir:_____________________${package_dir}"
     cd "${package_dir}"/eggroll/
     tar xzf eggroll.tar.gz
     rm -rf eggroll.tar.gz

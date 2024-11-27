@@ -25,12 +25,24 @@ then
   #install fate python dependency package
   echo "pip install -U -r ${workdir}/files/requirements.txt -f ${workdir}/files/pypkg --no-index"
   pip install -U -r ${workdir}/files/requirements.txt -f ${workdir}/files/pypkg --no-index
+  echo "pip install -U -r ${workdir}/files/requirements-fate.txt -f ${workdir}/files/pypkg --no-index"
+  pip install -U -r ${workdir}/files/requirements-fate.txt -f ${workdir}/files/pypkg --no-index
+  echo "pip install -U -r ${workdir}/files/fate_test/requirements.txt -f ${workdir}/files/pypkg --no-index"
+  pip install -U -r ${workdir}/files/fate_test/requirements.txt -f ${workdir}/files/pypkg --no-index
+  echo "pip install -U -r ${workdir}/files/fate_client/requirements.txt -f ${workdir}/files/pypkg --no-index"
+  pip install -U -r ${workdir}/files/fate_client/requirements.txt -f ${workdir}/files/pypkg --no-index
+  #echo "pip install -U -r ${workdir}/files/fate_llm/requirements.txt -f ${workdir}/files/pypkg --no-index"
+  #pip install -U -r ${workdir}/files/fate_llm/requirements.txt -f ${workdir}/files/pypkg --no-index
   pnum=$( pip list | wc -l )
   rnum=$( grep -cE '=|>|<' ${workdir}/files/requirements.txt  )
   echo "install: $pnum require: $rnum"
   if [ $pnum -lt $rnum ]
   then
     pip install -U -r ${workdir}/files/requirements.txt -f ${workdir}/files/pypkg --no-index
+    pip install -U -r ${workdir}/files/requirements-fate.txt -f ${workdir}/files/pypkg --no-index
+    pip install -U -r ${workdir}/files/fate_test/requirements.txt -f ${workdir}/files/pypkg --no-index
+    pip install -U -r ${workdir}/files/fate_client/requirements.txt -f ${workdir}/files/pypkg --no-index
+    #pip install -U -r ${workdir}/files/fate_llm/requirements.txt -f ${workdir}/files/pypkg --no-index
   fi
 fi
 

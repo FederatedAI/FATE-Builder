@@ -60,8 +60,10 @@ echo "CREATE USER ${mysql_user}@'${clustermanager_ip%:*}' IDENTIFIED BY '${mysql
 echo "GRANT ALL ON ${fate_flow_dbname}.* TO ${mysql_user}@'${clustermanager_ip%:*}';"
 echo "GRANT ALL ON ${eggroll_dbname}.* TO ${mysql_user}@'${clustermanager_ip%:*}';"
 echo "use ${eggroll_dbname};"
+echo "INSERT INTO server_node (host, port, node_type, status) values ('${clustermanager_ip%:*}', '${clustermanager_ip#*:}', 'CLUSTER_MANAGER', 'HEALTHY');"
 for temp in ${nodemanager_ips[*]}
 do
+echo "INSERT INTO server_node (host, port, node_type, status) values ('${temp%:*}', '${temp#*:}', 'NODE_MANAGER', 'HEALTHY');"
 if [  ${temp%:*} != ${clustermanager_ip%:*} ]
 then
   echo "CREATE USER ${mysql_user}@'${temp%:*}' IDENTIFIED BY '${mysql_pass}';"

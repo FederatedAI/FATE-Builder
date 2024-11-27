@@ -10,12 +10,12 @@ all_examples_data_config: examples/data/upload_config/all_examples_data_testsuit
 fate_base: ${pbase}/${pname}/fate
 clean_data: true
 parties:
-  guest: [${party_id}]
-  host: [${party_id}]
-  arbiter: [${party_id}]
+  guest: ['${party_id}']
+  host: ['${party_id}']
+  arbiter: ['${party_id}']
 services:
   - flow_services:
-      - {address: ${fate_flow_ip}:${fate_flow_httpPort}, parties: [${party_id}]}
+      - {address: ${fate_flow_ip}:${fate_flow_httpPort}, parties: ['${party_id}']}
     serving_setting:
       address: 127.0.0.1:8059
 

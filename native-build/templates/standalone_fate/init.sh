@@ -45,11 +45,6 @@ init() {
   cd ${project_base}
 
   echo "[INFO] install os dependency"
-
-  sed -e "s!^mirrorlist=!#mirrorlist=!g" -e "s!^#baseurl=!baseurl=!g" \
-  -e "s!http://mirror\.centos\.org!https://mirrors.cloud.tencent.com!g" \
-  -i /etc/yum.repos.d/CentOS-*.repo
-
   bash bin/install_os_dependencies.sh
   echo "[INFO] install os dependency done"
 
@@ -84,38 +79,47 @@ init() {
   pip install setuptools --no-index -f ${pypi_resource}
   echo "[INFO] install virtualenv done"
 
-  echo "[INFO] install python dependency packages by ${project_base}/fate/python/requirements.txt using ${pypi_resource}"
-  pip install -r ${project_base}/fate/python/requirements.txt -f ${pypi_resource} --no-index
+  #mv "${project_base}/fate/fate_test" "${project_base}"
+  echo "[INFO] install python dependency packages by ${project_base}/requirements.txt using ${pypi_resource}"
+  pip install -r ${project_base}/fate_test/python/requirements.txt -f ${pypi_resource} --no-index
+  pip install -r ${project_base}/fate_client/python/requirements.txt -f ${pypi_resource} --no-index
+  #pip install -r ${project_base}/fate_llm/python/fate_llm/requirements.txt -f ${pypi_resource} --no-index
+  pip install -r ${project_base}/fate_flow/python/requirements.txt -f ${pypi_resource} --no-index
+  pip install -r ${project_base}/fate/python/requirements-fate.txt -f ${pypi_resource} --no-index
+  pip install -r ${project_base}/fate_flow/python/requirements-flow.txt -f ${pypi_resource} --no-index
+  pip install -r ${project_base}/fate_flow/python/requirements-rabbitmq.txt -f ${pypi_resource} --no-index
+  pip install -r ${project_base}/fate_flow/python/requirements-pulsar.txt -f ${pypi_resource} --no-index
+  pip install -r ${project_base}/fate_flow/python/requirements-spark.txt -f ${pypi_resource} --no-index
+  pip install -r ${project_base}/fate_flow/python/requirements-container.txt -f ${pypi_resource} --no-index
   echo "[INFO] install python dependency packages done"
 
-  : '
   echo "[INFO] install fate client"
-  cd ${project_base}/fate/python/fate_client
+  cd ${project_base}/fate_client/python/
   python setup.py install
-  flow init -c "${project_base}/conf/service_conf.yaml"
-  pipeline init --ip '127.0.0.1' --port '9380'
+  flow init --ip 127.0.0.1 --port 9380
   echo "[INFO] install fate client done"
 
   echo "[INFO] install fate test"
-  cd ${project_base}/fate/python/fate_test
-  sed -i "s#data_base_dir:.*#data_base_dir: ${project_base}#g" ./fate_test/fate_test_config.yaml
-  sed -i "s#fate_base:.*#fate_base: ${project_base}/fate#g" ./fate_test/fate_test_config.yaml
+  cd ${project_base}/fate_test/python
   python setup.py install
-  fate_test data upload -t min_test -y
+  fate_test config new
+  sed -i "s#data_base_dir:.*#data_base_dir: ${project_base}#g" ./fate_test_config.yaml
+  sed -i "s#fate_base:.*#fate_base: ${project_base}/fate#g" ./fate_test_config.yaml
   echo "[INFO] install fate test done"
-  '
 
   echo "[INFO] setup fateflow"
-  sed -i "s#PYTHONPATH=.*#PYTHONPATH=${project_base}/fate/python:${project_base}/fateflow/python#g" ${project_base}/bin/init_env.sh
+  sed -i "s#PYTHONPATH=.*#PYTHONPATH=${project_base}/fate/python:${project_base}/fate_flow/python#g" ${project_base}/bin/init_env.sh
   sed -i "s#venv=.*#venv=${venv_dir}#g" ${project_base}/bin/init_env.sh
   sed -i "s#JAVA_HOME=.*#JAVA_HOME=${jdk_dir}#g" ${project_base}/bin/init_env.sh
+  ln -frs "${project_base}/fate/python" "${project_base}/python"
   echo "[INFO] setup fateflow done"
 
-  : '
   echo "[INFO] setup fateboard"
   sed -i "s#fateflow.url=.*#fateflow.url=http://localhost:9380#g" ${project_base}/fateboard/conf/application.properties
+  sed -i "s#server.board.login.username=.*#server.board.login.username=admin#g" ${project_base}/fateboard/conf/application.properties
+  sed -i "s#server.board.login.password=.*#server.board.login.password=admin#g" ${project_base}/fateboard/conf/application.properties
   echo "[INFO] setup fateboard done"
-  '
+  
 }
 
 action() {
@@ -123,7 +127,7 @@ action() {
 
   source $project_base/bin/init_env.sh
 
-  cd $project_base/fateflow
+  cd $project_base/fate_flow
   bash bin/service.sh $1
 
   cd $project_base/fateboard

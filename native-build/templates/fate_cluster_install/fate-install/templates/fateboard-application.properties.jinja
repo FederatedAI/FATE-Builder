@@ -1,5 +1,16 @@
 server.port=${fateboard_port}
-fateflow.url=http://${fate_flow_ip}:${fate_flow_port}
+fateflow.url=http://${fate_flow_ip}:${fate_flow_httpPort}
+
+zookeeper.enable=false
+zookeeper.acl_enable=false
+zookeeper.time_out=30000
+zookeeper.url_list=localhost:2181
+zookeeper.scheme=digest
+zookeeper.charset=UTF-8
+zookeeper.acl_username=admin
+zookeeper.acl_password=admin
+zookeeper.node_path=/FATE-COMPONENTS/fate-flow
+
 #priority is higher than {fateflow.url}, split by ;
 fateflow.url-list=
 fateflow.http_app_key=

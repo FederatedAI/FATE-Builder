@@ -17,6 +17,7 @@ set -euxo pipefail
 
 : "${FATE_DIR:=/data/projects/llm/fate/FATE}"
 : "${TAG:=latest}"
+: "${EGGROLL_TAG:=latest}"
 : "${PREFIX:=federatedai}"
 : "${version_tag:=release}"
 : "${Docker_Options:=""}"
@@ -40,8 +41,10 @@ WORKING_DIR=$(pwd)
 # Build and Package FATE
 package() {
 
+        rm -rf $FATE_DIR/build/package-build/
         mkdir -p $FATE_DIR/build/package-build/
-        cp build_docker.sh $FATE_DIR/build/package-build/
+        chmod u+w $FATE_DIR/build/package-build/
+	cp build_docker.sh $FATE_DIR/build/package-build/
 
         cd $FATE_DIR
         # package all
@@ -105,7 +108,7 @@ buildEggrollBasicCPU() {
         echo ""
 
         echo "### START BUILDING eggroll ###"
-        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/eggroll:${TAG} \
+        docker build --build-arg PREFIX=${PREFIX} --build-arg BASE_IMAGE=base-image --build-arg BASE_TAG=${BASE_TAG} ${Docker_Options} -t ${PREFIX}/eggroll:${EGGROLL_TAG} \
                 -f ${WORKING_DIR}/modules/eggroll/Dockerfile ${PACKAGE_DIR_CACHE}
         echo "### FINISH BUILDING eggroll ###"
         echo ""
@@ -344,7 +347,7 @@ pushImage() {
         ## push EggRoll image (EggRoll Basic CPU)
         if [ "$Build_Basic" -gt 0 ]
         then
-                for module in "fateflow" "osx" "eggroll" ; do
+                for module in "fateflow" "fateboard"  "eggroll" ; do
                         echo "### START PUSH ${module} ###"
                         docker push ${PREFIX}/${module}:${TAG}
                         echo "### FINISH PUSH ${module} ###"
@@ -577,129 +580,3 @@ while [ -n "${1-}" ]; do
         esac
         shift
 done
-/build/$FATE_VER/fate_flow/python/requirements-container.txt" "$target/roles/python/files"
-    [ "$include_large_files" -gt 0 ] &&
-    {
-        gcp -af "${resources[conda]}" "$target/roles/python/files"
-        gtar -cpz -f "$target/roles/python/files/pypi.tar.gz" -C "$dir/build/$FATE_VER" --transform "s/^pypkg/pypi/" 'pypkg'
-    }
-
-    gmkdir -p "$target/roles/java/files"
-    [ "$include_large_files" -gt 0 ] && \
-        gcp -af "${resources[jdk]}" "$target/roles/java/files"
-
-    gmkdir -p "$target/roles/mysql/files"
-    [ "$include_large_files" -gt 0 ] && \
-        gcp -af "${resources[mysql]}" "$target/roles/mysql/files"
-
-    gmkdir -p "$target/roles/rabbitmq/files"
-    [ "$include_large_files" -gt 0 ] && \
-        gcp -af "${resources[rabbitmq]}" "$target/roles/rabbitmq/files"
-
-    gmkdir -p "$target/roles/supervisor/files"
-    gln -frs "$target/roles/python/files/${resources[conda]##*/}" "$target/roles/supervisor/files"
-    gcp -af "${resources[supervisor]}" "${resources[pymysql]}" "$target/roles/supervisor/files"
-
-    #gtar -cpz -f "$target/roles/check/files/deploy.tar.gz" -C "$dir/build/$FATE_VER/fate" 'deploy'
-
-    gmkdir -p "$target/roles/eggroll/files"
-    gcp -af "$dir/build/$FATE_VER/eggroll/conf/create-eggroll-meta-tables.sql" "$target/roles/eggroll/files"
-    gtar -cpz -f "$target/roles/eggroll/files/eggroll.tar.gz" -C "$dir/build/$FATE_VER" 'eggroll'
-
-    gmkdir -p "$target/roles/fateflow/files"
-    gtar -cpz -f "$target/roles/fateflow/files/fate.tar.gz" -C "$dir/build/$FATE_VER" 'fate'
-    gtar -cpz -f "$target/roles/fateflow/files/fate_flow.tar.gz" -C "$dir/build/$FATE_VER" 'fate_flow'
-    gtar -cpz -f "$target/roles/fateflow/files/osx.tar.gz" -C "$dir/build/$FATE_VER/fate" 'osx'
-    gcp -af "$target/roles/fateflow/files/osx.tar.gz" "$target/roles/eggroll/files"
-
-    gmkdir -p "$target/roles/fateboard/files"
-    gtar -cpz -f "$target/roles/fateboard/files/fateboard.tar.gz" -C "$dir/build/$FATE_VER" 'fateboard'
-
-    gtar -cpz -f "$filepath" -C "${target%/*}" "${target##*/}"
-    filepath="$filepath" push_archive
-}
-
-function package_ansible_offline
-{
-    local name="AnsibleFATE_${FATE_VER}_${RELE_VER}_offline"
-    local target="$dir/packages/$FATE_VER/$name"
-    local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
-    local pack_llm=$PACK_LLM
-
-    if [ "$pack_llm" -gt 0 ]
-    then
-	name_llm="AnsibleFATE_${FATE_VER}_LLM_${LLM_VER}_${RELE_VER}_offline"
-	target_llm="$dir/packages/$FATE_VER/${name_llm}"
-	filepath_llm="$dir/dist/$FATE_VER/${name_llm}.tar.gz"
-	#name="${name}" target="$target" filepath="$filepath" pack_llm="$pack_llm" include_large_files=1 package_ansible
-	echo "${name_llm}"
-	echo "${target_llm}"
-	echo "${filepath_llm}"
-	name="${name_llm}" target="${target_llm}" filepath="${filepath_llm}" pack_llm="$pack_llm" include_large_files=1 package_ansible
-    else
-	name="$name" target="$target" filepath="$filepath" pack_llm="$pack_llm" include_large_files=1 package_ansible
-	 echo "$name"
-	 echo "$target"
-	 echo "$filepath"
-    fi
-    # target="$target" filepath="$filepath" include_large_files=1 package_ansible
-}
-
-function package_ansible_online
-{
-    local name="AnsibleFATE_${FATE_VER}_${RELE_VER}_online"
-    local target="$dir/packages/$FATE_VER/$name"
-    local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
-    local pack_llm=$PACK_LLM
-
-    if [ "$pack_llm" -gt 0 ]
-    then
-        name_llm="AnsibleFATE_${FATE_VER}_LLM_${LLM_VER}_${RELE_VER}_online"
-	target_llm="$dir/packages/$FATE_VER/${name_llm}"
-	filepath_llm="$dir/dist/$FATE_VER/${name_llm}.tar.gz"
-	echo "${name_llm}"
-	echo "${target_llm}"
-	echo "${filepath_llm}"
-	name="${name_llm}" target="${target_llm}" filepath="${filepath_llm}" pack_llm="$pack_llm" include_large_files=0 package_ansible
-    else
-	name="$name" target="$target" filepath="$filepath" pack_llm="$pack_llm" include_large_files=0 package_ansible
-        echo "$name"
-	echo "$target"
-	echo "$filepath"
-    fi
-    #target="$target" filepath="$filepath" include_large_files=0 package_ansible
-}
-
-[ "$PULL_GIT" -gt 0 ] && git_pull
-
-get_versions
-: "${FATE_VER:=${versions[fate]}}"
-
-[ "$CHEC_BRA" -gt 0 ] && check_branch
-
-get_resources
-
-[ "$SKIP_BUI" -gt 0 ] ||
-{
-    [ "$BUIL_PYP" -gt 0 ] && build_python_packages
-    [ "$BUIL_EGG" -gt 0 ] && build_eggroll
-    [ "$BUIL_BOA" -gt 0 ] && build_fateboard
-    [ "$BUIL_FAT" -gt 0 ] && build_fate
-
-    build_cleanup
-}
-
-[ "$SKIP_PKG" -gt 0 ] ||
-{
-    gmkdir -p "$dir/"{packages,dist}"/$FATE_VER"
-
-    [ "$PACK_ARC" -gt 0 ] && package_fate_install
-    [ "$PACK_PYP" -gt 0 ] && package_python_packages
-    [ "$PACK_STA" -gt 0 ] && package_standalone_install
-    [ "$PACK_DOC" -gt 0 ] && package_standalone_docker
-    [ "$PACK_CLU" -gt 0 ] && package_cluster_install
-    [ "$PACK_OFF" -gt 0 ] && package_ansible_offline
-    [ "$PACK_ONL" -gt 0 ] && package_ansible_online
-}
-
-echo 'Done'
