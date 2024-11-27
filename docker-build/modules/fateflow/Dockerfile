@@ -1,0 +1,59 @@
+# runtime envrionment
+ARG PREFIX=prefix
+ARG BASE_TAG=tag
+ARG BASE_IMAGE=image
+FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG} as builder
+
+WORKDIR /data/projects/fate/
+
+COPY fate.tar.gz .
+COPY fate_flow.tar.gz .
+COPY fate_client.tar.gz .
+COPY fate_test.tar.gz .
+COPY eggroll.tar.gz .
+COPY examples.tar.gz .
+COPY doc.tar.gz .
+COPY torch-2.3.1+cpu-cp310-cp310-linux_x86_64.whl .
+COPY fate_board.tar.gz .
+
+RUN tar -xzf fate.tar.gz; \
+    tar -xzf fate_flow.tar.gz; \
+    tar -xzf fate_client.tar.gz; \
+    tar -xzf fate_test.tar.gz; \
+    tar -xzf eggroll.tar.gz; \
+    tar -xzf examples.tar.gz; \
+    tar -xzf doc.tar.gz; \
+    tar -xzf fate_board.tar.gz; 
+
+FROM ${PREFIX}/${BASE_IMAGE}:${BASE_TAG} 
+
+WORKDIR /data/projects/fate
+
+COPY  --from=builder /data/projects/fate/fate /data/projects/fate/fate
+COPY  --from=builder /data/projects/fate/examples /data/projects/fate/examples
+COPY  --from=builder /data/projects/fate/doc /data/projects/fate/doc
+
+COPY --from=builder /data/projects/fate/eggroll /data/projects/fate/eggroll
+COPY --from=builder /data/projects/fate/fate_flow /data/projects/fate/fate_flow
+COPY --from=builder /data/projects/fate/fate_client /data/projects/fate/fate_client
+COPY --from=builder /data/projects/fate/fate_test /data/projects/fate/fate_test
+COPY --from=builder /data/projects/fate/torch-2.3.1+cpu-cp310-cp310-linux_x86_64.whl /data/projects/fate/torch-2.3.1+cpu-cp310-cp310-linux_x86_64.whl
+COPY --from=builder /data/projects/fate/fate_board /data/projects/fate/fate_board
+
+ENV PYTHONPATH=/data/projects/fate/fate/python:/data/projects/fate/fate_flow/python:/data/projects/fate/eggroll/python
+ENV EGGROLL_HOME=/data/projects/fate/eggroll
+ENV FATE_PROJECT_BASE=/data/projects/fate
+ENV FATE_FLOW_IP=fateflow
+ENV FATE_FLOW_PORT=9380
+
+RUN pip install  /data/projects/fate/torch-2.3.1+cpu-cp310-cp310-linux_x86_64.whl  -i http://mirrors.cloud.tencent.com/pypi/simple --trusted-host mirrors.cloud.tencent.com
+RUN pip install werkzeug cryptography   -i http://mirrors.cloud.tencent.com/pypi/simple --trusted-host mirrors.cloud.tencent.com; \
+    pip install -r /data/projects/fate/fate_flow/python/requirements-flow.txt  -i http://mirrors.cloud.tencent.com/pypi/simple --trusted-host mirrors.cloud.tencent.com; \
+    pip install -r /data/projects/python/requirements-fate.txt  -i http://mirrors.cloud.tencent.com/pypi/simple --trusted-host mirrors.cloud.tencent.com; \
+    pip install -e fate_client/python/ -i http://mirrors.cloud.tencent.com/pypi/simple --trusted-host mirrors.cloud.tencent.com; \
+    pip install -e fate_test/python/ -i http://mirrors.cloud.tencent.com/pypi/simple --trusted-host mirrors.cloud.tencent.com;
+RUN rm -rf /data/projects/fate/torch-2.3.1+cpu-cp310-cp310-linux_x86_64.whl
+#CMD ["/bin/bash", "-c", "rm -rf /data/projects/fate/torch-1.13.1+cpu-cp38-cp38-linux_x86_64.whl"]
+CMD ["/bin/bash", "-c", "sleep 5 && python fate_flow/python/fate_flow/fate_flow_server.py"]
+CMD ["/bin/bash", "-c", "sleep 5 && python eggroll/python/setup.py install"]
+CMD ["/bin/bash", "-c", "sleep 10 && pipeline init --ip ${FATE_FLOW_IP} --port ${FATE_FLOW_PORT} && sleep 5 && flow init --ip ${FATE_FLOW_IP} --port ${FATE_FLOW_PORT}"]

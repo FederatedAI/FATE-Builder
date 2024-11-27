@@ -1,0 +1,20 @@
+ARG PREFIX=prefix
+ARG BASE_TAG=tag
+
+FROM ${PREFIX}/base-image:${BASE_TAG} as builder
+
+WORKDIR /data/projects/fate/
+COPY deploy.tar.gz .
+
+RUN tar -xzf deploy.tar.gz;
+
+FROM python:3.8
+
+WORKDIR /
+#COPY  --from=builder /data/projects/fate/deploy/upgrade/sql ./sql
+COPY upgrade-mysql.py .
+COPY shutdown-flow.py .
+
+RUN pip install --upgrade pip && \
+    pip install mysql-connector-python   -i https://mirrors.cloud.tencent.com/pypi/simple --trusted-host mirrors.cloud.tencent.com&& \
+    pip install kubernetes   -i https://mirrors.cloud.tencent.com/pypi/simple --trusted-host mirrors.cloud.tencent.com
