@@ -56,6 +56,7 @@ package() {
         mkdir -p ${PACKAGE_DIR_CACHE}
 
         # FATE package_dir ${FATE_DIR}/FATE_install_${version}_release/
+        curl -o ${FATE_DIR}/FATE_install_${version}_${version_tag}/torch-2.3.1+cpu-cp310-cp310-linux_x86_64.whl https://webank-ai-1251170195.cos.ap-guangzhou.myqcloud.com/fate/torch-2.3.1+cpu-cp310-cp310-linux_x86_64.whl
         cp -r ${FATE_DIR}/FATE_install_${version}_${version_tag}/* ${PACKAGE_DIR_CACHE}
 }
 

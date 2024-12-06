@@ -15,7 +15,7 @@ RUN set -eux && \
     yum -y install gcc gcc-c++ make openssl=1.1.1f openssl-devel supervisor gmp-devel mpfr-devel libmpc-devel \
     libaio numactl autoconf automake libtool libffi-devel snappy snappy-devel zlib zlib-devel bzip2 bzip2-devel lz4-devel libasan lsof xz-devel sqlite-devel && \
     yum clean all
-RUN curl -o openssl-1.1.1d.tar.gz https://www.openssl.org/source/openssl-1.1.1d.tar.gz && \
+RUN curl -o openssl-1.1.1d.tar.gz https://webank-ai-1251170195.cos.ap-guangzhou.myqcloud.com/fate/openssl-1.1.1d.tar.gz && \
     tar -zxvf openssl-1.1.1d.tar.gz && \
     cd openssl-1.1.1d && \
     ./config --prefix=/usr/local/openssl && \

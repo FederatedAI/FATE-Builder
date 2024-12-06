@@ -113,7 +113,7 @@ packaging_fate_board() {
           mkdir -p "${package_dir}"/fateboard
 
           cp -ap "${source_dir}"/fate_board/RELEASE.md "${package_dir}"/fateboard
-          unzip "${source_dir}"/target/fateboard-*-release.zip -d "${package_dir}"/fateboard
+          unzip "${source_dir}"/fate_board/target/fateboard-*-release.zip -d "${package_dir}"/fateboard
           ln -frs "${package_dir}"/fateboard/fateboard-*.jar "${package_dir}"/fateboard/fateboard.jar
 			    cd "${package_dir}"
 			    mv fateboard fate_board
