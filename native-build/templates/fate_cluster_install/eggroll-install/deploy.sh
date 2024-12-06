@@ -25,7 +25,7 @@ fi
 
 eval id=\${${group}_id}
 eval rollsite_ip=\${${group}_rollsite_ip}
-eval osx_port=\${${group}_osx_port}
+eval rollsite_port=\${${group}_rollsite_port}
 eval fateflow_ip=\${${group}_fateflow_ip}
 eval fateflow_port=\${${group}_fateflow_port}
 eval clustermanager_ip=\${${group}_clustermanager_ip}
@@ -44,18 +44,18 @@ mkdir -p  "${pbase}/${pname}/bin"
 
 if [ ${roles_num} -gt 1 ]; then
   if [ "$group" == "host" ];then
-    variables="local_fateflow_ip=${host_fateflow_ip} local_fateflow_port=${host_fateflow_port} local_rollsite_ip=${host_rollsite_ip} local_osx_port=${host_osx_port} other_rollsite_ip=${guest_rollsite_ip} other_osx_port=${guest_osx_port} local_id=${host_id} other_id=${guest_id}"
+    variables="local_fateflow_ip=${host_fateflow_ip} local_fateflow_port=${host_fateflow_port} local_rollsite_ip=${host_rollsite_ip} local_rollsite_port=${host_rollsite_port} other_rollsite_ip=${guest_rollsite_ip} other_rollsite_port=${guest_rollsite_port} local_id=${host_id} other_id=${guest_id}"
   else
-    variables="local_fateflow_ip=${guest_fateflow_ip} local_fateflow_port=${guest_fateflow_port} local_rollsite_ip=${guest_rollsite_ip} local_osx_port=${guest_osx_port} other_rollsite_ip=${host_rollsite_ip} other_osx_port=${host_osx_port} local_id=${guest_id} other_id=${host_id}"
+    variables="local_fateflow_ip=${guest_fateflow_ip} local_fateflow_port=${guest_fateflow_port} local_rollsite_ip=${guest_rollsite_ip} local_rollsite_port=${guest_rollsite_port} other_rollsite_ip=${host_rollsite_ip} other_rollsite_port=${host_rollsite_port} local_id=${guest_id} other_id=${host_id}"
   fi
   tpl=$( cat ${workdir}/templates/double_route_table.json.jinja )
 else
-  variables="rollsite_ip=${rollsite_ip} osx_port=${osx_port} fateflow_ip=${fateflow_ip} fateflow_port=${fateflow_port} id=${id}"
+  variables="rollsite_ip=${rollsite_ip} rollsite_port=${rollsite_port} fateflow_ip=${fateflow_ip} fateflow_port=${fateflow_port} id=${id}"
   tpl=$( cat ${workdir}/templates/single_route_table.json.jinja )
 fi
 printf "$variables\ncat << EOF\n$tpl\nEOF" | bash > ${pbase}/${pname}/${role_name}/conf/route_table.json
 
-variables="pbase=$pbase pname=$pname javahome=$javahome pyenv=$pyenv pypath=$pypath id=$id rollsite_ip=${rollsite_ip} osx_port=${osx_port} clustermanager_ip=${clustermanager_ip} clustermanager_port=${clustermanager_port} nodemanager_port=${nodemanager_port} dashboard_port=${dashboard_port} eggroll_db_ip=${eggroll_db_ip} eggroll_db_port=${eggroll_db_port} eggroll_db_name=${eggroll_db_name} eggroll_db_username=${eggroll_db_username} eggroll_db_passwd=${eggroll_db_passwd} coordinator=$coordinator pyenv=$pyenv javahome=$javahome role=$group pypath=$pypath "
+variables="javahome=$javahome pyenv=$pyenv pypath=$pypath id=$id rollsite_ip=${rollsite_ip} rollsite_port=${rollsite_port} clustermanager_ip=${clustermanager_ip} clustermanager_port=${clustermanager_port} nodemanager_port=${nodemanager_port} eggroll_db_ip=${eggroll_db_ip} eggroll_db_port=${eggroll_db_port} eggroll_db_name=${eggroll_db_name} eggroll_db_username=${eggroll_db_username} eggroll_db_passwd=${eggroll_db_passwd} coordinator=$coordinator pyenv=$pyenv javahome=$javahome role=$group pypath=$pypath "
 tpl=$( cat ${workdir}/templates/eggroll.properties.jinja )
 printf "$variables\ncat << EOF\n$tpl\nEOF" | bash > ${pbase}/${pname}/${role_name}/conf/eggroll.properties
 
@@ -70,6 +70,7 @@ do
   cd ${pbase}/${pname}/${role_name};
   source ${pbase}/${pname}/bin/init_env.sh;
   /bin/bash bin/eggroll.sh $role start;
+
 done
 
 num=$( ps aux|grep -v grep |grep -c "fate" );
@@ -80,4 +81,4 @@ else
     echo "$role running ok"
 fi
 
-#echo "deploy $role ok"
+echo "deploy $role ok"

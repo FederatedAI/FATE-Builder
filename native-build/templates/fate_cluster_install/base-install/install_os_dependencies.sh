@@ -26,17 +26,9 @@ echo ${system}
 
 case "${system}" in
     "CentOS Linux")
-            echo "test0"
-	    echo "CentOS System"
-	    $command sed -e "s!^mirrorlist=!#mirrorlist=!g" -e "s!^#baseurl=!baseurl=!g"  -e "s!http://mirror\.centos\.org!http://mirrors.tencentyun.com!g" -i /etc/yum.repos.d/CentOS-*.repo 
-	    #$command cat /etc/yum.repos.d/CentOS-Base.repo
-
-	    $command sed -e "s!^metalink=!#metalink=!g" -e "s!^#baseurl=!baseurl=!g" -e "s!http://download\.example/pub!http://mirrors.tencentyun.com!g" -i /etc/yum.repos.d/epel*.repo 
-            $command yum clean all && yum makecache fast
-	    echo "test1"
+            echo "CentOS System"
             $command yum -y install gcc gcc-c++ make openssl-devel supervisor gmp-devel mpfr-devel libmpc-devel libaio numactl autoconf automake libtool libffi-devel snappy snappy-devel zlib zlib-devel bzip2 bzip2-devel lz4-devel libasan lsof
-            echo "test2"
-	    ;;
+            ;;
     "Ubuntu")
             echo "Ubuntu System"
             $command apt-get install -y gcc g++ make  openssl supervisor libgmp-dev  libmpfr-dev libmpc-dev libaio1 libaio-dev numactl autoconf automake libtool libffi-dev libssl1.0.0 libssl-dev  liblz4-1 liblz4-dev liblz4-1-dbg liblz4-tool  zlib1g zlib1g-dbg zlib1g-dev libtinfo5

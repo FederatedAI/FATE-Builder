@@ -1,122 +1,130 @@
-party_id: "${party_id}"
 use_registry: false
-# DEBUG 10/INFO 20
-log_level: 20
-encrypt:
-  key_0:
-    module: fate_flow.hub.encrypt.password_encrypt#pwdecrypt
-    # base on: fate_flow/conf/
-    private_path: private_key.pem
-fateflow:
-  host: ${fate_flow_ip}
-  http_port: ${fate_flow_httpPort}
-  grpc_port: ${fate_flow_grpcPort}
-  proxy_name: osx
-#  nginx:
-#    host:
-#    http_port:
-#    grpc_port:
-database:
-  engine: mysql
-  # encrypt passwd key
-  decrypt_key:
-  mysql:
-    name: ${fate_flow_dbname}
-    user: ${mysql_user}
-    passwd: ${mysql_pass}
-    host: ${mysql_ip}
-    port: ${mysql_port}
-    max_connections: 100
-    stale_timeout: 30
-  sqlite:
-    # default fate_flow/runtime/system_settings: SQLITE_PATH
-    # /xxx/xxx.sqlite
-    path:
-default_engines:
-  computing: eggroll
-  federation: osx
-  storage: eggroll
-default_provider:
-  name: fate
-  # version default: fateflow.env
-  version:
-  device: local
-computing:
-  standalone:
-    cores: 32
-  eggroll:
-    cores: ${cores_per_node}
-    nodes: 1
-    # cluster manager host and port
-    host: ${fate_flow_ip}
-    port: ${clustermanager_port}
-  spark:
-    # default use SPARK_HOME environment variable
-    home:
-    cores: 32
-federation:
-  osx:
-    host: ${fate_flow_ip}
-    port: ${osx_port}
-    # stream or queue
-    mode: stream
-#  pulsar:
-#    host: 192.168.0.5
-#    port: 6650
-#    mng_port: 8080
-#    cluster: standalone
-#    tenant: fl-tenant
-#    topic_ttl: 5
-#    # default conf/pulsar_route_table.yaml
-#    route_table:
-#    # mode: replication / client, default: replication
-#    mode: replication
-#    max_message_size: 1048576
-#  rabbitmq:
-#    host: 192.168.0.4
-#    mng_port: 12345
-#    port: 5672
-#    user: fate
-#    password: fate
-#    # default conf/rabbitmq_route_table.yaml
-#    route_table:
-#    # mode: replication / client, default: replication
-#    mode: replication
-#    max_message_size: 1048576
-storage:
-  hdfs:
-    name_node: hdfs://fate-cluster
+use_deserialize_safe_module: false
+dependent_distribution: false
+encrypt_password: false
+encrypt_module: fate_arch.common.encrypt_utils#pwdecrypt
+private_key_file: private_key.pem
+private_key:
+party_id: ${party_id}
 hook_module:
   client_authentication: fate_flow.hook.flow.client_authentication
   site_authentication: fate_flow.hook.flow.site_authentication
   permission: fate_flow.hook.flow.permission
+hook_server_name:
 authentication:
-  client: false
-  site: false
-  permission: false
-model_store:
-  engine: file
-  # encrypt passwd key
-  decrypt_key:
-  file:
-    # default fate_flow/runtime/system_settings: MODEL_STORE_PATH
-    path:
-  mysql:
-    name: ${fate_flow_dbname}
-    user: ${mysql_user}
-    passwd: ${mysql_pass}
-    host: ${mysql_ip}
-    port: ${mysql_port}
-    max_connections: 10
-    stale_timeout: 10
-  tencent_cos:
-    Region:
-    SecretId:
-    SecretKey:
-    Bucket:
+  client:
+    switch: false
+    http_app_key:
+    http_secret_key:
+  site:
+    switch: false
+permission:
+  switch: false
+  component: false
+  dataset: false
+fateflow:
+  host: ${fate_flow_ip}
+  http_port: ${fate_flow_httpPort}
+  grpc_port: ${fate_flow_grpcPort}
+  nginx:
+    host:
+    http_port:
+    grpc_port:
+  proxy: rollsite
+  protocol: default
+database:
+  name: ${fate_flow_dbname}
+  user: ${mysql_user}
+  passwd: ${mysql_pass}
+  host: ${mysql_ip}
+  port: ${mysql_port}
+  max_connections: 100
+  stale_timeout: 30
 zookeeper:
   hosts:
     - 127.0.0.1:2181
   use_acl: false
   user: fate
   password: fate
+default_engines:
+  computing: eggroll
+  federation: eggroll
+  storage: eggroll
+fate_on_standalone:
+  standalone:
+    cores_per_node: 20
+    nodes: 1
+fate_on_eggroll:
+  clustermanager:
+    cores_per_node: ${cores_per_node}
+    nodes: 1
+  rollsite:
+    host: ${rollsite_ip}
+    port: 9370
+fate_on_spark:
+  spark:
+    home:
+    cores_per_node: 20
+    nodes: 2
+  linkis_spark:
+    cores_per_node: 20
+    nodes: 2
+    host: 127.0.0.1
+    port: 9001
+    token_code: MLSS
+    python_path: /data/projects/fate/python
+  hive:
+    host: 127.0.0.1
+    port: 10000
+    auth_mechanism:
+    username:
+    password:
+  linkis_hive:
+    host: 127.0.0.1
+    port: 9001
+  hdfs:
+    name_node: hdfs://fate-cluster
+    path_prefix:
+  rabbitmq:
+    host: 192.168.0.4
+    mng_port: 12345
+    port: 5672
+    user: fate
+    password: fate
+    route_table:
+    mode: replication
+    max_message_size: 1048576
+  pulsar:
+    host: 192.168.0.5
+    port: 6650
+    mng_port: 8080
+    cluster: standalone
+    tenant: fl-tenant
+    topic_ttl: 5
+    route_table:
+    mode: replication
+    max_message_size: 1048576
+  nginx:
+    host: 127.0.0.1
+    http_port: 9300
+    grpc_port: 9310
+fateboard:
+  host: ${fateboard_ip}
+  port: ${fateboard_port}
+enable_model_store: false
+model_store_address:
+  storage: mysql
+  name: ${fate_flow_dbname}
+  user: ${mysql_user}
+  passwd: ${mysql_pass}
+  host: ${mysql_ip}
+  port: ${mysql_port}
+  max_connections: 10
+  stale_timeout: 10
+servings:
+  hosts:
+    - 127.0.0.1:8000
+fatemanager:
+  host: 127.0.0.1
+  port: 8001
+  federatedId: 0

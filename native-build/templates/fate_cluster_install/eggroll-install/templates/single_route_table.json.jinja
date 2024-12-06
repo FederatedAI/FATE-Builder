@@ -5,7 +5,7 @@
     {
       "default":[
         {
-          "port": ${osx_port},
+          "port": ${rollsite_port},
           "ip": "${rollsite_ip}"
         }
       ],
@@ -17,8 +17,8 @@
       ]
     }
   },
-  "self_party":
-  [
-    "${id}"
-  ]
+  "permission":
+  {
+    "default_allow": true
+  }
 }

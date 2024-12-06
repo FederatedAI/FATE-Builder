@@ -5,7 +5,7 @@
     {
       "default":[
         {
-          "port": ${local_osx_port},
+          "port": ${local_rollsite_port},
           "ip": "${local_rollsite_ip}"
         }
       ],
@@ -20,14 +20,14 @@
     {
       "default":[
         {
-          "port": ${other_osx_port},
+          "port": ${other_rollsite_port},
           "ip": "${other_rollsite_ip}"
         }
       ]
     }
   },
-  "self_party":
-  [
-    "${local_id}"
-  ]
+  "permission":
+  {
+    "default_allow": true
+  }
 }

@@ -16,7 +16,7 @@ shopt -s expand_aliases extglob
 : "${BUIL_BOA:=1}"
 : "${BUIL_FAT:=1}"
 : "${SKIP_PKG:=0}"
-: "${PATH_CON:=cos://fate/resources/Miniconda3-py310_24.5.0-0-Linux-x86_64.sh}"
+: "${PATH_CON:=cos://fate/resources/Miniconda3-py38_4.12.0-Linux-x86_64.sh}"
 : "${PATH_JDK:=cos://fate/resources/jdk-8u345.tar.xz}"
 : "${PATH_MYS:=cos://fate/resources/mysql-8.0.28.tar.gz}"
 : "${PATH_RMQ:=cos://fate/resources/rabbitmq-server-generic-unix-3.9.14.tar.xz}"
@@ -210,11 +210,11 @@ function build_python_packages
 	cat /fate_flow/requirements-spark.txt && \
 
 	yum install -q -y gmp-devel mpfr-devel libmpc-devel && \
-	    /opt/python/cp310-cp310/bin/pip wheel -q -r /fate_llm/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
-		/opt/python/cp310-cp310/bin/pip wheel -q -r /fate_flow/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
-		/opt/python/cp310-cp310/bin/pip wheel -q -r /fate_flow/requirements-fate.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
-		/opt/python/cp310-cp310/bin/pip wheel -q -r /fate_client/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
-		/opt/python/cp310-cp310/bin/pip wheel -q -r /fate_test/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com || \
+	    /opt/python/cp38-cp38/bin/pip wheel -q -r /fate_llm/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
+		/opt/python/cp38-cp38/bin/pip wheel -q -r /fate_flow/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
+		/opt/python/cp38-cp38/bin/pip wheel -q -r /fate_flow/requirements-fate.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
+		/opt/python/cp38-cp38/bin/pip wheel -q -r /fate_client/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
+		/opt/python/cp38-cp38/bin/pip wheel -q -r /fate_test/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com || \
 															        exit 1
 	for whl in /wheelhouse/*.whl
         {
@@ -257,11 +257,10 @@ function build_python_packages
 		cat /fate_flow/requirements-spark.txt && \
 
 		yum install -q -y gmp-devel mpfr-devel libmpc-devel && \
-		/opt/_internal/cpython-3.10.14/bin/python -m pip install --upgrade pip && \
-		/opt/python/cp310-cp310/bin/pip wheel -q -r /fate_flow/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
-		/opt/python/cp310-cp310/bin/pip wheel -q -r /fate_flow/requirements-fate.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
-		/opt/python/cp310-cp310/bin/pip wheel -q -r /fate_client/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
-		/opt/python/cp310-cp310/bin/pip wheel -q -r /fate_test/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com || \
+		/opt/python/cp38-cp38/bin/pip wheel -q -r /fate_flow/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
+		/opt/python/cp38-cp38/bin/pip wheel -q -r /fate_flow/requirements-fate.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
+		/opt/python/cp38-cp38/bin/pip wheel -q -r /fate_client/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com && \
+		/opt/python/cp38-cp38/bin/pip wheel -q -r /fate_test/requirements.txt -w /wheelhouse -i https://pypi.doubanio.com/simple --trusted-host pypi.doubanio.com || \
 		exit 1
 		for whl in /wheelhouse/*.whl
 		{
@@ -400,29 +399,21 @@ function package_python_packages
 function package_standalone
 {
     local source="$dir/templates/standalone_fate"
-    local pack_llm=$PACK_LLM
 
     grm -fr "$target"
     gmkdir -p "$target/fate"
    
     gcp -af "$dir/build/$FATE_VER/fate/"!(python*|proxy*) "$dir/build/$FATE_VER/"{fateboard,fate_flow} "$target"
     gcp -af  "$dir/build/$FATE_VER/fate/python" "$target/fate"
-    grm -fr "$target/fate_test"
-    gcp -af  "$dir/build/$FATE_VER/fate/fate_test" "$target"
-    if [ "$pack_llm" -gt 0 ]
-    then
-	gmkdir -p "$target/fate_llm/python"
-	gcp -af "$dir/build/$FATE_VER/fate/python/fate_llm" "$target/fate_llm/python"
-	grm -fr "$target/fate/python/fate_llm"
-    fi
-    #gln -frs "$target/fate_flow/python/requirements.txt" "$target/requirements.txt"
-    #gln -frs "$target/fate/python/requirements-fate.txt" "$target/requirements-fate.txt"
-    #gln -frs "$target/fate_flow/python/requirements-flow.txt" "$target/requirements-flow.txt"
-    #gln -frs "$target/fate_flow/python/requirements-eggroll.txt" "$target/requirements-eggroll.txt"
-    #gln -frs "$target/fate_flow/python/requirements-rabbitmq.txt" "$target/requirements-rabbitmq.txt"
-    #gln -frs "$target/fate_flow/python/requirements-pulsar.txt" "$target/requirements-pulsar.txt"
-    #gln -frs "$target/fate_flow/python/requirements-spark.txt" "$target/requirements-spark.txt"
-    #gln -frs "$target/fate_flow/python/requirements-container.txt" "$target/requirements-container.txt"
+    gcp -af  "$dir/build/$FATE_VER/fate/fate_test" "$target/fate"
+    gln -frs "$target/fate_flow/python/requirements.txt" "$target/requirements.txt"
+    gln -frs "$target/fate/python/requirements-fate.txt" "$target/requirements-fate.txt"
+    gln -frs "$target/fate_flow/python/requirements-flow.txt" "$target/requirements-flow.txt"
+    gln -frs "$target/fate_flow/python/requirements-eggroll.txt" "$target/requirements-eggroll.txt"
+    gln -frs "$target/fate_flow/python/requirements-rabbitmq.txt" "$target/requirements-rabbitmq.txt"
+    gln -frs "$target/fate_flow/python/requirements-pulsar.txt" "$target/requirements-pulsar.txt"
+    gln -frs "$target/fate_flow/python/requirements-spark.txt" "$target/requirements-spark.txt"
+    gln -frs "$target/fate_flow/python/requirements-container.txt" "$target/requirements-container.txt"
 
     gcp -af "$source/"*.sh "$target/bin"
     gcp -af "$source/"!(*.sh) "$target"
@@ -439,13 +430,7 @@ function package_standalone_install
     local name="standalone_fate_install_${FATE_VER}_${RELE_VER}"
     local target="$dir/packages/$FATE_VER/$name"
     local filepath="$dir/dist/$FATE_VER/$name.tar.gz"
-    local pack_llm="$PACK_LLM"
-    if [ "$pack_llm" -gt 0 ]		    
-    then			            
-	name="standalone_fate_install_${FATE_VER}_llm_${LLM_VER}_${RELE_VER}"
-	filepath="$dir/dist/$FATE_VER/$name.tar.gz"
-        target="$dir/packages/$FATE_VER/$name"	
-    fi
+
     target="$target" package_standalone
 
     gtar -cpz -f "$filepath" -C "${target%/*}" "${target##*/}"
