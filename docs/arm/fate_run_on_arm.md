@@ -196,7 +196,7 @@ bash service.sh start
 3.4 验证
 ```shell
 pip3.8 install fate-client==1.9.0 -i https://pypi.douban.com/simple
-flow init --ip=10.1.194.86 --port=49380
+flow init --ip=127.0.0.1 --port=49380
 flow test toy -hid 9999 -gid 9999
 ```
 ![img](img/30.PNG)
